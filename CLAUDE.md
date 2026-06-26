@@ -77,6 +77,19 @@ Rule of thumb: if a family member wouldn't notice it in the UI → PATCH. If the
 
 ---
 
+## Commit message convention
+
+Every commit message starts with one of 4 category labels, lovercase, in square brackets:
+
+- **`[dev]`** - general development: new features, new files, new plugins/helpers/utils/modules/components/UI.
+- **`[fix]`** - fixing an issue or bug (behavior was wrong, now it's correct).
+- **`[update]`** - extending or changing existing behavior that wasn't broken (e.g. new config opttion, widening an existing feature).
+- **`[refactor]`** - non-behavior changes: renames, file moves, restructuring, build/project config fixes. Nothing observable changes for the end user.
+
+Format: `[category] Short summary line`, optionally followed by a blank line and a short bullet list of the actual changes (file/method level), one line each. No rationale, background, or deferred-work notes in the message body - those belong in code comments or `CHANGELOG.md`, or the commit log.
+
+---
+
 ## Documentation Update Rules
 
 **`CHANGELOG.md`** — do **not** write entries until the project has its first rendered visual page (e.g. a working homepage). Once that milestone is reached, add an entry under `[Unreleased]` in [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) format after every meaningful change.
