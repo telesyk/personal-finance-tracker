@@ -20,9 +20,13 @@
 # production
 /build
 
-# misc
+# local-only project files
+AGENTS.md
+CLAUDE.md
 /docs
 docs/*.md
+
+# misc
 .DS_Store
 *.pem
 
