@@ -1,0 +1,175 @@
+# Dev Implementation Log
+
+A running record of implementation stages, tasks, decisions, and notes.
+Each stage maps directly to the Development Plan in `FinanceTracker_ProjectNotes.md`.
+
+---
+
+## Versioning Criteria
+
+This project follows [Semantic Versioning](https://semver.org): `MAJOR.MINOR.PATCH`
+
+---
+
+### Before MVP (current phase) — only `0.MINOR.PATCH`
+
+The major version stays at **0** until the first public MVP release. During development, only minor and patch versions increment. This signals the product is not yet stable or feature-complete.
+
+---
+
+#### PATCH — `0.x.+1`
+A patch is a **small, scoped change that does not add new user-facing functionality**.
+
+Bump patch when:
+- Fixing a bug (UI glitch, wrong calculation, broken query)
+- Correcting a typo or label in the UI
+- Adjusting styling, spacing, or layout without changing behavior
+- Fixing a broken migration or seed script
+- Updating environment config, `.env.example`, or deploy settings
+- Refactoring code internals with no visible change to the user
+- Updating a dependency for a security or compatibility fix
+
+> **Rule of thumb:** if a user wouldn't notice it in the UI, it's a patch.
+
+---
+
+#### MINOR — `0.+1.0`
+A minor version represents **a completed, working feature or a meaningful group of related changes**.
+
+Bump minor when:
+- A full Stage (or a self-contained sub-section of one) is completed and working
+- A new screen or page is functional end-to-end
+- A new user-facing capability is added (e.g. wallet creation, transaction form, monthly chart)
+- A meaningful structural change is made (e.g. RLS policies applied, auth flow complete)
+- A group of related patches accumulates into something that feels like a coherent release
+
+> **Rule of thumb:** if a family member could use this new thing today, it's a minor.
+
+> **Reset:** patch resets to 0 on every minor bump. e.g. `0.3.4` → `0.4.0`
+
+---
+
+#### MAJOR — `+1.0.0` *(post-MVP only)*
+The major version is **reserved for the first public MVP release and breaking changes thereafter**.
+
+Bump major when:
+- `1.0.0` — first MVP is deployed, stable, and shared with the family as the real product
+- A breaking change is introduced (e.g. DB schema incompatibility, complete UI redesign, auth system replacement)
+- A large feature milestone ships post-1.0 that fundamentally changes how the product works
+
+> **Rule of thumb:** don't touch major until Stage 6 (Quality & Launch) is fully done.
+
+---
+
+### Version Map — Planning Phase (retroactive)
+
+| Version | What it represented |
+|---|---|
+| `0.1.0` | Initial planning: goals, stack, data model, MVP screens |
+| `0.2.0` | Data model extended: Group entity, BankPresets, wallet source |
+| `0.3.0` | Bank list revised; Monobank + PrivatBank added; format → Markdown |
+| `0.4.0` | Bank presets trimmed to active banks; PayPal + Klarna added |
+| `0.5.0` | Future extension features section added |
+| `0.6.0` | Tech stack finalized: Next.js + shadcn/ui |
+| `0.7.0` | Full DB schema written (SQL, RLS, seed data) |
+| `0.8.0` | Development plan written (7 stages) |
+| `0.9.0` | *(next)* Stage 0 complete — project scaffold live on Vercel |
+
+---
+
+## Stage 0 — Project Setup
+
+**Goal:** Get a working, deployed skeleton before writing any feature code.
+**Estimate:** 1–2 days
+
+### Tasks
+
+#### Next.js Scaffold
+- [x] Create new Next.js project with App Router and TypeScript
+  ```bash
+  npx create-next-app@latest finance-tracker --typescript --tailwind --app --src-dir
+  ```
+- [x] Verify folder structure: `src/app`, `src/components`, `src/lib`
+- [x] Remove boilerplate (default page content, placeholder CSS)
+
+#### Tailwind + shadcn/ui
+- [x] Confirm Tailwind CSS v4 is active (ships with Next.js by default now)
+- [x] Initialize shadcn/ui
+  ```bash
+  npx shadcn@latest init
+  ```
+- [x] Install first components to verify setup: `button`, `card`, `input`
+  ```bash
+  npx shadcn@latest add button card input
+  ```
+
+#### Supabase Setup
+- [ ] Create new Supabase project at supabase.com
+- [ ] Copy project URL and anon key into `.env.local`
+  ```
+  NEXT_PUBLIC_SUPABASE_URL=...
+  NEXT_PUBLIC_SUPABASE_ANON_KEY=...
+  ```
+- [ ] Install Supabase client libraries
+  ```bash
+  npm install @supabase/supabase-js @supabase/ssr
+  ```
+- [ ] Create `src/lib/supabase/client.ts` — browser client
+- [ ] Create `src/lib/supabase/server.ts` — server client (for Server Components)
+- [ ] Create `src/lib/supabase/middleware.ts` — session refresh middleware
+
+#### Database Migrations
+- [ ] Run enums (`bank_type`, `transaction_type`)
+- [ ] Run table creation scripts (profiles, groups, bank_presets, wallets, categories, transactions)
+- [ ] Run indexes
+- [ ] Enable RLS and apply all policies
+- [ ] Run seed data (bank presets + default categories)
+- [ ] Verify in Supabase Table Editor that all tables and data look correct
+
+#### Environment & Config
+- [x] Add `.env.local` to `.gitignore`
+##### New — needs to be checked off or added:
+  - [x] Verified dev server runs locally (pnpm dev, confirmed HTTP 200 at localhost:3000)
+  - [x] Migrated package manager from npm → pnpm (pnpm@10.14.0, packageManager field added to package.json, pnpm-lock.yaml committed, package-lock.json removed)
+- [ ] Create `.env.example` with placeholder keys for reference
+- [ ] Set up `src/lib/supabase` folder with typed client helpers
+
+#### Vercel Deployment
+- [ ] Push repo to GitHub
+- [ ] Connect GitHub repo to Vercel
+- [ ] Add environment variables in Vercel dashboard (`SUPABASE_URL`, `SUPABASE_ANON_KEY`)
+- [ ] Trigger first deploy — confirm blank app is live at Vercel URL
+- [ ] Verify auto-deploy on push to `main` branch works
+
+### Notes
+> *(Add implementation notes, decisions, and gotchas here as you work through this stage)*
+
+---
+
+## Stage 1 — Auth & Groups
+> Tasks to be added when Stage 0 is complete.
+
+---
+
+## Stage 2 — Wallets
+> Tasks to be added when Stage 1 is complete.
+
+---
+
+## Stage 3 — Transactions
+> Tasks to be added when Stage 2 is complete.
+
+---
+
+## Stage 4 — Analytics
+> Tasks to be added when Stage 3 is complete.
+
+---
+
+## Stage 5 — PWA & Mobile Polish
+> Tasks to be added when Stage 4 is complete.
+
+---
+
+## Stage 6 — Quality & Launch
+> Tasks to be added when Stage 5 is complete.
