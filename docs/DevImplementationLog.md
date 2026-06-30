@@ -73,7 +73,7 @@ Bump major when:
 | `0.6.0` | Tech stack finalized: Next.js + shadcn/ui |
 | `0.7.0` | Full DB schema written (SQL, RLS, seed data) |
 | `0.8.0` | Development plan written (7 stages) |
-| `0.9.0` | *(next)* Stage 0 complete — project scaffold live on Vercel |
+| `0.1.0` | *(next)* Stage 0 complete — project scaffold live on Vercel |
 
 ---
 
@@ -104,12 +104,8 @@ Bump major when:
   ```
 
 #### Supabase Setup
-- [ ] Create new Supabase project at supabase.com
-- [ ] Copy project URL and anon key into `.env.local`
-  ```
-  NEXT_PUBLIC_SUPABASE_URL=...
-  NEXT_PUBLIC_SUPABASE_ANON_KEY=...
-  ```
+- [x] Create new Supabase project at supabase.com
+- [x] Copy project URL and anon key into `.env.local`
 - [x] Install Supabase client libraries (`@supabase/supabase-js`, `@supabase/ssr`)
 - [x] Create `src/lib/supabase/client.ts` — browser client
 - [x] Create `src/lib/supabase/server.ts` — server client (for Server Components / Route Handlers)
@@ -117,12 +113,15 @@ Bump major when:
 - [x] Create `middleware.ts` at project root — wires `updateSession` into Next.js middleware
 
 #### Database Migrations
-- [ ] Run enums (`bank_type`, `transaction_type`)
-- [ ] Run table creation scripts (profiles, groups, bank_presets, wallets, categories, transactions)
-- [ ] Run indexes
-- [ ] Enable RLS and apply all policies
-- [ ] Run seed data (bank presets + default categories)
-- [ ] Verify in Supabase Table Editor that all tables and data look correct
+- [x] Set up Supabase CLI (`brew install supabase/tap/supabase`), `supabase init`, linked to remote project
+- [x] Created `supabase/migrations/20260630201938_initial_schema.sql` with full schema
+- [x] Run enums (`bank_type`, `transaction_type`)
+- [x] Run table creation scripts (profiles, groups, bank_presets, wallets, categories, transactions)
+- [x] Run indexes
+- [x] Enable RLS and apply all policies + `my_group_id()` helper function
+- [x] Wallet balance DB trigger (`trg_wallet_balance`) — handles insert / update / delete
+- [x] Run seed data (bank presets + default categories)
+- [x] Applied to remote via `supabase db push`
 
 #### Environment & Config
 - [x] Add `.env.local` to `.gitignore`
@@ -145,6 +144,8 @@ Bump major when:
 **Supabase SSR client pattern:** Per `@supabase/ssr` v0.12 docs, always use `getUser()` (makes a network call to Auth server) rather than `getSession()` (reads cookies only, unverified) for any authorization decisions. The middleware calls `getUser()` on every request to keep the session cookie refreshed.
 
 **`.gitignore` — `/docs` exclusion:** The `/docs` line in `.gitignore` is intentional during the early development stage. The docs folder is not tracked in git by design at this point. **Do not remove this line without a direct instruction from the project owner.**
+
+**Version scheme clarification:** The planning retroactive versions (0.1.0–0.8.0) in the Version Map above exist only as documentation milestones. The first real code version deployed to Vercel is `0.1.0` — this is what `package.json` reflects. Future development versions follow from there.
 
 ---
 

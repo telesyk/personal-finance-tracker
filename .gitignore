@@ -19,9 +19,10 @@
 
 # production
 /build
-/docs
 
 # misc
+/docs
+docs/*.md
 .DS_Store
 *.pem
 
