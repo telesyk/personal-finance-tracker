@@ -110,13 +110,11 @@ Bump major when:
   NEXT_PUBLIC_SUPABASE_URL=...
   NEXT_PUBLIC_SUPABASE_ANON_KEY=...
   ```
-- [ ] Install Supabase client libraries
-  ```bash
-  npm install @supabase/supabase-js @supabase/ssr
-  ```
-- [ ] Create `src/lib/supabase/client.ts` — browser client
-- [ ] Create `src/lib/supabase/server.ts` — server client (for Server Components)
-- [ ] Create `src/lib/supabase/middleware.ts` — session refresh middleware
+- [x] Install Supabase client libraries (`@supabase/supabase-js`, `@supabase/ssr`)
+- [x] Create `src/lib/supabase/client.ts` — browser client
+- [x] Create `src/lib/supabase/server.ts` — server client (for Server Components / Route Handlers)
+- [x] Create `src/lib/supabase/middleware.ts` — session refresh helper
+- [x] Create `middleware.ts` at project root — wires `updateSession` into Next.js middleware
 
 #### Database Migrations
 - [ ] Run enums (`bank_type`, `transaction_type`)
@@ -128,21 +126,25 @@ Bump major when:
 
 #### Environment & Config
 - [x] Add `.env.local` to `.gitignore`
-##### New — needs to be checked off or added:
-  - [x] Verified dev server runs locally (pnpm dev, confirmed HTTP 200 at localhost:3000)
-  - [x] Migrated package manager from npm → pnpm (pnpm@10.14.0, packageManager field added to package.json, pnpm-lock.yaml committed, package-lock.json removed)
-- [ ] Create `.env.example` with placeholder keys for reference
-- [ ] Set up `src/lib/supabase` folder with typed client helpers
+- [x] Create `.env.example` with placeholder keys for reference
+- [x] Set up `src/lib/supabase` folder with typed client helpers
+- [x] Migrated package manager from npm → pnpm (v10.14.0; `packageManager` field in `package.json`; `pnpm-lock.yaml` committed; `package-lock.json` removed)
+- [x] Verified dev server runs locally (`pnpm dev`, HTTP 200 at localhost:3000)
 
 #### Vercel Deployment
 - [ ] Push repo to GitHub
 - [ ] Connect GitHub repo to Vercel
-- [ ] Add environment variables in Vercel dashboard (`SUPABASE_URL`, `SUPABASE_ANON_KEY`)
+- [ ] Add environment variables in Vercel dashboard (`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`)
 - [ ] Trigger first deploy — confirm blank app is live at Vercel URL
 - [ ] Verify auto-deploy on push to `main` branch works
 
 ### Notes
-> *(Add implementation notes, decisions, and gotchas here as you work through this stage)*
+
+**Package manager — pnpm:** Switched from npm to pnpm for faster installs and disk efficiency. Use `pnpm` for all commands going forward (`pnpm dev`, `pnpm add`, etc.). Vercel auto-detects `pnpm-lock.yaml`.
+
+**Supabase SSR client pattern:** Per `@supabase/ssr` v0.12 docs, always use `getUser()` (makes a network call to Auth server) rather than `getSession()` (reads cookies only, unverified) for any authorization decisions. The middleware calls `getUser()` on every request to keep the session cookie refreshed.
+
+**`.gitignore` — `/docs` exclusion:** The `/docs` line in `.gitignore` is intentional during the early development stage. The docs folder is not tracked in git by design at this point. **Do not remove this line without a direct instruction from the project owner.**
 
 ---
 
