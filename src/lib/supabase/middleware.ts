@@ -24,7 +24,7 @@ export async function updateSession(request: NextRequest) {
   )
 
   // Refreshes the session cookie — use getUser(), not getSession(), per supabase/ssr docs
-  await supabase.auth.getUser()
+  const { data: { user } } = await supabase.auth.getUser()
 
-  return supabaseResponse
+  return { response: supabaseResponse, user }
 }

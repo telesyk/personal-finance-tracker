@@ -1,7 +1,8 @@
-export default function Home() {
-  return (
-    <main className="flex min-h-screen items-center justify-center">
-      <p className="text-muted-foreground">Finance Tracker</p>
-    </main>
-  );
+import { redirect } from 'next/navigation'
+import { createClient } from '@/lib/supabase/server'
+
+export default async function Home() {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  redirect(user ? '/dashboard' : '/sign-in')
 }
