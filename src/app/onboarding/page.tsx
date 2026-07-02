@@ -1,7 +1,8 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import { OnboardingForm } from './onboarding-form'
 
-export default async function DashboardPage() {
+export default async function OnboardingPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
@@ -9,15 +10,15 @@ export default async function DashboardPage() {
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('group_id, display_name')
+    .select('group_id')
     .eq('id', user.id)
     .single()
 
-  if (!profile?.group_id) redirect('/onboarding')
+  if (profile?.group_id) redirect('/dashboard')
 
   return (
-    <main className="flex min-h-screen items-center justify-center">
-      <p className="text-muted-foreground">Dashboard — {profile.display_name ?? user.email}</p>
+    <main className="flex min-h-screen items-center justify-center p-4">
+      <OnboardingForm />
     </main>
   )
 }
