@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist_Mono, Montserrat, Poppins } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
+import { Header } from "@/components/header";
 
 const poppins = Poppins({ subsets: ['latin'], weight: ['400', '500', '600', '700'], variable: '--font-heading' });
 
@@ -27,7 +28,10 @@ export default function RootLayout({
       lang="en"
       className={cn("h-full antialiased font-sans", montserrat.variable, poppins.variable, geistMono.variable)}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        <Header />
+        {children}
+      </body>
     </html>
   );
 }

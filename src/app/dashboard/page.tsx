@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import { InviteSection } from './invite-section'
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -16,8 +17,11 @@ export default async function DashboardPage() {
   if (!profile?.group_id) redirect('/onboarding')
 
   return (
-    <main className="flex min-h-screen items-center justify-center">
-      <p className="text-muted-foreground">Dashboard — {profile.display_name ?? user.email}</p>
+    <main className="flex flex-col gap-6 p-8 max-w-lg mx-auto">
+      <p className="text-muted-foreground">
+        Welcome, <span className="text-foreground font-medium">{profile.display_name ?? user.email}</span>
+      </p>
+      <InviteSection />
     </main>
   )
 }
