@@ -1,5 +1,7 @@
+import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import { Button } from '@/components/ui/button'
 import { InviteSection } from './invite-section'
 
 export default async function DashboardPage() {
@@ -21,6 +23,9 @@ export default async function DashboardPage() {
       <p className="text-muted-foreground">
         Welcome, <span className="text-foreground font-medium">{profile.display_name ?? user.email}</span>
       </p>
+      <Button asChild variant="outline" className="w-fit">
+        <Link href="/wallets">Go to Wallets</Link>
+      </Button>
       <InviteSection />
     </main>
   )
