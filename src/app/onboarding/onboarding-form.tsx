@@ -18,6 +18,14 @@ export function OnboardingForm() {
     setError(null)
 
     const supabase = createClient()
+
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) {
+      setError('Your session has expired. Please sign out and sign back in.')
+      setLoading(false)
+      return
+    }
+
     const { data: groupId, error: rpcError } = await supabase.rpc('create_group_and_join', { group_name: name.trim() })
 
     if (rpcError) {
@@ -25,23 +33,55 @@ export function OnboardingForm() {
       if (msg.includes('Not authenticated')) {
         setError('Your session has expired. Please sign out and sign back in.')
       } else if (msg.includes('Profile link failed')) {
-        setError('Your group was created but your account could not be linked. Please sign out and sign back in.')
+        setError(`Group created but account link failed: ${msg}. Please sign out and sign back in.`)
       } else if (msg.includes('fkey') || msg.includes('foreign key') || msg.includes('violates')) {
         setError('Your account setup is incomplete. Please sign out and sign back in — the issue will resolve on next login.')
       } else {
-        setError('Something went wrong creating your group. Please try again.')
+        setError(`Could not create group: ${msg || 'unknown error'}. Please try again.`)
       }
       setLoading(false)
       return
     }
 
-    // Fallback: apply the profile link directly from the client in case the
-    // function's internal UPDATE silently affected 0 rows. The "own profile"
-    // RLS policy permits authenticated users to update their own row.
-    if (groupId) {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (user) {
-        await supabase.from('profiles').update({ group_id: groupId }).eq('id', user.id)
+    // Read the profile back from the client to confirm the DB function actually
+    // committed the group_id. This catches the case where the function returned
+    // success but the UPDATE silently wrote NULL (e.g. new_group_id was NULL).
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('group_id')
+      .eq('id', user.id)
+      .single()
+
+    if (!profile?.group_id) {
+      // DB function did not link the profile — try a direct client-side update.
+      if (!groupId) {
+        setError('Group was created but its ID could not be determined. Please refresh and try again.')
+        setLoading(false)
+        return
+      }
+
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ group_id: groupId })
+        .eq('id', user.id)
+
+      if (updateError) {
+        setError(`Account link failed: ${updateError.message}. Please sign out and sign back in.`)
+        setLoading(false)
+        return
+      }
+
+      // Confirm the write landed before navigating.
+      const { data: verified } = await supabase
+        .from('profiles')
+        .select('group_id')
+        .eq('id', user.id)
+        .single()
+
+      if (!verified?.group_id) {
+        setError('Could not link your account to the group. Please sign out and sign back in.')
+        setLoading(false)
+        return
       }
     }
 
