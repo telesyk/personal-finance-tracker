@@ -18,12 +18,14 @@ export function OnboardingForm() {
     setError(null)
 
     const supabase = createClient()
-    const { error } = await supabase.rpc('create_group_and_join', { group_name: name.trim() })
+    const { data: groupId, error: rpcError } = await supabase.rpc('create_group_and_join', { group_name: name.trim() })
 
-    if (error) {
-      const msg = error.message ?? ''
+    if (rpcError) {
+      const msg = rpcError.message ?? ''
       if (msg.includes('Not authenticated')) {
         setError('Your session has expired. Please sign out and sign back in.')
+      } else if (msg.includes('Profile link failed')) {
+        setError('Your group was created but your account could not be linked. Please sign out and sign back in.')
       } else if (msg.includes('fkey') || msg.includes('foreign key') || msg.includes('violates')) {
         setError('Your account setup is incomplete. Please sign out and sign back in — the issue will resolve on next login.')
       } else {
@@ -31,6 +33,16 @@ export function OnboardingForm() {
       }
       setLoading(false)
       return
+    }
+
+    // Fallback: apply the profile link directly from the client in case the
+    // function's internal UPDATE silently affected 0 rows. The "own profile"
+    // RLS policy permits authenticated users to update their own row.
+    if (groupId) {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        await supabase.from('profiles').update({ group_id: groupId }).eq('id', user.id)
+      }
     }
 
     window.location.href = '/dashboard'
