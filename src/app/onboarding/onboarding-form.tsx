@@ -21,7 +21,14 @@ export function OnboardingForm() {
     const { error } = await supabase.rpc('create_group_and_join', { group_name: name.trim() })
 
     if (error) {
-      setError(error.message)
+      const msg = error.message ?? ''
+      if (msg.includes('Not authenticated')) {
+        setError('Your session has expired. Please sign out and sign back in.')
+      } else if (msg.includes('fkey') || msg.includes('foreign key') || msg.includes('violates')) {
+        setError('Your account setup is incomplete. Please sign out and sign back in — the issue will resolve on next login.')
+      } else {
+        setError('Something went wrong creating your group. Please try again.')
+      }
       setLoading(false)
       return
     }
