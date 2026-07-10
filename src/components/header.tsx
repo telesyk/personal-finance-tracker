@@ -16,6 +16,7 @@ export async function Header() {
         </Link>
         <nav className="flex items-center gap-4 text-sm text-muted-foreground">
           <Link href="/wallets" className="hover:text-foreground transition-colors">Wallets</Link>
+          <Link href="/transactions" className="hover:text-foreground transition-colors">Transactions</Link>
         </nav>
       </div>
       <SignOutButton />
