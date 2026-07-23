@@ -18,7 +18,7 @@ export default async function TransactionsPage() {
     supabase
       .from('transactions')
       .select(`
-        id, type, amount, date, note, wallet_id, transfer_to_wallet_id,
+        id, type, amount, date, note, wallet_id, transfer_to_wallet_id, category_id,
         wallet:wallets!wallet_id(name, currency),
         transfer_to_wallet:wallets!transfer_to_wallet_id(name),
         category:categories(name, icon)

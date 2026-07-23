@@ -2,9 +2,11 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { Pencil, Trash2 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
@@ -23,6 +25,7 @@ export interface Transaction {
   note: string | null
   wallet_id: string
   transfer_to_wallet_id: string | null
+  category_id: string | null
   wallet: { name: string; currency: string } | null
   transfer_to_wallet: { name: string } | null
   category: { name: string; icon: string | null } | null
@@ -81,10 +84,13 @@ export function TransactionList({ transactions, wallets, categories, groupId, cu
   const router = useRouter()
   const groups = groupByDate(transactions)
 
+  // form dialog
+  const [editingTx, setEditingTx] = useState<Transaction | null>(null)
   const [dialogOpen, setDialogOpen] = useState(false)
   const [loading, setLoading] = useState(false)
   const [formError, setFormError] = useState<string | null>(null)
 
+  // form fields
   const [type, setType] = useState<TxType>('expense')
   const [walletId, setWalletId] = useState('')
   const [amount, setAmount] = useState('')
@@ -93,7 +99,13 @@ export function TransactionList({ transactions, wallets, categories, groupId, cu
   const [date, setDate] = useState(todayLocal())
   const [note, setNote] = useState('')
 
+  // delete dialog
+  const [deletingTx, setDeletingTx] = useState<Transaction | null>(null)
+  const [deleteLoading, setDeleteLoading] = useState(false)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
+
   function openCreate() {
+    setEditingTx(null)
     setType('expense')
     setWalletId(wallets[0]?.id ?? '')
     setAmount('')
@@ -101,6 +113,19 @@ export function TransactionList({ transactions, wallets, categories, groupId, cu
     setToWalletId('')
     setDate(todayLocal())
     setNote('')
+    setFormError(null)
+    setDialogOpen(true)
+  }
+
+  function openEdit(tx: Transaction) {
+    setEditingTx(tx)
+    setType(tx.type)
+    setWalletId(tx.wallet_id)
+    setAmount(String(typeof tx.amount === 'string' ? parseFloat(tx.amount) : tx.amount))
+    setCategoryId(tx.category_id ?? 'none')
+    setToWalletId(tx.transfer_to_wallet_id ?? '')
+    setDate(tx.date)
+    setNote(tx.note ?? '')
     setFormError(null)
     setDialogOpen(true)
   }
@@ -131,9 +156,7 @@ export function TransactionList({ transactions, wallets, categories, groupId, cu
     setLoading(true)
 
     const supabase = createClient()
-    const { error } = await supabase.from('transactions').insert({
-      group_id: groupId,
-      created_by: currentUserId,
+    const payload = {
       type,
       wallet_id: walletId,
       amount: n,
@@ -141,7 +164,11 @@ export function TransactionList({ transactions, wallets, categories, groupId, cu
       transfer_to_wallet_id: type === 'transfer' ? toWalletId : null,
       date,
       note: note.trim() || null,
-    })
+    }
+
+    const { error } = editingTx
+      ? await supabase.from('transactions').update(payload).eq('id', editingTx.id)
+      : await supabase.from('transactions').insert({ ...payload, group_id: groupId, created_by: currentUserId })
 
     setLoading(false)
 
@@ -154,6 +181,26 @@ export function TransactionList({ transactions, wallets, categories, groupId, cu
     router.refresh()
   }
 
+  async function handleDelete() {
+    if (!deletingTx) return
+    setDeleteLoading(true)
+    setDeleteError(null)
+
+    const supabase = createClient()
+    const { error } = await supabase.from('transactions').delete().eq('id', deletingTx.id)
+
+    setDeleteLoading(false)
+
+    if (error) {
+      setDeleteError(error.message)
+      return
+    }
+
+    setDeletingTx(null)
+    router.refresh()
+  }
+
+  const isEdit = editingTx !== null
   const toWalletOptions = wallets.filter(w => w.id !== walletId)
 
   return (
@@ -199,14 +246,32 @@ export function TransactionList({ transactions, wallets, categories, groupId, cu
                         )}
                       </div>
                     </div>
-                    <span className={cn(
-                      'font-medium tabular-nums',
-                      tx.type === 'income' && 'text-green-600 dark:text-green-400',
-                      tx.type === 'expense' && 'text-red-600 dark:text-red-500',
-                      tx.type === 'transfer' && 'text-muted-foreground',
-                    )}>
-                      {formatAmount(tx.amount, tx.wallet?.currency ?? 'EUR', tx.type)}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className={cn(
+                        'font-medium tabular-nums',
+                        tx.type === 'income' && 'text-green-600 dark:text-green-400',
+                        tx.type === 'expense' && 'text-red-600 dark:text-red-500',
+                        tx.type === 'transfer' && 'text-muted-foreground',
+                      )}>
+                        {formatAmount(tx.amount, tx.wallet?.currency ?? 'EUR', tx.type)}
+                      </span>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7 text-muted-foreground hover:text-foreground"
+                        onClick={() => openEdit(tx)}
+                      >
+                        <Pencil className="h-3.5 w-3.5" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                        onClick={() => { setDeleteError(null); setDeletingTx(tx) }}
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -215,14 +280,16 @@ export function TransactionList({ transactions, wallets, categories, groupId, cu
         </div>
       )}
 
+      {/* Create / Edit dialog */}
       <Dialog open={dialogOpen} onOpenChange={handleDialogOpenChange}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle className="font-heading">Add transaction</DialogTitle>
+            <DialogTitle className="font-heading">
+              {isEdit ? 'Edit transaction' : 'Add transaction'}
+            </DialogTitle>
           </DialogHeader>
 
           <form onSubmit={handleSubmit} className="space-y-4 pt-2">
-            {/* Type selector */}
             <div className="space-y-2">
               <Label>Type</Label>
               <div className="flex rounded-md border overflow-hidden">
@@ -244,7 +311,6 @@ export function TransactionList({ transactions, wallets, categories, groupId, cu
               </div>
             </div>
 
-            {/* Wallet (source) */}
             <div className="space-y-2">
               <Label>{type === 'transfer' ? 'From wallet' : 'Wallet'}</Label>
               <Select value={walletId} onValueChange={setWalletId} required>
@@ -259,7 +325,6 @@ export function TransactionList({ transactions, wallets, categories, groupId, cu
               </Select>
             </div>
 
-            {/* To wallet (transfer only) */}
             {type === 'transfer' && (
               <div className="space-y-2">
                 <Label>To wallet</Label>
@@ -276,7 +341,6 @@ export function TransactionList({ transactions, wallets, categories, groupId, cu
               </div>
             )}
 
-            {/* Amount */}
             <div className="space-y-2">
               <Label htmlFor="tx-amount">Amount</Label>
               <Input
@@ -293,7 +357,6 @@ export function TransactionList({ transactions, wallets, categories, groupId, cu
               />
             </div>
 
-            {/* Category (income / expense only) */}
             {type !== 'transfer' && (
               <div className="space-y-2">
                 <Label>Category</Label>
@@ -313,7 +376,6 @@ export function TransactionList({ transactions, wallets, categories, groupId, cu
               </div>
             )}
 
-            {/* Date */}
             <div className="space-y-2">
               <Label htmlFor="tx-date">Date</Label>
               <Input
@@ -325,9 +387,10 @@ export function TransactionList({ transactions, wallets, categories, groupId, cu
               />
             </div>
 
-            {/* Note */}
             <div className="space-y-2">
-              <Label htmlFor="tx-note">Note <span className="text-muted-foreground font-normal">(optional)</span></Label>
+              <Label htmlFor="tx-note">
+                Note <span className="text-muted-foreground font-normal">(optional)</span>
+              </Label>
               <Textarea
                 id="tx-note"
                 placeholder="e.g. Monthly groceries"
@@ -342,12 +405,37 @@ export function TransactionList({ transactions, wallets, categories, groupId, cu
 
             <DialogFooter>
               <Button type="submit" className="w-full" disabled={loading || !walletId || !amount}>
-                {loading ? 'Saving…' : 'Add transaction'}
+                {loading
+                  ? (isEdit ? 'Saving…' : 'Adding…')
+                  : (isEdit ? 'Save changes' : 'Add transaction')}
               </Button>
             </DialogFooter>
           </form>
         </DialogContent>
       </Dialog>
+
+      {/* Delete confirmation */}
+      <AlertDialog open={!!deletingTx} onOpenChange={v => { if (!v) setDeletingTx(null) }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete this transaction?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. The wallet balance will be updated automatically.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          {deleteError && <p className="text-sm text-destructive px-1">{deleteError}</p>}
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleteLoading}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              disabled={deleteLoading}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleteLoading ? 'Deleting…' : 'Delete'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </main>
   )
 }
