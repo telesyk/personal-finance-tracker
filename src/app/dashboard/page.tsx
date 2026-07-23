@@ -26,6 +26,9 @@ export default async function DashboardPage() {
       <Button asChild variant="outline" className="w-fit">
         <Link href="/wallets">Go to Wallets</Link>
       </Button>
+      <Button asChild variant="outline" className="w-fit">
+        <Link href="/transactions">Go to Transactions</Link>
+      </Button>
       <InviteSection />
     </main>
   )
