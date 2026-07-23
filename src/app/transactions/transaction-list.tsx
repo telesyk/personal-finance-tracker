@@ -204,7 +204,7 @@ export function TransactionList({ transactions, wallets, categories, groupId, cu
   const toWalletOptions = wallets.filter(w => w.id !== walletId)
 
   return (
-    <main className="max-w-2xl mx-auto p-8 space-y-6">
+    <main className="max-w-4xl mx-auto p-8 space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="font-heading text-2xl font-semibold">Transactions</h1>
         <Button onClick={openCreate} disabled={wallets.length === 0}>Add transaction</Button>
@@ -216,67 +216,83 @@ export function TransactionList({ transactions, wallets, categories, groupId, cu
           <p className="text-sm">Add your first income or expense to get started.</p>
         </div>
       ) : (
-        <div className="space-y-6">
-          {groups.map(group => (
-            <div key={group.date}>
-              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
-                {formatDateHeader(group.date)}
-              </p>
-              <div className="space-y-1">
-                {group.items.map(tx => (
-                  <div
-                    key={tx.id}
-                    className="flex items-center justify-between rounded-lg border px-4 py-3 text-sm"
-                  >
-                    <div className="flex items-center gap-3">
-                      <span className="text-base w-6 text-center" aria-hidden>
-                        {tx.type === 'transfer' ? '↔' : (tx.category?.icon ?? '•')}
-                      </span>
-                      <div>
-                        <p className="font-medium leading-tight">
-                          {tx.type === 'transfer'
-                            ? `${tx.wallet?.name ?? '?'} → ${tx.transfer_to_wallet?.name ?? '?'}`
-                            : (tx.category?.name ?? 'Uncategorised')}
-                        </p>
-                        {tx.type !== 'transfer' && (
-                          <p className="text-xs text-muted-foreground mt-0.5">{tx.wallet?.name}</p>
-                        )}
-                        {tx.note && (
-                          <p className="text-xs text-muted-foreground mt-0.5 italic">{tx.note}</p>
-                        )}
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className={cn(
-                        'font-medium tabular-nums',
-                        tx.type === 'income' && 'text-green-600 dark:text-green-400',
-                        tx.type === 'expense' && 'text-red-600 dark:text-red-500',
-                        tx.type === 'transfer' && 'text-muted-foreground',
-                      )}>
-                        {formatAmount(tx.amount, tx.wallet?.currency ?? 'EUR', tx.type)}
-                      </span>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7 text-muted-foreground hover:text-foreground"
-                        onClick={() => openEdit(tx)}
-                      >
-                        <Pencil className="h-3.5 w-3.5" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7 text-muted-foreground hover:text-destructive"
-                        onClick={() => { setDeleteError(null); setDeletingTx(tx) }}
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          ))}
+        <div className="overflow-x-auto rounded-lg border">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b bg-muted/50">
+                <th className="px-4 py-2.5 text-left font-medium text-muted-foreground">Category</th>
+                <th className="px-4 py-2.5 text-left font-medium text-muted-foreground">Wallet</th>
+                <th className="px-4 py-2.5 text-left font-medium text-muted-foreground">Note</th>
+                <th className="px-4 py-2.5 text-right font-medium text-muted-foreground">Amount</th>
+                <th className="px-4 py-2.5" />
+              </tr>
+            </thead>
+            <tbody>
+              {groups.map(group => (
+                <>
+                  <tr key={`date-${group.date}`} className="border-b bg-muted/30">
+                    <td colSpan={5} className="px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                      {formatDateHeader(group.date)}
+                    </td>
+                  </tr>
+                  {group.items.map(tx => (
+                    <tr key={tx.id} className="border-b last:border-0 hover:bg-muted/20 transition-colors">
+                      <td className="px-4 py-3">
+                        <span className="flex items-center gap-2">
+                          <span className="text-base" aria-hidden>
+                            {tx.type === 'transfer' ? '↔' : (tx.category?.icon ?? '•')}
+                          </span>
+                          <span className="font-medium">
+                            {tx.type === 'transfer'
+                              ? 'Transfer'
+                              : (tx.category?.name ?? 'Uncategorised')}
+                          </span>
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-muted-foreground">
+                        {tx.type === 'transfer'
+                          ? `${tx.wallet?.name ?? '?'} → ${tx.transfer_to_wallet?.name ?? '?'}`
+                          : (tx.wallet?.name ?? '—')}
+                      </td>
+                      <td className="px-4 py-3 text-muted-foreground italic">
+                        {tx.note ?? ''}
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        <span className={cn(
+                          'font-medium tabular-nums',
+                          tx.type === 'income' && 'text-green-600 dark:text-green-400',
+                          tx.type === 'expense' && 'text-red-600 dark:text-red-500',
+                          tx.type === 'transfer' && 'text-muted-foreground',
+                        )}>
+                          {formatAmount(tx.amount, tx.wallet?.currency ?? 'EUR', tx.type)}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center justify-end gap-1">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 text-muted-foreground hover:text-foreground"
+                            onClick={() => openEdit(tx)}
+                          >
+                            <Pencil className="h-3.5 w-3.5" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                            onClick={() => { setDeleteError(null); setDeletingTx(tx) }}
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </>
+              ))}
+            </tbody>
+          </table>
         </div>
       )}
 
