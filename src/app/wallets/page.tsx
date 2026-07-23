@@ -17,7 +17,7 @@ export default async function WalletsPage() {
   const [{ data: wallets }, { data: bankPresets }, { data: members }] = await Promise.all([
     supabase
       .from('wallets')
-      .select('id, name, currency, balance, bank_preset_id, owner_id')
+      .select('id, name, currency, balance, bank_preset_id, owner_id, is_primary')
       .order('created_at'),
     supabase
       .from('bank_presets')

@@ -31,7 +31,7 @@ export default async function TransactionsPage() {
       .order('name'),
     supabase
       .from('categories')
-      .select('id, name, icon')
+      .select('id, name, icon, type')
       .or(`group_id.is.null,group_id.eq.${profile.group_id}`)
       .order('name'),
   ])

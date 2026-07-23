@@ -32,7 +32,7 @@ export interface Transaction {
 }
 
 interface Wallet { id: string; name: string; currency: string }
-interface Category { id: string; name: string; icon: string | null }
+interface Category { id: string; name: string; icon: string | null; type: 'income' | 'expense' | null }
 
 interface Props {
   transactions: Transaction[]
@@ -202,6 +202,7 @@ export function TransactionList({ transactions, wallets, categories, groupId, cu
 
   const isEdit = editingTx !== null
   const toWalletOptions = wallets.filter(w => w.id !== walletId)
+  const filteredCategories = categories.filter(c => c.type === type)
 
   return (
     <main className="max-w-4xl mx-auto p-8 space-y-6">
@@ -313,7 +314,7 @@ export function TransactionList({ transactions, wallets, categories, groupId, cu
                   <button
                     key={t}
                     type="button"
-                    onClick={() => setType(t)}
+                    onClick={() => { setType(t); setCategoryId('none') }}
                     className={cn(
                       'flex-1 py-2 text-sm font-medium capitalize transition-colors',
                       type === t
@@ -382,7 +383,7 @@ export function TransactionList({ transactions, wallets, categories, groupId, cu
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="none">— None —</SelectItem>
-                    {categories.map(c => (
+                    {filteredCategories.map(c => (
                       <SelectItem key={c.id} value={c.id}>
                         {c.icon ? `${c.icon} ${c.name}` : c.name}
                       </SelectItem>

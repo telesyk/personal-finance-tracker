@@ -31,6 +31,7 @@ interface Wallet {
   balance: string | number
   bank_preset_id: string | null
   owner_id: string | null
+  is_primary: boolean
 }
 
 interface BankPreset { id: string; name: string; type: string }
@@ -63,6 +64,7 @@ export function WalletList({ wallets, bankPresets, members, currentUserId, group
   const [presetId, setPresetId] = useState('none')
   const [currency, setCurrency] = useState('EUR')
   const [ownerId, setOwnerId] = useState(currentUserId)
+  const [isPrimary, setIsPrimary] = useState(false)
 
   function openCreate() {
     setEditingWallet(null)
@@ -70,6 +72,7 @@ export function WalletList({ wallets, bankPresets, members, currentUserId, group
     setPresetId('none')
     setCurrency('EUR')
     setOwnerId(currentUserId)
+    setIsPrimary(!wallets.some(w => w.is_primary))
     setFormError(null)
     setDialogOpen(true)
   }
@@ -80,6 +83,7 @@ export function WalletList({ wallets, bankPresets, members, currentUserId, group
     setPresetId(wallet.bank_preset_id ?? 'none')
     setCurrency(wallet.currency)
     setOwnerId(wallet.owner_id ?? currentUserId)
+    setIsPrimary(wallet.is_primary)
     setFormError(null)
     setDialogOpen(true)
   }
@@ -100,6 +104,19 @@ export function WalletList({ wallets, bankPresets, members, currentUserId, group
       bank_preset_id: presetId === 'none' ? null : presetId,
       currency,
       owner_id: ownerId,
+      is_primary: isPrimary,
+    }
+
+    if (isPrimary) {
+      const excludeId = editingWallet?.id
+      let q = supabase.from('wallets').update({ is_primary: false }).eq('is_primary', true)
+      if (excludeId) q = q.neq('id', excludeId)
+      const { error: unsetError } = await q
+      if (unsetError) {
+        setFormError(unsetError.message)
+        setLoading(false)
+        return
+      }
     }
 
     const { error } = editingWallet
@@ -163,7 +180,14 @@ export function WalletList({ wallets, bankPresets, members, currentUserId, group
               <Card key={wallet.id}>
                 <CardHeader className="pb-2">
                   <div className="flex items-center justify-between">
-                    <CardTitle className="text-base">{wallet.name}</CardTitle>
+                    <div className="flex items-center gap-2">
+                      <CardTitle className="text-base">{wallet.name}</CardTitle>
+                      {wallet.is_primary && (
+                        <span className="text-xs font-medium px-1.5 py-0.5 rounded border border-primary/40 text-primary bg-primary/10">
+                          Primary
+                        </span>
+                      )}
+                    </div>
                     <div className="flex items-center gap-1">
                       <Button
                         variant="ghost"
@@ -265,6 +289,19 @@ export function WalletList({ wallets, bankPresets, members, currentUserId, group
                 </Select>
               </div>
             )}
+
+            <div className="flex items-center gap-2">
+              <input
+                id="wallet-primary"
+                type="checkbox"
+                checked={isPrimary}
+                onChange={e => setIsPrimary(e.target.checked)}
+                className="h-4 w-4 rounded border-input accent-primary cursor-pointer"
+              />
+              <Label htmlFor="wallet-primary" className="cursor-pointer font-normal">
+                Set as primary wallet
+              </Label>
+            </div>
 
             {formError && <p className="text-sm text-destructive">{formError}</p>}
 
