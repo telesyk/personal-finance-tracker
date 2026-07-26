@@ -12,6 +12,7 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import { cn } from '@/lib/utils'
+import React from 'react'
 
 const CURRENCY_SYMBOL: Record<string, string> = {
   EUR: '€', USD: '$', GBP: '£', UAH: '₴',
@@ -230,8 +231,8 @@ export function TransactionList({ transactions, wallets, categories, groupId, cu
             </thead>
             <tbody>
               {groups.map(group => (
-                <>
-                  <tr key={`date-${group.date}`} className="border-b bg-muted/30">
+                <React.Fragment key={`date-${group.date}`}>
+                  <tr className="border-b bg-muted/30">
                     <td colSpan={5} className="px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                       {formatDateHeader(group.date)}
                     </td>
@@ -290,7 +291,7 @@ export function TransactionList({ transactions, wallets, categories, groupId, cu
                       </td>
                     </tr>
                   ))}
-                </>
+                </React.Fragment>
               ))}
             </tbody>
           </table>

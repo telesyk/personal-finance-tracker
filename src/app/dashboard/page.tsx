@@ -26,10 +26,11 @@ export default async function DashboardPage() {
     .order('created_at', { ascending: true })
 
   const primaryWallet = wallets?.[0] ?? null
+  const totalBalance = (wallets ?? []).reduce((sum, w) => sum + parseFloat(String(w.balance)), 0)
 
   const CURRENCY_SYMBOL: Record<string, string> = { EUR: '€', USD: '$', GBP: '£', UAH: '₴' }
   const symbol = primaryWallet ? (CURRENCY_SYMBOL[primaryWallet.currency] ?? primaryWallet.currency) : null
-  const balance = primaryWallet ? parseFloat(String(primaryWallet.balance)).toFixed(2) : null
+  const primaryBalance = primaryWallet ? parseFloat(String(primaryWallet.balance)).toFixed(2) : null
 
   return (
     <main className="flex flex-col gap-6 p-8 max-w-lg mx-auto">
@@ -38,14 +39,25 @@ export default async function DashboardPage() {
       </p>
 
       {primaryWallet && (
-        <div className="rounded-lg border p-4 space-y-1">
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            {primaryWallet.is_primary ? 'Primary wallet' : 'Main wallet'}
-          </p>
-          <p className="font-heading text-2xl font-semibold tabular-nums">
-            {symbol} {balance}
-          </p>
-          <p className="text-sm text-muted-foreground">{primaryWallet.name}</p>
+        <div className="rounded-lg border p-4 space-y-3">
+          <div className="space-y-1">
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              {primaryWallet.is_primary ? 'Primary wallet' : 'Main wallet'}
+            </p>
+            <p className="font-heading text-2xl font-semibold tabular-nums">
+              {symbol} {primaryBalance}
+            </p>
+            <p className="text-sm text-muted-foreground">{primaryWallet.name}</p>
+          </div>
+
+          {(wallets ?? []).length > 1 && (
+            <div className="border-t pt-3 flex items-baseline justify-between">
+              <p className="text-xs text-muted-foreground">All wallets</p>
+              <p className="text-sm font-medium tabular-nums text-muted-foreground">
+                {symbol} {totalBalance.toFixed(2)}
+              </p>
+            </div>
+          )}
         </div>
       )}
 
