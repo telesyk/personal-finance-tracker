@@ -2,7 +2,16 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { TransactionList, type Transaction } from './transaction-list'
 
-export default async function TransactionsPage() {
+function currentMonthStr() {
+  const d = new Date()
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+}
+
+export default async function TransactionsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>
+}) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/sign-in')
@@ -14,6 +23,13 @@ export default async function TransactionsPage() {
     .single()
   if (!profile?.group_id) redirect('/onboarding')
 
+  const params = await searchParams
+  const month = typeof params.month === 'string' ? params.month : currentMonthStr()
+
+  const [year, mon] = month.split('-').map(Number)
+  const dateFrom = `${month}-01`
+  const dateTo = new Date(year, mon, 0).toLocaleDateString('en-CA')
+
   const [{ data: transactions }, { data: wallets }, { data: categories }] = await Promise.all([
     supabase
       .from('transactions')
@@ -23,6 +39,8 @@ export default async function TransactionsPage() {
         transfer_to_wallet:wallets!transfer_to_wallet_id(name),
         category:categories(name, icon)
       `)
+      .gte('date', dateFrom)
+      .lte('date', dateTo)
       .order('date', { ascending: false })
       .order('created_at', { ascending: false }),
     supabase
@@ -44,6 +62,7 @@ export default async function TransactionsPage() {
       categories={categories ?? []}
       groupId={profile.group_id}
       currentUserId={user.id}
+      month={month}
     />
   )
 }

@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Pencil, Trash2 } from 'lucide-react'
+import { Pencil, Trash2, ChevronLeft, ChevronRight } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
@@ -41,6 +41,7 @@ interface Props {
   categories: Category[]
   groupId: string
   currentUserId: string
+  month: string
 }
 
 type TxType = 'income' | 'expense' | 'transfer'
@@ -71,6 +72,28 @@ function groupByDate(transactions: Transaction[]) {
   return groups
 }
 
+function currentMonthStr() {
+  const d = new Date()
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+}
+
+function monthLabel(month: string) {
+  const [year, mon] = month.split('-').map(Number)
+  return new Date(year, mon - 1, 1).toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })
+}
+
+function prevMonth(month: string) {
+  const [year, mon] = month.split('-').map(Number)
+  const d = new Date(year, mon - 2, 1)
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+}
+
+function nextMonth(month: string) {
+  const [year, mon] = month.split('-').map(Number)
+  const d = new Date(year, mon, 1)
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+}
+
 function formatDateHeader(dateStr: string) {
   const todayStr = new Date().toLocaleDateString('en-CA')
   const yesterdayStr = new Date(Date.now() - 86400000).toLocaleDateString('en-CA')
@@ -81,8 +104,9 @@ function formatDateHeader(dateStr: string) {
   })
 }
 
-export function TransactionList({ transactions, wallets, categories, groupId, currentUserId }: Props) {
+export function TransactionList({ transactions, wallets, categories, groupId, currentUserId, month }: Props) {
   const router = useRouter()
+  const isCurrentMonth = month === currentMonthStr()
   const groups = groupByDate(transactions)
 
   // form dialog
@@ -214,7 +238,30 @@ export function TransactionList({ transactions, wallets, categories, groupId, cu
     <main className="max-w-4xl mx-auto p-8 space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="font-heading text-2xl font-semibold">Transactions</h1>
-        <Button onClick={openCreate} disabled={wallets.length === 0}>Add transaction</Button>
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1">
+            <button
+              onClick={() => router.push(`/transactions?month=${prevMonth(month)}`)}
+              className="p-1.5 rounded hover:bg-muted transition-colors"
+              aria-label="Previous month"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </button>
+            <span className="text-sm font-medium w-32 text-center">{monthLabel(month)}</span>
+            <button
+              onClick={() => router.push(`/transactions?month=${nextMonth(month)}`)}
+              disabled={isCurrentMonth}
+              className={cn(
+                'p-1.5 rounded transition-colors',
+                isCurrentMonth ? 'text-muted-foreground/30 cursor-not-allowed' : 'hover:bg-muted',
+              )}
+              aria-label="Next month"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </button>
+          </div>
+          <Button onClick={openCreate} disabled={wallets.length === 0}>Add transaction</Button>
+        </div>
       </div>
 
       {primaryWallet && (
@@ -244,8 +291,8 @@ export function TransactionList({ transactions, wallets, categories, groupId, cu
 
       {transactions.length === 0 ? (
         <div className="flex flex-col items-center gap-2 py-20 text-muted-foreground">
-          <p>No transactions yet.</p>
-          <p className="text-sm">Add your first income or expense to get started.</p>
+          <p>{isCurrentMonth ? 'No transactions yet.' : `No transactions in ${monthLabel(month)}.`}</p>
+          {isCurrentMonth && <p className="text-sm">Add your first income or expense to get started.</p>}
         </div>
       ) : (
         <div className="overflow-x-auto rounded-lg border">
