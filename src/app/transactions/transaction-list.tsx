@@ -32,7 +32,7 @@ export interface Transaction {
   category: { name: string; icon: string | null } | null
 }
 
-interface Wallet { id: string; name: string; currency: string }
+interface Wallet { id: string; name: string; currency: string; balance: string | number; is_primary: boolean }
 interface Category { id: string; name: string; icon: string | null; type: 'income' | 'expense' | null }
 
 interface Props {
@@ -205,12 +205,42 @@ export function TransactionList({ transactions, wallets, categories, groupId, cu
   const toWalletOptions = wallets.filter(w => w.id !== walletId)
   const filteredCategories = categories.filter(c => c.type === type)
 
+  const primaryWallet = wallets[0] ?? null
+  const totalBalance = wallets.reduce((sum, w) => sum + parseFloat(String(w.balance)), 0)
+  const primarySymbol = primaryWallet ? (CURRENCY_SYMBOL[primaryWallet.currency] ?? primaryWallet.currency) : ''
+  const primaryBalance = primaryWallet ? parseFloat(String(primaryWallet.balance)).toFixed(2) : null
+
   return (
     <main className="max-w-4xl mx-auto p-8 space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="font-heading text-2xl font-semibold">Transactions</h1>
         <Button onClick={openCreate} disabled={wallets.length === 0}>Add transaction</Button>
       </div>
+
+      {primaryWallet && (
+        <div className="flex items-center gap-6 rounded-lg bg-muted/40 border px-4 py-2.5 text-sm text-muted-foreground">
+          <div className="flex items-center gap-1.5">
+            <span className="text-xs uppercase tracking-wide">
+              {primaryWallet.is_primary ? 'Primary' : 'Main'}
+            </span>
+            <span className="font-medium tabular-nums text-foreground">
+              {primarySymbol} {primaryBalance}
+            </span>
+            <span className="text-muted-foreground/60">{primaryWallet.name}</span>
+          </div>
+          {wallets.length > 1 && (
+            <>
+              <span className="text-muted-foreground/30">·</span>
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs uppercase tracking-wide">All wallets</span>
+                <span className="font-medium tabular-nums text-foreground">
+                  {primarySymbol} {totalBalance.toFixed(2)}
+                </span>
+              </div>
+            </>
+          )}
+        </div>
+      )}
 
       {transactions.length === 0 ? (
         <div className="flex flex-col items-center gap-2 py-20 text-muted-foreground">
