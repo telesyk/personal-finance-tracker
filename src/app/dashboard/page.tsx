@@ -18,11 +18,37 @@ export default async function DashboardPage() {
 
   if (!profile?.group_id) redirect('/onboarding')
 
+  // Primary wallet: prefer is_primary = true, fall back to oldest by created_at.
+  const { data: wallets } = await supabase
+    .from('wallets')
+    .select('id, name, currency, balance, is_primary')
+    .order('is_primary', { ascending: false })
+    .order('created_at', { ascending: true })
+
+  const primaryWallet = wallets?.[0] ?? null
+
+  const CURRENCY_SYMBOL: Record<string, string> = { EUR: '€', USD: '$', GBP: '£', UAH: '₴' }
+  const symbol = primaryWallet ? (CURRENCY_SYMBOL[primaryWallet.currency] ?? primaryWallet.currency) : null
+  const balance = primaryWallet ? parseFloat(String(primaryWallet.balance)).toFixed(2) : null
+
   return (
     <main className="flex flex-col gap-6 p-8 max-w-lg mx-auto">
       <p className="text-muted-foreground">
         Welcome, <span className="text-foreground font-medium">{profile.display_name ?? user.email}</span>
       </p>
+
+      {primaryWallet && (
+        <div className="rounded-lg border p-4 space-y-1">
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            {primaryWallet.is_primary ? 'Primary wallet' : 'Main wallet'}
+          </p>
+          <p className="font-heading text-2xl font-semibold tabular-nums">
+            {symbol} {balance}
+          </p>
+          <p className="text-sm text-muted-foreground">{primaryWallet.name}</p>
+        </div>
+      )}
+
       <Button asChild variant="outline" className="w-fit">
         <Link href="/wallets">Go to Wallets</Link>
       </Button>
