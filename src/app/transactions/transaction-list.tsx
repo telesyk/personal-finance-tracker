@@ -377,7 +377,14 @@ export function TransactionList({ transactions, wallets, categories, groupId, cu
 
       {/* Create / Edit dialog */}
       <Dialog open={dialogOpen} onOpenChange={handleDialogOpenChange}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent
+          className="sm:max-w-md"
+          onPointerDownOutside={(e) => {
+            if (document.querySelector('[data-radix-select-content]')) {
+              e.preventDefault()
+            }
+          }}
+        >
           <DialogHeader>
             <DialogTitle className="font-heading">
               {isEdit ? 'Edit transaction' : 'Add transaction'}
