@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist_Mono, Montserrat, Poppins } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
@@ -13,9 +13,23 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+export const viewport: Viewport = {
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#ffffff' },
+    { media: '(prefers-color-scheme: dark)', color: '#0f172a' },
+  ],
+}
+
 export const metadata: Metadata = {
   title: "Finance Tracker",
   description: "Family finance tracker",
+  manifest: '/manifest.webmanifest',
+  icons: { icon: '/icon.svg' },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'Finance Tracker',
+  },
 };
 
 export default function RootLayout({

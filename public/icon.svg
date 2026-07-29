@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Background -->
+  <rect width="512" height="512" rx="102" fill="#0f172a"/>
+
+  <!-- Chimney -->
+  <rect x="318" y="58" width="34" height="72" rx="4" fill="rgba(255,255,255,0.16)"/>
+
+  <!-- Roof -->
+  <polygon points="68,202 256,52 444,202" fill="rgba(255,255,255,0.20)"/>
+
+  <!-- House body -->
+  <rect x="138" y="200" width="236" height="210" fill="rgba(255,255,255,0.11)"/>
+
+  <!-- Left window -->
+  <rect x="156" y="242" width="66" height="58" rx="5" fill="rgba(255,255,255,0.24)"/>
+
+  <!-- Right window -->
+  <rect x="290" y="242" width="66" height="58" rx="5" fill="rgba(255,255,255,0.24)"/>
+
+  <!-- Door -->
+  <rect x="208" y="318" width="96" height="92" rx="8" fill="rgba(255,255,255,0.18)"/>
+
+  <!-- Coin drop shadow -->
+  <circle cx="344" cy="386" r="100" fill="rgba(0,0,0,0.35)"/>
+
+  <!-- Coin outer (gold) -->
+  <circle cx="340" cy="382" r="100" fill="#F59E0B"/>
+
+  <!-- Coin inner (darker gold, depth) -->
+  <circle cx="340" cy="382" r="82" fill="#D97706"/>
+
+  <!-- Coin rim highlight -->
+  <circle cx="340" cy="382" r="100" fill="none" stroke="#FDE68A" stroke-width="5"/>
+
+  <!-- Euro symbol -->
+  <text x="340" y="410" text-anchor="middle"
+        font-family="system-ui, -apple-system, sans-serif"
+        font-size="104" font-weight="800" fill="#FEFCE8">€</text>
+</svg>
