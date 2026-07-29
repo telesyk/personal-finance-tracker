@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Pencil, Trash2, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Pencil, Trash2, ChevronLeft, ChevronRight, Plus } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
@@ -129,6 +129,9 @@ export function TransactionList({ transactions, wallets, categories, groupId, cu
   const [deleteLoading, setDeleteLoading] = useState(false)
   const [deleteError, setDeleteError] = useState<string | null>(null)
 
+  // mobile: which row is showing its action buttons
+  const [activeId, setActiveId] = useState<string | null>(null)
+
   function openCreate() {
     setEditingTx(null)
     setType('expense')
@@ -235,10 +238,10 @@ export function TransactionList({ transactions, wallets, categories, groupId, cu
   const primaryBalance = primaryWallet ? parseFloat(String(primaryWallet.balance)).toFixed(2) : null
 
   return (
-    <main className="max-w-4xl mx-auto p-8 space-y-6">
-      <div className="flex items-center justify-between">
+    <main className="max-w-4xl mx-auto p-4 sm:p-8 space-y-4 sm:space-y-6">
+      <div className="flex flex-col md:flex-row md:items-center  md:justify-between gap-2">
         <h1 className="font-heading text-2xl font-semibold">Transactions</h1>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           <div className="flex items-center gap-1">
             <button
               onClick={() => router.push(`/transactions?month=${prevMonth(month)}`)}
@@ -247,7 +250,7 @@ export function TransactionList({ transactions, wallets, categories, groupId, cu
             >
               <ChevronLeft className="h-4 w-4" />
             </button>
-            <span className="text-sm font-medium w-32 text-center">{monthLabel(month)}</span>
+            <span className="text-sm font-medium w-28 text-center">{monthLabel(month)}</span>
             <button
               onClick={() => router.push(`/transactions?month=${nextMonth(month)}`)}
               disabled={isCurrentMonth}
@@ -260,12 +263,15 @@ export function TransactionList({ transactions, wallets, categories, groupId, cu
               <ChevronRight className="h-4 w-4" />
             </button>
           </div>
-          <Button onClick={openCreate} disabled={wallets.length === 0}>Add transaction</Button>
+          <Button onClick={openCreate} disabled={wallets.length === 0} size="sm">
+            <Plus className="h-4 w-4 sm:hidden" />
+            <span className="hidden sm:inline">Add transaction</span>
+          </Button>
         </div>
       </div>
 
       {primaryWallet && (
-        <div className="flex items-center gap-6 rounded-lg bg-muted/40 border px-4 py-2.5 text-sm text-muted-foreground">
+        <div className="flex flex-col md:flex-row md:flex-wrap md:items-center gap-x-4 gap-y-1 rounded-lg bg-muted/40 border px-4 py-2.5 text-sm text-muted-foreground">
           <div className="flex items-center gap-1.5">
             <span className="text-xs uppercase tracking-wide">
               {primaryWallet.is_primary ? 'Primary' : 'Main'}
@@ -276,15 +282,12 @@ export function TransactionList({ transactions, wallets, categories, groupId, cu
             <span className="text-muted-foreground/60">{primaryWallet.name}</span>
           </div>
           {wallets.length > 1 && (
-            <>
-              <span className="text-muted-foreground/30">·</span>
-              <div className="flex items-center gap-1.5">
-                <span className="text-xs uppercase tracking-wide">All wallets</span>
-                <span className="font-medium tabular-nums text-foreground">
-                  {primarySymbol} {totalBalance.toFixed(2)}
-                </span>
-              </div>
-            </>
+            <div className="flex items-center gap-1.5">
+              <span className="text-xs uppercase tracking-wide">All wallets</span>
+              <span className="font-medium tabular-nums text-foreground">
+                {primarySymbol} {totalBalance.toFixed(2)}
+              </span>
+            </div>
           )}
         </div>
       )}
@@ -295,83 +298,67 @@ export function TransactionList({ transactions, wallets, categories, groupId, cu
           {isCurrentMonth && <p className="text-sm">Add your first income or expense to get started.</p>}
         </div>
       ) : (
-        <div className="overflow-x-auto rounded-lg border">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b bg-muted/50">
-                <th className="px-4 py-2.5 text-left font-medium text-muted-foreground">Category</th>
-                <th className="px-4 py-2.5 text-left font-medium text-muted-foreground">Wallet</th>
-                <th className="px-4 py-2.5 text-left font-medium text-muted-foreground">Note</th>
-                <th className="px-4 py-2.5 text-right font-medium text-muted-foreground">Amount</th>
-                <th className="px-4 py-2.5" />
-              </tr>
-            </thead>
-            <tbody>
-              {groups.map(group => (
-                <React.Fragment key={`date-${group.date}`}>
-                  <tr className="border-b bg-muted/30">
-                    <td colSpan={5} className="px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                      {formatDateHeader(group.date)}
-                    </td>
-                  </tr>
-                  {group.items.map(tx => (
-                    <tr key={tx.id} className="border-b last:border-0 hover:bg-muted/20 transition-colors">
-                      <td className="px-4 py-3">
-                        <span className="flex items-center gap-2">
-                          <span className="text-base" aria-hidden>
-                            {tx.type === 'transfer' ? '↔' : (tx.category?.icon ?? '•')}
-                          </span>
-                          <span className="font-medium">
-                            {tx.type === 'transfer'
-                              ? 'Transfer'
-                              : (tx.category?.name ?? 'Uncategorised')}
-                          </span>
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-muted-foreground">
-                        {tx.type === 'transfer'
-                          ? `${tx.wallet?.name ?? '?'} → ${tx.transfer_to_wallet?.name ?? '?'}`
-                          : (tx.wallet?.name ?? '—')}
-                      </td>
-                      <td className="px-4 py-3 text-muted-foreground italic">
-                        {tx.note ?? ''}
-                      </td>
-                      <td className="px-4 py-3 text-right">
-                        <span className={cn(
-                          'font-medium tabular-nums',
-                          tx.type === 'income' && 'text-green-600 dark:text-green-400',
-                          tx.type === 'expense' && 'text-red-600 dark:text-red-500',
-                          tx.type === 'transfer' && 'text-muted-foreground',
-                        )}>
-                          {formatAmount(tx.amount, tx.wallet?.currency ?? 'EUR', tx.type)}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center justify-end gap-1">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-7 w-7 text-muted-foreground hover:text-foreground"
-                            onClick={() => openEdit(tx)}
-                          >
-                            <Pencil className="h-3.5 w-3.5" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-7 w-7 text-muted-foreground hover:text-destructive"
-                            onClick={() => { setDeleteError(null); setDeletingTx(tx) }}
-                          >
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </Button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </React.Fragment>
+        <div className="rounded-lg border divide-y">
+          {groups.map(group => (
+            <React.Fragment key={`date-${group.date}`}>
+              <div className="px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground bg-muted/30">
+                {formatDateHeader(group.date)}
+              </div>
+              {group.items.map(tx => (
+                <div
+                  key={tx.id}
+                  className="flex items-center gap-3 px-4 py-3 hover:bg-muted/20 transition-colors sm:cursor-default cursor-pointer"
+                  onClick={() => setActiveId(activeId === tx.id ? null : tx.id)}
+                >
+                  <span className="text-xl shrink-0 w-7 text-center" aria-hidden>
+                    {tx.type === 'transfer' ? '↔' : (tx.category?.icon ?? '•')}
+                  </span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium leading-tight truncate">
+                      {tx.type === 'transfer'
+                        ? 'Transfer'
+                        : (tx.category?.name ?? 'Uncategorised')}
+                    </p>
+                    <p className="text-xs text-muted-foreground truncate">
+                      {tx.type === 'transfer'
+                        ? `${tx.wallet?.name ?? '?'} → ${tx.transfer_to_wallet?.name ?? '?'}`
+                        : tx.wallet?.name ?? '—'}
+                      {tx.note && <span className="italic"> · {tx.note}</span>}
+                    </p>
+                  </div>
+                  <span className={cn(
+                    'text-sm font-medium tabular-nums shrink-0',
+                    tx.type === 'income' && 'text-green-600 dark:text-green-400',
+                    tx.type === 'expense' && 'text-red-600 dark:text-red-500',
+                    tx.type === 'transfer' && 'text-muted-foreground',
+                  )}>
+                    {formatAmount(tx.amount, tx.wallet?.currency ?? 'EUR', tx.type)}
+                  </span>
+                  <div className={cn(
+                    'items-center gap-0.5 shrink-0',
+                    activeId === tx.id ? 'flex' : 'hidden sm:flex',
+                  )}>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                      onClick={(e) => { e.stopPropagation(); openEdit(tx) }}
+                    >
+                      <Pencil className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                      onClick={(e) => { e.stopPropagation(); setDeleteError(null); setDeletingTx(tx) }}
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                </div>
               ))}
-            </tbody>
-          </table>
+            </React.Fragment>
+          ))}
         </div>
       )}
 
