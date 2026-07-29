@@ -69,7 +69,7 @@ export default async function DashboardPage() {
   const net = income - expenses
 
   return (
-    <main className="max-w-lg mx-auto p-8 space-y-6">
+    <main className="max-w-lg mx-auto p-4 sm:p-8 space-y-4 sm:space-y-6">
       <p className="text-muted-foreground">
         Welcome, <span className="text-foreground font-medium">{profile.display_name ?? user.email}</span>
       </p>

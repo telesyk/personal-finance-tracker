@@ -4,6 +4,7 @@ import "./globals.css";
 import { cn } from "@/lib/utils";
 import { Header } from "@/components/header";
 import { BottomNav } from "@/components/bottom-nav";
+import { ThemeProvider } from "@/components/theme-provider";
 
 const poppins = Poppins({ subsets: ['latin'], weight: ['400', '500', '600', '700'], variable: '--font-heading' });
 
@@ -44,9 +45,11 @@ export default function RootLayout({
       className={cn("h-full antialiased font-sans", montserrat.variable, poppins.variable, geistMono.variable)}
     >
       <body className="min-h-full flex flex-col pb-16 md:pb-0">
-        <Header />
-        {children}
-        <BottomNav />
+        <ThemeProvider>
+          <Header />
+          {children}
+          <BottomNav />
+        </ThemeProvider>
       </body>
     </html>
   );

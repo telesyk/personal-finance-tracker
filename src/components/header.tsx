@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { SignOutButton } from './sign-out-button'
+import { ThemeToggle } from './theme-toggle'
 
 export async function Header() {
   const supabase = await createClient()
@@ -20,7 +21,10 @@ export async function Header() {
           <Link href="/analytics" className="hover:text-foreground transition-colors">Analytics</Link>
         </nav>
       </div>
-      <SignOutButton />
+      <div className="flex items-center gap-1">
+        <ThemeToggle />
+        <SignOutButton />
+      </div>
     </header>
   )
 }

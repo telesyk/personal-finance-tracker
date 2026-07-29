@@ -78,7 +78,7 @@ export function AnalyticsDashboard({ month, transactions, wallets }: Props) {
     .sort((a, b) => b.total - a.total)
 
   return (
-    <main className="max-w-3xl mx-auto p-8 space-y-8">
+    <main className="max-w-3xl mx-auto p-4 sm:p-8 space-y-6 sm:space-y-8">
 
       {/* Header + month nav */}
       <div className="flex items-center justify-between">
@@ -148,7 +148,7 @@ export function AnalyticsDashboard({ month, transactions, wallets }: Props) {
                 <YAxis
                   type="category"
                   dataKey="name"
-                  width={140}
+                  width={110}
                   tick={{ fontSize: 12 }}
                   tickFormatter={(name, i) => {
                     const icon = categoryData[i]?.icon

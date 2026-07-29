@@ -341,7 +341,7 @@ export function TransactionList({ transactions, wallets, categories, groupId, cu
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                      className="h-9 w-9 text-muted-foreground hover:text-foreground"
                       onClick={(e) => { e.stopPropagation(); openEdit(tx) }}
                     >
                       <Pencil className="h-3.5 w-3.5" />
@@ -349,7 +349,7 @@ export function TransactionList({ transactions, wallets, categories, groupId, cu
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                      className="h-9 w-9 text-muted-foreground hover:text-destructive"
                       onClick={(e) => { e.stopPropagation(); setDeleteError(null); setDeletingTx(tx) }}
                     >
                       <Trash2 className="h-3.5 w-3.5" />

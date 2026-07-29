@@ -161,7 +161,7 @@ export function WalletList({ wallets, bankPresets, members, currentUserId, group
   const isEdit = editingWallet !== null
 
   return (
-    <main className="max-w-2xl mx-auto p-8 space-y-6">
+    <main className="max-w-2xl mx-auto p-4 sm:p-8 space-y-4 sm:space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="font-heading text-2xl font-semibold">Wallets</h1>
         <Button onClick={openCreate}>New wallet</Button>
@@ -192,7 +192,7 @@ export function WalletList({ wallets, bankPresets, members, currentUserId, group
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-7 w-7 text-muted-foreground hover:text-foreground"
+                        className="h-9 w-9 text-muted-foreground hover:text-foreground"
                         onClick={() => openEdit(wallet)}
                       >
                         <Pencil className="h-3.5 w-3.5" />
@@ -200,7 +200,7 @@ export function WalletList({ wallets, bankPresets, members, currentUserId, group
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                        className="h-9 w-9 text-muted-foreground hover:text-destructive"
                         onClick={() => { setDeleteError(null); setDeletingWallet(wallet) }}
                       >
                         <Trash2 className="h-3.5 w-3.5" />
