@@ -42,6 +42,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
+      suppressHydrationWarning
       className={cn("h-full antialiased font-sans", montserrat.variable, poppins.variable, geistMono.variable)}
     >
       <body className="min-h-full flex flex-col pb-16 md:pb-0">
