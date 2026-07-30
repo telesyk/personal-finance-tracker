@@ -237,7 +237,7 @@ export function TransactionList({ transactions, wallets, categories, groupId, cu
   const primaryBalance = primaryWallet ? parseFloat(String(primaryWallet.balance)).toFixed(2) : null
 
   return (
-    <main className="max-w-4xl mx-auto p-4 sm:p-8 space-y-4 sm:space-y-6">
+    <main className="w-full sm:max-w-4xl sm:mx-auto p-4 sm:p-8 space-y-4 sm:space-y-6">
       <div className="flex flex-col md:flex-row md:items-center  md:justify-between gap-2">
         <h1 className="font-heading text-2xl font-semibold">Transactions</h1>
         <div className="flex items-center gap-2">
@@ -429,13 +429,11 @@ export function TransactionList({ transactions, wallets, categories, groupId, cu
               <Label htmlFor="tx-amount">Amount</Label>
               <Input
                 id="tx-amount"
-                type="number"
+                type="text"
                 inputMode="decimal"
-                min="0.01"
-                step="0.01"
                 placeholder="0.00"
                 value={amount}
-                onChange={e => setAmount(e.target.value)}
+                onChange={e => setAmount(e.target.value.replace(',', '.'))}
                 required
                 autoFocus
               />

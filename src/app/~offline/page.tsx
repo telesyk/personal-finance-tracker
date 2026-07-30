@@ -2,7 +2,7 @@ import Link from 'next/link'
 
 export default function OfflinePage() {
   return (
-    <main className="max-w-lg mx-auto p-8 flex flex-col items-center justify-center min-h-[60vh] text-center space-y-4">
+    <main className="w-full sm:max-w-lg sm:mx-auto p-8 flex flex-col items-center justify-center min-h-[60vh] text-center space-y-4">
       <p className="text-4xl" aria-hidden>📡</p>
       <h1 className="font-heading text-xl font-semibold">You&apos;re offline</h1>
       <p className="text-sm text-muted-foreground">

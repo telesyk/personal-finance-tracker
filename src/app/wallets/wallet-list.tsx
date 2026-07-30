@@ -160,7 +160,7 @@ export function WalletList({ wallets, bankPresets, members, currentUserId, group
   const isEdit = editingWallet !== null
 
   return (
-    <main className="max-w-2xl mx-auto p-4 sm:p-8 space-y-4 sm:space-y-6">
+    <main className="w-full sm:max-w-2xl sm:mx-auto p-4 sm:p-8 space-y-4 sm:space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="font-heading text-2xl font-semibold">Wallets</h1>
         <Button onClick={openCreate}>New wallet</Button>

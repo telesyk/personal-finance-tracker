@@ -78,7 +78,7 @@ export function AnalyticsDashboard({ month, transactions, wallets }: Props) {
     .sort((a, b) => b.total - a.total)
 
   return (
-    <main className="max-w-3xl mx-auto p-4 sm:p-8 space-y-6 sm:space-y-8">
+    <main className="w-full sm:max-w-3xl sm:mx-auto p-4 sm:p-8 space-y-6 sm:space-y-8">
 
       {/* Header + month nav */}
       <div className="flex items-center justify-between">
@@ -91,7 +91,7 @@ export function AnalyticsDashboard({ month, transactions, wallets }: Props) {
           >
             <ChevronLeft className="h-4 w-4" />
           </button>
-          <span className="text-sm font-medium w-36 text-center">{monthLabel(month)}</span>
+          <span className="text-sm font-medium min-w-0 text-center">{monthLabel(month)}</span>
           <button
             onClick={() => router.push(`/analytics?month=${nextMonth(month)}`)}
             disabled={isCurrentMonth}
@@ -107,23 +107,23 @@ export function AnalyticsDashboard({ month, transactions, wallets }: Props) {
       </div>
 
       {/* KPI cards */}
-      <div className="grid grid-cols-3 gap-4">
-        <div className="rounded-lg border p-4 space-y-1">
+      <div className="grid grid-cols-3 gap-3">
+        <div className="rounded-lg border p-3 sm:p-4 space-y-1">
           <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Income</p>
-          <p className="font-heading text-xl font-semibold tabular-nums text-green-600 dark:text-green-400">
+          <p className="font-heading text-base sm:text-xl font-semibold tabular-nums text-green-600 dark:text-green-400">
             {symbol} {income.toFixed(2)}
           </p>
         </div>
-        <div className="rounded-lg border p-4 space-y-1">
+        <div className="rounded-lg border p-3 sm:p-4 space-y-1">
           <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Expenses</p>
-          <p className="font-heading text-xl font-semibold tabular-nums text-red-600 dark:text-red-500">
+          <p className="font-heading text-base sm:text-xl font-semibold tabular-nums text-red-600 dark:text-red-500">
             {symbol} {expenses.toFixed(2)}
           </p>
         </div>
-        <div className="rounded-lg border p-4 space-y-1">
+        <div className="rounded-lg border p-3 sm:p-4 space-y-1">
           <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Net</p>
           <p className={cn(
-            'font-heading text-xl font-semibold tabular-nums',
+            'font-heading text-base sm:text-xl font-semibold tabular-nums',
             net >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-500',
           )}>
             {net >= 0 ? '+' : '−'}{symbol} {Math.abs(net).toFixed(2)}
