@@ -9,7 +9,6 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import { cn } from '@/lib/utils'
 import React from 'react'
@@ -364,14 +363,7 @@ export function TransactionList({ transactions, wallets, categories, groupId, cu
 
       {/* Create / Edit dialog */}
       <Dialog open={dialogOpen} onOpenChange={handleDialogOpenChange}>
-        <DialogContent
-          className="sm:max-w-md"
-          onPointerDownOutside={(e) => {
-            if (document.querySelector('[data-radix-select-content]')) {
-              e.preventDefault()
-            }
-          }}
-        >
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="font-heading">
               {isEdit ? 'Edit transaction' : 'Add transaction'}
@@ -401,32 +393,35 @@ export function TransactionList({ transactions, wallets, categories, groupId, cu
             </div>
 
             <div className="space-y-2">
-              <Label>{type === 'transfer' ? 'From wallet' : 'Wallet'}</Label>
-              <Select value={walletId} onValueChange={setWalletId} required>
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select wallet" />
-                </SelectTrigger>
-                <SelectContent>
-                  {wallets.map(w => (
-                    <SelectItem key={w.id} value={w.id}>{w.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Label htmlFor="tx-wallet">{type === 'transfer' ? 'From wallet' : 'Wallet'}</Label>
+              <select
+                id="tx-wallet"
+                value={walletId}
+                onChange={e => setWalletId(e.target.value)}
+                required
+                className="h-10 w-full border border-transparent border-b-input bg-transparent py-1 text-base text-foreground outline-none focus:border-b-ring md:text-sm disabled:opacity-50"
+              >
+                {wallets.map(w => (
+                  <option key={w.id} value={w.id}>{w.name}</option>
+                ))}
+              </select>
             </div>
 
             {type === 'transfer' && (
               <div className="space-y-2">
-                <Label>To wallet</Label>
-                <Select value={toWalletId} onValueChange={setToWalletId} required>
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select destination" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {toWalletOptions.map(w => (
-                      <SelectItem key={w.id} value={w.id}>{w.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Label htmlFor="tx-to-wallet">To wallet</Label>
+                <select
+                  id="tx-to-wallet"
+                  value={toWalletId}
+                  onChange={e => setToWalletId(e.target.value)}
+                  required
+                  className="h-10 w-full border border-transparent border-b-input bg-transparent py-1 text-base text-foreground outline-none focus:border-b-ring md:text-sm disabled:opacity-50"
+                >
+                  <option value="">Select destination</option>
+                  {toWalletOptions.map(w => (
+                    <option key={w.id} value={w.id}>{w.name}</option>
+                  ))}
+                </select>
               </div>
             )}
 
@@ -448,20 +443,20 @@ export function TransactionList({ transactions, wallets, categories, groupId, cu
 
             {type !== 'transfer' && (
               <div className="space-y-2">
-                <Label>Category</Label>
-                <Select value={categoryId} onValueChange={setCategoryId}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select category" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">— None —</SelectItem>
-                    {filteredCategories.map(c => (
-                      <SelectItem key={c.id} value={c.id}>
-                        {c.icon ? `${c.icon} ${c.name}` : c.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Label htmlFor="tx-category">Category</Label>
+                <select
+                  id="tx-category"
+                  value={categoryId}
+                  onChange={e => setCategoryId(e.target.value)}
+                  className="h-10 w-full border border-transparent border-b-input bg-transparent py-1 text-base text-foreground outline-none focus:border-b-ring md:text-sm disabled:opacity-50"
+                >
+                  <option value="none">— None —</option>
+                  {filteredCategories.map(c => (
+                    <option key={c.id} value={c.id}>
+                      {c.icon ? `${c.icon} ${c.name}` : c.name}
+                    </option>
+                  ))}
+                </select>
               </div>
             )}
 

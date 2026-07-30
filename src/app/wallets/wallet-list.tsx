@@ -10,7 +10,6 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 
 const CURRENCIES = ['EUR', 'USD', 'GBP', 'UAH']
 
@@ -246,47 +245,47 @@ export function WalletList({ wallets, bankPresets, members, currentUserId, group
             </div>
 
             <div className="space-y-2">
-              <Label>Bank preset</Label>
-              <Select value={presetId} onValueChange={setPresetId}>
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="None / Custom" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">None / Custom</SelectItem>
-                  {bankPresets.map(p => (
-                    <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Label htmlFor="wallet-preset">Bank preset</Label>
+              <select
+                id="wallet-preset"
+                value={presetId}
+                onChange={e => setPresetId(e.target.value)}
+                className="h-10 w-full border border-transparent border-b-input bg-transparent py-1 text-base text-foreground outline-none focus:border-b-ring md:text-sm disabled:opacity-50"
+              >
+                <option value="none">None / Custom</option>
+                {bankPresets.map(p => (
+                  <option key={p.id} value={p.id}>{p.name}</option>
+                ))}
+              </select>
             </div>
 
             <div className="space-y-2">
-              <Label>Currency</Label>
-              <Select value={currency} onValueChange={setCurrency}>
-                <SelectTrigger className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {CURRENCIES.map(c => (
-                    <SelectItem key={c} value={c}>{c}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Label htmlFor="wallet-currency">Currency</Label>
+              <select
+                id="wallet-currency"
+                value={currency}
+                onChange={e => setCurrency(e.target.value)}
+                className="h-10 w-full border border-transparent border-b-input bg-transparent py-1 text-base text-foreground outline-none focus:border-b-ring md:text-sm disabled:opacity-50"
+              >
+                {CURRENCIES.map(c => (
+                  <option key={c} value={c}>{c}</option>
+                ))}
+              </select>
             </div>
 
             {members.length > 1 && (
               <div className="space-y-2">
-                <Label>Owner</Label>
-                <Select value={ownerId} onValueChange={setOwnerId}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {members.map(m => (
-                      <SelectItem key={m.id} value={m.id}>{m.display_name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Label htmlFor="wallet-owner">Owner</Label>
+                <select
+                  id="wallet-owner"
+                  value={ownerId}
+                  onChange={e => setOwnerId(e.target.value)}
+                  className="h-10 w-full border border-transparent border-b-input bg-transparent py-1 text-base text-foreground outline-none focus:border-b-ring md:text-sm disabled:opacity-50"
+                >
+                  {members.map(m => (
+                    <option key={m.id} value={m.id}>{m.display_name}</option>
+                  ))}
+                </select>
               </div>
             )}
 
