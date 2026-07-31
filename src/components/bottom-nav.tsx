@@ -2,14 +2,15 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { LayoutDashboard, Wallet, ArrowLeftRight, BarChart2 } from 'lucide-react'
+import { LayoutDashboard, Wallet, ArrowLeftRight, BarChart2, Settings2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const NAV_ITEMS = [
   { href: '/dashboard',    label: 'Dashboard',    icon: LayoutDashboard },
-  { href: '/wallets',      label: 'Wallets',       icon: Wallet },
-  { href: '/transactions', label: 'Transactions',  icon: ArrowLeftRight },
-  { href: '/analytics',   label: 'Analytics',     icon: BarChart2 },
+  { href: '/wallets',      label: 'Wallets',      icon: Wallet },
+  { href: '/transactions', label: 'Transactions', icon: ArrowLeftRight },
+  { href: '/analytics',   label: 'Analytics',    icon: BarChart2 },
+  { href: '/settings',    label: 'Settings',     icon: Settings2 },
 ]
 
 export function BottomNav() {
