@@ -10,6 +10,66 @@ Versioning: PATCH only (`0.0.x`) until a release is explicitly approved.
 
 ---
 
+## [0.3.0] — 2026-07-31
+
+### Added
+- PWA manifest (`/manifest.webmanifest`), SVG app icon, 180×180 PNG Apple touch icon via ImageResponse
+- Apple web app meta tags and `theme-color` for installability
+- Service worker with offline fallback page (`/~offline`) via `@ducanh2912/next-pwa`
+- Dark mode toggle in header (sun/moon icon, `next-themes`); `ThemeProvider` wired in root layout
+- Bottom navigation bar (mobile only): Dashboard, Wallets, Transactions, Analytics, Settings
+- `/settings` page — read-only group name and member list; "You" badge on current user's row
+- Settings link in desktop header nav and mobile bottom nav
+- `loading.tsx` skeleton screens for dashboard, wallets, transactions, analytics, settings
+- `error.tsx` error boundaries with retry button for dashboard, wallets, transactions, analytics, settings
+- Shared `<ErrorPage>` component reused across all error boundaries
+
+### Changed
+- Transaction list replaced table with flex rows on mobile; edit/delete actions hidden by default, revealed on tap
+- All form `<Select>` components replaced with native `<select>` elements — eliminates Radix scroll-lock on mobile iOS/Android
+- Amount input: `type="text"` + `inputMode="decimal"` with comma→period normalization for mobile decimal keyboard
+- All pages use fluid widths (`w-full sm:max-w-* sm:mx-auto`) — full width on mobile, centered with max-width on `sm+`
+- Analytics KPI cards: `text-base sm:text-xl` and reduced padding on mobile to prevent overflow on narrow screens
+- Desktop nav links hidden on mobile; header retains app name, theme toggle, and sign-out button only
+
+### Fixed
+- `next-themes` hydration mismatch on `<html>` — added `suppressHydrationWarning`
+- Service worker build incompatibility with Next.js 16 Turbopack default — `dev` uses `--turbopack`, `build` uses `--webpack`
+
+---
+
+## [0.2.0] — 2026-07-26
+
+### Added
+- `/analytics` page — monthly KPI summary cards (income / expenses / net), horizontal bar chart of expenses by category, wallet balance list
+- Month navigation via URL search param (`?month=YYYY-MM`) — server-rendered and shareable; next-month button disabled on current month
+- Month filter on `/transactions` page — same URL param pattern; empty state adapts message for past months
+- Recharts v3 (`recharts@^3.10.1`) for bar chart rendering
+- Dashboard upgrade: primary wallet card with accent styling, all-wallets total below, monthly KPI strip, last 3 transactions, navigation links to all sections
+
+### Changed
+- Dashboard replaced placeholder screen with live monthly snapshot
+
+---
+
+## [0.1.0] — 2026-07-23
+
+### Added
+- `/transactions` page — transactions grouped by date with "Today" / "Yesterday" / formatted date headers
+- Add, edit, and delete transactions via dialog form (type, wallet, amount, category, date, note, to-wallet for transfers)
+- Category list filtered by transaction type — income categories shown for income, expense for expense; hidden for transfers
+- Transfer rows display both wallet names (e.g. "Cash → Monobank")
+- `textarea` shadcn/ui component (note field)
+- `type` column on `categories` table; 6 income categories seeded (Salary, Freelance & Business, Investments, Rental Income, Social Benefits, Other Income)
+- `is_primary` flag on `wallets`; "Set as primary" checkbox in create/edit dialog; Primary badge in wallet list
+- Wallet summary bar at top of `/transactions` — primary wallet name + balance, total across all wallets
+- Transactions link in header nav and dashboard
+
+### Fixed
+- Transaction dialog closing when Radix Select dropdown opened — added `onPointerDownOutside` guard on `<DialogContent>`
+
+---
+
 ## [0.0.1] — 2026-07-09
 
 ### Added
