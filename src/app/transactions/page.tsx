@@ -1,34 +1,17 @@
-import { redirect } from 'next/navigation'
-import { createClient } from '@/lib/supabase/server'
+import { requireProfile } from '@/lib/auth'
+import { currentMonthStr, monthDateRange } from '@/lib/date'
 import { TransactionList, type Transaction } from './transaction-list'
-
-function currentMonthStr() {
-  const d = new Date()
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
-}
 
 export default async function TransactionsPage({
   searchParams,
 }: {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>
 }) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/sign-in')
-
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('group_id')
-    .eq('id', user.id)
-    .single()
-  if (!profile?.group_id) redirect('/onboarding')
+  const { supabase, user, profile } = await requireProfile()
 
   const params = await searchParams
   const month = typeof params.month === 'string' ? params.month : currentMonthStr()
-
-  const [year, mon] = month.split('-').map(Number)
-  const dateFrom = `${month}-01`
-  const dateTo = new Date(year, mon, 0).toLocaleDateString('en-CA')
+  const { from: dateFrom, to: dateTo } = monthDateRange(month)
 
   const [{ data: transactions }, { data: wallets }, { data: categories }] = await Promise.all([
     supabase
@@ -51,7 +34,6 @@ export default async function TransactionsPage({
     supabase
       .from('categories')
       .select('id, name, icon, type')
-      .or(`group_id.is.null,group_id.eq.${profile.group_id}`)
       .order('name'),
   ])
 
@@ -60,7 +42,7 @@ export default async function TransactionsPage({
       transactions={(transactions ?? []) as unknown as Transaction[]}
       wallets={wallets ?? []}
       categories={categories ?? []}
-      groupId={profile.group_id}
+      groupId={profile?.group_id ?? null}
       currentUserId={user.id}
       month={month}
     />

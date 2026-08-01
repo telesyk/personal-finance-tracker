@@ -1,34 +1,18 @@
-import { redirect } from 'next/navigation'
-import { createClient } from '@/lib/supabase/server'
+import { requireUser } from '@/lib/auth'
+import { currentMonthStr, monthDateRange } from '@/lib/date'
 import { AnalyticsDashboard } from './analytics-dashboard'
-
-function currentMonthStr() {
-  const d = new Date()
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
-}
 
 export default async function AnalyticsPage({
   searchParams,
 }: {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>
 }) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/sign-in')
-
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('group_id')
-    .eq('id', user.id)
-    .single()
-  if (!profile?.group_id) redirect('/onboarding')
+  const { supabase } = await requireUser()
 
   const params = await searchParams
   const month = typeof params.month === 'string' ? params.month : currentMonthStr()
 
-  const [year, mon] = month.split('-').map(Number)
-  const dateFrom = `${month}-01`
-  const dateTo = new Date(year, mon, 0).toLocaleDateString('en-CA') // last day of month
+  const { from: dateFrom, to: dateTo } = monthDateRange(month)
 
   const [{ data: transactions }, { data: wallets }] = await Promise.all([
     supabase

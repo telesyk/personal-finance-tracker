@@ -24,12 +24,20 @@ export function GroupActions({ isSoleMember }: { isSoleMember: boolean }) {
     const supabase = createClient()
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
+
+    // Unshare all owned wallets before leaving so they stay private
+    const { error: unshareError } = await supabase
+      .from('wallets')
+      .update({ group_id: null })
+      .eq('owner_id', user.id)
+    if (unshareError) { setLeaveError(unshareError.message); return }
+
     const { error } = await supabase
       .from('profiles')
       .update({ group_id: null })
       .eq('id', user.id)
     if (error) { setLeaveError(error.message); return }
-    window.location.href = '/onboarding'
+    window.location.href = '/dashboard'
   }
 
   async function handleDelete() {
@@ -37,7 +45,7 @@ export function GroupActions({ isSoleMember }: { isSoleMember: boolean }) {
     const supabase = createClient()
     const { error } = await supabase.rpc('delete_my_group')
     if (error) { setDeleteError(error.message); return }
-    window.location.href = '/onboarding'
+    window.location.href = '/dashboard'
   }
 
   return (
@@ -46,7 +54,7 @@ export function GroupActions({ isSoleMember }: { isSoleMember: boolean }) {
       {!isSoleMember && <div className="flex items-center justify-between">
         <div>
           <p className="text-sm font-medium">Leave group</p>
-          <p className="text-xs text-muted-foreground">You will lose access to all group data.</p>
+          <p className="text-xs text-muted-foreground">Your wallets stay with you; shared access is removed.</p>
         </div>
         <AlertDialog>
           <AlertDialogTrigger asChild>
@@ -56,7 +64,7 @@ export function GroupActions({ isSoleMember }: { isSoleMember: boolean }) {
             <AlertDialogHeader>
               <AlertDialogTitle>Leave this group?</AlertDialogTitle>
               <AlertDialogDescription>
-                You will be removed from the group and lose access to all wallets and transactions. This cannot be undone.
+                Your wallets will be unshared and become private again. You will lose access to wallets shared by other group members. This cannot be undone.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>

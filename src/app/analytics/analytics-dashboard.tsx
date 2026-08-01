@@ -5,9 +5,9 @@ import { useRouter } from 'next/navigation'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts'
 import { cn } from '@/lib/utils'
+import { currencySymbol } from '@/lib/currency'
+import { currentMonthStr } from '@/lib/date'
 import type { AnalyticsTransaction } from './page'
-
-const CURRENCY_SYMBOL: Record<string, string> = { EUR: '€', USD: '$', GBP: '£', UAH: '₴' }
 
 interface Wallet {
   id: string
@@ -44,14 +44,9 @@ function nextMonth(month: string) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
 }
 
-function currentMonthStr() {
-  const d = new Date()
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
-}
-
 export function AnalyticsDashboard({ month, transactions, wallets }: Props) {
   const router = useRouter()
-  const symbol = wallets[0] ? (CURRENCY_SYMBOL[wallets[0].currency] ?? wallets[0].currency) : '€'
+  const symbol = wallets[0] ? currencySymbol(wallets[0].currency) : '€'
   const isCurrentMonth = month === currentMonthStr()
 
   const income = transactions
@@ -178,7 +173,7 @@ export function AnalyticsDashboard({ month, transactions, wallets }: Props) {
         ) : (
           <div className="rounded-lg border divide-y">
             {wallets.map(w => {
-              const s = CURRENCY_SYMBOL[w.currency] ?? w.currency
+              const s = currencySymbol(w.currency)
               return (
                 <div key={w.id} className="flex items-center justify-between px-4 py-3 text-sm">
                   <div className="flex items-center gap-2">

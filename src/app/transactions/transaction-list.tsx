@@ -11,11 +11,9 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { cn } from '@/lib/utils'
+import { currencySymbol } from '@/lib/currency'
+import { currentMonthStr } from '@/lib/date'
 import React from 'react'
-
-const CURRENCY_SYMBOL: Record<string, string> = {
-  EUR: '€', USD: '$', GBP: '£', UAH: '₴',
-}
 
 export interface Transaction {
   id: string
@@ -38,7 +36,7 @@ interface Props {
   transactions: Transaction[]
   wallets: Wallet[]
   categories: Category[]
-  groupId: string
+  groupId: string | null
   currentUserId: string
   month: string
 }
@@ -51,7 +49,7 @@ function todayLocal() {
 
 function formatAmount(amount: string | number, currency: string, type: TxType) {
   const n = typeof amount === 'string' ? parseFloat(amount) : amount
-  const symbol = CURRENCY_SYMBOL[currency] ?? currency
+  const symbol = currencySymbol(currency)
   const formatted = `${symbol} ${n.toFixed(2)}`
   if (type === 'income') return `+${formatted}`
   if (type === 'expense') return `−${formatted}`
@@ -71,10 +69,6 @@ function groupByDate(transactions: Transaction[]) {
   return groups
 }
 
-function currentMonthStr() {
-  const d = new Date()
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
-}
 
 function monthLabel(month: string) {
   const [year, mon] = month.split('-').map(Number)
@@ -195,7 +189,7 @@ export function TransactionList({ transactions, wallets, categories, groupId, cu
 
     const { error } = editingTx
       ? await supabase.from('transactions').update(payload).eq('id', editingTx.id)
-      : await supabase.from('transactions').insert({ ...payload, group_id: groupId, created_by: currentUserId })
+      : await supabase.from('transactions').insert({ ...payload, created_by: currentUserId })
 
     setLoading(false)
 
@@ -233,7 +227,7 @@ export function TransactionList({ transactions, wallets, categories, groupId, cu
 
   const primaryWallet = wallets[0] ?? null
   const totalBalance = wallets.reduce((sum, w) => sum + parseFloat(String(w.balance)), 0)
-  const primarySymbol = primaryWallet ? (CURRENCY_SYMBOL[primaryWallet.currency] ?? primaryWallet.currency) : ''
+  const primarySymbol = primaryWallet ? currencySymbol(primaryWallet.currency) : ''
   const primaryBalance = primaryWallet ? parseFloat(String(primaryWallet.balance)).toFixed(2) : null
 
   return (
