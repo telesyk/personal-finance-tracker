@@ -1,7 +1,6 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import { InviteSection } from './invite-section'
 import { cn } from '@/lib/utils'
 
 const CURRENCY_SYMBOL: Record<string, string> = { EUR: '€', USD: '$', GBP: '£', UAH: '₴' }
@@ -180,7 +179,6 @@ export default async function DashboardPage() {
         <Link href="/analytics" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Analytics</Link>
       </div>
 
-      <InviteSection />
     </main>
   )
 }

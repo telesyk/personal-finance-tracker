@@ -1,5 +1,7 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import { RenameGroupForm } from './rename-group-form'
+import { InviteSection } from './invite-section'
 
 export default async function SettingsPage() {
   const supabase = await createClient()
@@ -16,7 +18,7 @@ export default async function SettingsPage() {
   const [{ data: group }, { data: members }] = await Promise.all([
     supabase
       .from('groups')
-      .select('name')
+      .select('id, name')
       .eq('id', profile.group_id)
       .single(),
     supabase
@@ -32,10 +34,7 @@ export default async function SettingsPage() {
 
       <section className="space-y-2">
         <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Group</p>
-        <div className="rounded-lg border px-4 py-3">
-          <p className="font-medium">{group?.name ?? '—'}</p>
-          <p className="text-xs text-muted-foreground mt-0.5">Household group</p>
-        </div>
+        <RenameGroupForm groupId={group?.id ?? ''} currentName={group?.name ?? ''} />
       </section>
 
       <section className="space-y-2">
@@ -52,6 +51,11 @@ export default async function SettingsPage() {
             </div>
           ))}
         </div>
+      </section>
+
+      <section className="space-y-2">
+        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Invite</p>
+        <InviteSection />
       </section>
     </main>
   )
