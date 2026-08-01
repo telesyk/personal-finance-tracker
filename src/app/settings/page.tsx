@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { RenameGroupForm } from './rename-group-form'
 import { InviteSection } from './invite-section'
+import { GroupActions } from './group-actions'
 
 export default async function SettingsPage() {
   const supabase = await createClient()
@@ -56,6 +57,11 @@ export default async function SettingsPage() {
       <section className="space-y-2">
         <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Invite</p>
         <InviteSection />
+      </section>
+
+      <section className="space-y-2 pt-2 border-t">
+        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Danger zone</p>
+        <GroupActions isSoleMember={(members ?? []).length === 1} />
       </section>
     </main>
   )
