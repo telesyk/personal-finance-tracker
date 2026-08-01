@@ -10,6 +10,16 @@ Versioning: PATCH only (`0.0.x`) until a release is explicitly approved.
 
 ---
 
+## [0.3.1] — 2026-08-01
+
+### Added
+- `/settings` — group rename (inline form), invite link generation, Danger zone section
+- Leave group action — visible to non-sole members; clears `group_id` and redirects to `/onboarding`
+- Delete group action — visible to sole member only; `delete_my_group()` SECURITY DEFINER RPC cascades through transactions, wallets, categories, and the group record
+- Invite link moved from `/dashboard` to `/settings`
+
+---
+
 ## [0.3.0] — 2026-07-31
 
 ### Added
