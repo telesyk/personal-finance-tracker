@@ -33,7 +33,7 @@ export default async function SettingsPage() {
   const [{ data: group }, { data: members }] = await Promise.all([
     supabase
       .from('groups')
-      .select('id, name')
+      .select('id, name, owner_id')
       .eq('id', profile.group_id)
       .single(),
     supabase
@@ -75,7 +75,11 @@ export default async function SettingsPage() {
 
       <section className="space-y-2 pt-2 border-t">
         <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Danger zone</p>
-        <GroupActions isSoleMember={(members ?? []).length === 1} />
+        <GroupActions
+          isSoleMember={(members ?? []).length === 1}
+          isOwner={group?.owner_id === user.id}
+          otherMembers={(members ?? []).filter(m => m.id !== user.id)}
+        />
       </section>
     </main>
   )

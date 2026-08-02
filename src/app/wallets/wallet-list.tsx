@@ -161,17 +161,15 @@ interface Wallet {
 }
 
 interface BankPreset { id: string; name: string; type: string }
-interface Member { id: string; display_name: string }
 
 interface Props {
   wallets: Wallet[]
   bankPresets: BankPreset[]
-  members: Member[]
   currentUserId: string
   groupId: string | null
 }
 
-export function WalletList({ wallets, bankPresets, members, currentUserId, groupId }: Props) {
+export function WalletList({ wallets, bankPresets, currentUserId, groupId }: Props) {
   const router = useRouter()
 
   // form dialog state
@@ -219,7 +217,7 @@ export function WalletList({ wallets, bankPresets, members, currentUserId, group
     if (!v) setFormError(null)
   }
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     setLoading(true)
     setFormError(null)

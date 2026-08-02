@@ -6,7 +6,7 @@ export default async function WalletsPage() {
 
   const groupId = profile?.group_id ?? null
 
-  const [{ data: wallets }, { data: bankPresets }, { data: members }] = await Promise.all([
+  const [{ data: wallets }, { data: bankPresets }] = await Promise.all([
     supabase
       .from('wallets')
       .select('id, name, currency, balance, bank_preset_id, owner_id, group_id, is_primary')
@@ -15,16 +15,12 @@ export default async function WalletsPage() {
       .from('bank_presets')
       .select('id, name, type')
       .order('name'),
-    groupId
-      ? supabase.from('profiles').select('id, display_name').eq('group_id', groupId)
-      : Promise.resolve({ data: [] }),
   ])
 
   return (
     <WalletList
       wallets={wallets ?? []}
       bankPresets={bankPresets ?? []}
-      members={(members ?? []) as { id: string; display_name: string }[]}
       currentUserId={user.id}
       groupId={groupId}
     />
