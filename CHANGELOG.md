@@ -10,6 +10,25 @@ Versioning: PATCH only (`0.0.x`) until a release is explicitly approved.
 
 ---
 
+## [0.3.2] — 2026-08-02
+
+### Added
+- Wallet list split into "My wallets" and "Shared by others" sections
+- Transfer ownership action in Settings — group owner can pass admin rights to another member before leaving
+- Settings page no-group state — shows "Create a group" link instead of redirecting to `/onboarding`
+- Dashboard shows group name below welcome text when user belongs to a group
+
+### Changed
+- Leave group blocked for group owner until ownership is transferred
+- "All wallets" on dashboard is now a link to `/wallets`
+- `/onboarding` is opt-in only — no longer auto-redirected from Settings
+- Dashboard: removed "not in a family group" nudge (now in Settings) and duplicate bottom nav links
+
+### Fixed
+- Removed unused `members` query from wallets page (no longer needed after section split)
+
+---
+
 ## [0.3.1] — 2026-08-01
 
 ### Added
