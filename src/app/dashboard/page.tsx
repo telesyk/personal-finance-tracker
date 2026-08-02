@@ -9,7 +9,9 @@ export default async function DashboardPage() {
 
   const { from, to, label } = currentMonthRange()
 
-  const [{ data: wallets }, { data: transactions }, { data: recentTxs }] = await Promise.all([
+  const groupId = profile?.group_id ?? null
+
+  const [{ data: wallets }, { data: transactions }, { data: recentTxs }, { data: group }] = await Promise.all([
     supabase
       .from('wallets')
       .select('id, name, currency, balance, is_primary')
@@ -30,6 +32,9 @@ export default async function DashboardPage() {
       .order('date', { ascending: false })
       .order('created_at', { ascending: false })
       .limit(3),
+    groupId
+      ? supabase.from('groups').select('name').eq('id', groupId).single()
+      : Promise.resolve({ data: null }),
   ])
 
   const primaryWallet = wallets?.[0] ?? null
@@ -48,19 +53,14 @@ export default async function DashboardPage() {
 
   return (
     <main className="w-full sm:max-w-lg sm:mx-auto p-4 sm:p-8 space-y-4 sm:space-y-6">
-      <p className="text-muted-foreground">
-        Welcome, <span className="text-foreground font-medium">{profile?.display_name ?? user.email}</span>
-      </p>
-
-      {!profile?.group_id && (
-        <div className="rounded-lg border border-dashed p-4 text-sm text-muted-foreground">
-          You are not in a family group yet.{' '}
-          <Link href="/settings" className="text-foreground underline underline-offset-4">
-            Create or join one in Settings
-          </Link>{' '}
-          to share wallets and expenses with your family.
-        </div>
-      )}
+      <div>
+        <p className="text-muted-foreground">
+          Welcome, <span className="text-foreground font-medium">{profile?.display_name ?? user.email}</span>
+        </p>
+        {group?.name && (
+          <p className="text-xs text-muted-foreground">{group.name}</p>
+        )}
+      </div>
 
       {/* Primary wallet + all wallets total */}
       {primaryWallet && (
@@ -76,7 +76,7 @@ export default async function DashboardPage() {
           </div>
           {(wallets ?? []).length > 1 && (
             <div className="border-t pt-3 flex items-baseline justify-between">
-              <p className="text-xs text-muted-foreground">All wallets</p>
+              <Link href="/wallets" className="text-xs text-muted-foreground hover:text-foreground transition-colors">All wallets</Link>
               <p className="text-sm font-medium tabular-nums text-muted-foreground">
                 {symbol} {totalBalance.toFixed(2)}
               </p>
@@ -158,15 +158,6 @@ export default async function DashboardPage() {
           </div>
         </div>
       )}
-
-      {/* Nav links */}
-      <div className="flex gap-3 flex-wrap pt-2">
-        <Link href="/wallets" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Wallets</Link>
-        <span className="text-muted-foreground/30">·</span>
-        <Link href="/transactions" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Transactions</Link>
-        <span className="text-muted-foreground/30">·</span>
-        <Link href="/analytics" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Analytics</Link>
-      </div>
 
     </main>
   )
