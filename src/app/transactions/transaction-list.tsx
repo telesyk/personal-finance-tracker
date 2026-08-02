@@ -12,7 +12,8 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { cn } from '@/lib/utils'
 import { currencySymbol } from '@/lib/currency'
-import { currentMonthStr } from '@/lib/date'
+import { currentMonthStr, monthLabel, prevMonth, nextMonth } from '@/lib/date'
+import { TabSwitcher } from '@/components/tab-switcher'
 import React from 'react'
 
 export interface Transaction {
@@ -70,22 +71,6 @@ function groupByDate(transactions: Transaction[]) {
 }
 
 
-function monthLabel(month: string) {
-  const [year, mon] = month.split('-').map(Number)
-  return new Date(year, mon - 1, 1).toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })
-}
-
-function prevMonth(month: string) {
-  const [year, mon] = month.split('-').map(Number)
-  const d = new Date(year, mon - 2, 1)
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
-}
-
-function nextMonth(month: string) {
-  const [year, mon] = month.split('-').map(Number)
-  const d = new Date(year, mon, 1)
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
-}
 
 function formatDateHeader(dateStr: string) {
   const todayStr = new Date().toLocaleDateString('en-CA')
@@ -293,23 +278,11 @@ export function TransactionList({ transactions, wallets, categories, groupId, cu
       )}
 
       {groupId && (
-        <div className="flex gap-1 border-b">
-          {(['personal', 'group'] as const).map(tab => (
-            <button
-              key={tab}
-              type="button"
-              onClick={() => setActiveTab(tab)}
-              className={cn(
-                'px-3 py-2 text-sm font-medium capitalize transition-colors border-b-2 -mb-px',
-                activeTab === tab
-                  ? 'border-foreground text-foreground'
-                  : 'border-transparent text-muted-foreground hover:text-foreground',
-              )}
-            >
-              {tab === 'personal' ? 'Personal' : 'Group'}
-            </button>
-          ))}
-        </div>
+        <TabSwitcher
+          tabs={[{ value: 'personal', label: 'Personal' }, { value: 'group', label: 'Group' }]}
+          active={activeTab}
+          onChange={v => setActiveTab(v as 'personal' | 'group')}
+        />
       )}
 
       {visibleTransactions.length === 0 ? (

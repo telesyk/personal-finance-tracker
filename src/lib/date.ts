@@ -21,3 +21,20 @@ export function monthDateRange(month: string): { from: string; to: string } {
     to: new Date(year, mon, 0).toLocaleDateString('en-CA'),
   }
 }
+
+export function monthLabel(month: string): string {
+  const [year, mon] = month.split('-').map(Number)
+  return new Date(year, mon - 1, 1).toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })
+}
+
+export function prevMonth(month: string): string {
+  const [year, mon] = month.split('-').map(Number)
+  const d = new Date(year, mon - 2, 1)
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+}
+
+export function nextMonth(month: string): string {
+  const [year, mon] = month.split('-').map(Number)
+  const d = new Date(year, mon, 1)
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+}

@@ -4,8 +4,8 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Pencil, Trash2 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
-import { currencySymbol } from '@/lib/currency'
-import { cn } from '@/lib/utils'
+import { currencySymbol, formatAmount, parseAmount } from '@/lib/currency'
+import { TabSwitcher } from '@/components/tab-switcher'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
@@ -14,11 +14,6 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 
 const CURRENCIES = ['EUR', 'USD', 'GBP', 'UAH']
-
-function formatBalance(balance: string | number, currency: string) {
-  const amount = typeof balance === 'string' ? parseFloat(balance) : balance
-  return `${currencySymbol(currency)} ${amount.toFixed(2)}`
-}
 
 function WalletCard({
   wallet,
@@ -83,7 +78,7 @@ function WalletCard({
             {wallet.currency}
           </span>
           <span className="font-medium tabular-nums">
-            {formatBalance(wallet.balance, wallet.currency)}
+            {formatAmount(wallet.balance, wallet.currency)}
           </span>
         </div>
       </CardContent>
@@ -241,38 +236,67 @@ export function WalletList({ wallets, bankPresets, currentUserId, groupId }: Pro
           <p>No wallets yet.</p>
           <Button variant="outline" onClick={openCreate}>Add your first wallet</Button>
         </div>
-      ) : (
-        <div className="space-y-4">
-          {groupId && (
-            <div className="flex gap-1 border-b">
-              {(['personal', 'group'] as const).map(tab => (
-                <button
-                  key={tab}
-                  type="button"
-                  onClick={() => setActiveTab(tab)}
-                  className={cn(
-                    'px-3 py-2 text-sm font-medium capitalize transition-colors border-b-2 -mb-px',
-                    activeTab === tab
-                      ? 'border-foreground text-foreground'
-                      : 'border-transparent text-muted-foreground hover:text-foreground',
-                  )}
-                >
-                  {tab === 'personal' ? 'Personal' : 'Group'}
-                </button>
-              ))}
-            </div>
-          )}
-          {(() => {
-            const visible = !groupId || activeTab === 'personal'
-              ? wallets.filter(w => w.owner_id === currentUserId)
-              : wallets.filter(w => w.owner_id !== currentUserId)
-            return visible.length === 0 ? (
+      ) : (() => {
+        const personalWallets = wallets.filter(w => w.owner_id === currentUserId)
+        const groupWallets = wallets.filter(w => w.group_id !== null)
+        const visibleWallets = !groupId || activeTab === 'personal' ? personalWallets : groupWallets
+        const primaryWallet = personalWallets.find(w => w.is_primary) ?? personalWallets[0] ?? null
+        const primarySymbol = primaryWallet ? currencySymbol(primaryWallet.currency) : ''
+        const personalTotal = personalWallets.reduce((s, w) => s + parseAmount(w.balance), 0)
+        const groupTotal = groupWallets.reduce((s, w) => s + parseAmount(w.balance), 0)
+
+        return (
+          <div className="space-y-4">
+            {groupId && (
+              <TabSwitcher
+                tabs={[{ value: 'personal', label: 'Personal' }, { value: 'group', label: 'Group' }]}
+                active={activeTab}
+                onChange={v => setActiveTab(v as 'personal' | 'group')}
+              />
+            )}
+
+            {/* Personal tab summary */}
+            {(!groupId || activeTab === 'personal') && primaryWallet && (
+              <div className="flex flex-col md:flex-row md:flex-wrap md:items-center gap-x-4 gap-y-1 rounded-lg bg-muted/40 border px-4 py-2.5 text-sm text-muted-foreground">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-xs uppercase tracking-wide">
+                    {primaryWallet.is_primary ? 'Primary' : 'Main'}
+                  </span>
+                  <span className="font-medium tabular-nums text-foreground">
+                    {formatAmount(primaryWallet.balance, primaryWallet.currency)}
+                  </span>
+                  <span className="text-muted-foreground/60">{primaryWallet.name}</span>
+                </div>
+                {personalWallets.length > 1 && (
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-xs uppercase tracking-wide">All personal</span>
+                    <span className="font-medium tabular-nums text-foreground">
+                      {primarySymbol} {personalTotal.toFixed(2)}
+                    </span>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Group tab summary */}
+            {groupId && activeTab === 'group' && groupWallets.length > 0 && (
+              <div className="flex items-center gap-x-4 rounded-lg bg-muted/40 border px-4 py-2.5 text-sm text-muted-foreground">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-xs uppercase tracking-wide">Group total</span>
+                  <span className="font-medium tabular-nums text-foreground">
+                    {primarySymbol} {groupTotal.toFixed(2)}
+                  </span>
+                </div>
+              </div>
+            )}
+
+            {visibleWallets.length === 0 ? (
               <p className="text-sm text-muted-foreground py-8 text-center">
-                {activeTab === 'group' ? 'No wallets shared by group members yet.' : 'No wallets yet.'}
+                {activeTab === 'group' ? 'No wallets shared with the group yet.' : 'No wallets yet.'}
               </p>
             ) : (
               <div className="space-y-3">
-                {visible.map(wallet => (
+                {visibleWallets.map(wallet => (
                   <WalletCard
                     key={wallet.id}
                     wallet={wallet}
@@ -283,10 +307,10 @@ export function WalletList({ wallets, bankPresets, currentUserId, groupId }: Pro
                   />
                 ))}
               </div>
-            )
-          })()}
-        </div>
-      )}
+            )}
+          </div>
+        )
+      })()}
 
       {/* Create / Edit dialog */}
       <Dialog open={dialogOpen} onOpenChange={handleDialogOpenChange}>

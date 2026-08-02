@@ -1,12 +1,14 @@
 'use client'
 
+import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts'
 import { cn } from '@/lib/utils'
-import { currencySymbol } from '@/lib/currency'
-import { currentMonthStr } from '@/lib/date'
+import { currencySymbol, parseAmount } from '@/lib/currency'
+import { currentMonthStr, monthLabel, prevMonth, nextMonth } from '@/lib/date'
+import { TabSwitcher } from '@/components/tab-switcher'
 import type { AnalyticsTransaction } from './page'
 
 interface Wallet {
@@ -15,53 +17,45 @@ interface Wallet {
   currency: string
   balance: string | number
   is_primary: boolean
+  owner_id: string | null
+  group_id: string | null
 }
 
 interface Props {
   month: string
   transactions: AnalyticsTransaction[]
   wallets: Wallet[]
+  groupId: string | null
+  currentUserId: string
 }
 
-function parseAmount(v: string | number) {
-  return typeof v === 'string' ? parseFloat(v) : v
-}
-
-function monthLabel(month: string) {
-  const [year, mon] = month.split('-').map(Number)
-  return new Date(year, mon - 1, 1).toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })
-}
-
-function prevMonth(month: string) {
-  const [year, mon] = month.split('-').map(Number)
-  const d = new Date(year, mon - 2, 1)
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
-}
-
-function nextMonth(month: string) {
-  const [year, mon] = month.split('-').map(Number)
-  const d = new Date(year, mon, 1)
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
-}
-
-export function AnalyticsDashboard({ month, transactions, wallets }: Props) {
+export function AnalyticsDashboard({ month, transactions, wallets, groupId, currentUserId }: Props) {
   const router = useRouter()
-  const symbol = wallets[0] ? currencySymbol(wallets[0].currency) : '€'
   const isCurrentMonth = month === currentMonthStr()
+  const [activeTab, setActiveTab] = useState<'personal' | 'group'>('personal')
 
-  const income = transactions
+  const visibleTxs = !groupId || activeTab === 'personal'
+    ? transactions.filter(t => t.wallet?.owner_id === currentUserId)
+    : transactions.filter(t => t.wallet?.group_id !== null)
+
+  const visibleWallets = !groupId || activeTab === 'personal'
+    ? wallets.filter(w => w.owner_id === currentUserId)
+    : wallets.filter(w => w.group_id !== null)
+
+  const symbol = visibleWallets[0] ? currencySymbol(visibleWallets[0].currency) : '€'
+
+  const income = visibleTxs
     .filter(t => t.type === 'income')
     .reduce((s, t) => s + parseAmount(t.amount), 0)
 
-  const expenses = transactions
+  const expenses = visibleTxs
     .filter(t => t.type === 'expense')
     .reduce((s, t) => s + parseAmount(t.amount), 0)
 
   const net = income - expenses
 
-  // Category breakdown — expenses only
   const categoryMap = new Map<string, { name: string; icon: string | null; total: number }>()
-  for (const tx of transactions) {
+  for (const tx of visibleTxs) {
     if (tx.type !== 'expense') continue
     const key = tx.category_id ?? '__none__'
     const name = tx.category?.name ?? 'Uncategorised'
@@ -69,8 +63,7 @@ export function AnalyticsDashboard({ month, transactions, wallets }: Props) {
     const prev = categoryMap.get(key) ?? { name, icon, total: 0 }
     categoryMap.set(key, { ...prev, total: prev.total + parseAmount(tx.amount) })
   }
-  const categoryData = Array.from(categoryMap.values())
-    .sort((a, b) => b.total - a.total)
+  const categoryData = Array.from(categoryMap.values()).sort((a, b) => b.total - a.total)
 
   return (
     <main className="w-full sm:max-w-3xl sm:mx-auto p-4 sm:p-8 space-y-6 sm:space-y-8">
@@ -100,6 +93,15 @@ export function AnalyticsDashboard({ month, transactions, wallets }: Props) {
           </button>
         </div>
       </div>
+
+      {/* Personal / Group tabs */}
+      {groupId && (
+        <TabSwitcher
+          tabs={[{ value: 'personal', label: 'Personal' }, { value: 'group', label: 'Group' }]}
+          active={activeTab}
+          onChange={v => setActiveTab(v as 'personal' | 'group')}
+        />
+      )}
 
       {/* KPI cards */}
       <div className="grid grid-cols-3 gap-3">
@@ -168,11 +170,13 @@ export function AnalyticsDashboard({ month, transactions, wallets }: Props) {
       {/* Wallet summary */}
       <div className="space-y-3">
         <h2 className="font-heading text-base font-semibold">Wallets</h2>
-        {wallets.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No wallets yet.</p>
+        {visibleWallets.length === 0 ? (
+          <p className="text-sm text-muted-foreground">
+            {activeTab === 'group' ? 'No wallets shared with the group yet.' : 'No wallets yet.'}
+          </p>
         ) : (
           <div className="rounded-lg border divide-y">
-            {wallets.map(w => {
+            {visibleWallets.map(w => {
               const s = currencySymbol(w.currency)
               return (
                 <div key={w.id} className="flex items-center justify-between px-4 py-3 text-sm">
