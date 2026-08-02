@@ -1,20 +1,34 @@
-import { redirect } from 'next/navigation'
-import { createClient } from '@/lib/supabase/server'
+import Link from 'next/link'
+import { requireProfile } from '@/lib/auth'
 import { RenameGroupForm } from './rename-group-form'
 import { InviteSection } from './invite-section'
 import { GroupActions } from './group-actions'
 
 export default async function SettingsPage() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/sign-in')
+  const { supabase, user, profile } = await requireProfile()
 
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('group_id, display_name')
-    .eq('id', user.id)
-    .single()
-  if (!profile?.group_id) redirect('/onboarding')
+  if (!profile?.group_id) {
+    return (
+      <main className="w-full sm:max-w-lg sm:mx-auto p-4 sm:p-8 space-y-6">
+        <h1 className="font-heading text-xl font-semibold">Settings</h1>
+        <div className="rounded-lg border border-dashed p-6 space-y-3 text-sm text-muted-foreground">
+          <p>You are not in a family group yet.</p>
+          <div className="flex flex-col gap-2">
+            <Link
+              href="/onboarding"
+              className="inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-foreground shadow-sm hover:bg-accent hover:text-accent-foreground transition-colors w-full sm:w-auto"
+            >
+              Create a group
+            </Link>
+            <p className="text-xs">
+              Already have an invite link?{' '}
+              <span className="text-foreground">Open the link from your family member to join their group.</span>
+            </p>
+          </div>
+        </div>
+      </main>
+    )
+  }
 
   const [{ data: group }, { data: members }] = await Promise.all([
     supabase

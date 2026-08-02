@@ -19,6 +19,136 @@ function formatBalance(balance: string | number, currency: string) {
   return `${currencySymbol(currency)} ${amount.toFixed(2)}`
 }
 
+function WalletCard({
+  wallet,
+  preset,
+  currentUserId,
+  onEdit,
+  onDelete,
+}: {
+  wallet: Wallet
+  preset: BankPreset | undefined
+  currentUserId: string
+  onEdit: (w: Wallet) => void
+  onDelete: (w: Wallet) => void
+}) {
+  return (
+    <Card>
+      <CardHeader className="pb-2">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2 flex-wrap">
+            <CardTitle className="text-base">{wallet.name}</CardTitle>
+            {wallet.is_primary && (
+              <span className="text-xs font-medium px-1.5 py-0.5 rounded border border-primary/40 text-primary bg-primary/10">
+                Primary
+              </span>
+            )}
+            {wallet.group_id ? (
+              <span className="text-xs font-medium px-1.5 py-0.5 rounded border border-muted text-muted-foreground">
+                Shared
+              </span>
+            ) : (
+              <span className="text-xs px-1.5 py-0.5 rounded border border-dashed border-muted text-muted-foreground/60">
+                Private
+              </span>
+            )}
+          </div>
+          {wallet.owner_id === currentUserId && (
+            <div className="flex items-center gap-1">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-9 w-9 text-muted-foreground hover:text-foreground"
+                onClick={() => onEdit(wallet)}
+              >
+                <Pencil className="h-3.5 w-3.5" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-9 w-9 text-muted-foreground hover:text-destructive"
+                onClick={() => onDelete(wallet)}
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+              </Button>
+            </div>
+          )}
+        </div>
+      </CardHeader>
+      <CardContent className="flex items-center justify-between text-sm">
+        <span className="text-muted-foreground">{preset?.name ?? 'Custom'}</span>
+        <div className="flex items-center gap-3">
+          <span className="text-xs font-mono border rounded px-1.5 py-0.5 text-muted-foreground">
+            {wallet.currency}
+          </span>
+          <span className="font-medium tabular-nums">
+            {formatBalance(wallet.balance, wallet.currency)}
+          </span>
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
+
+function WalletSections({
+  wallets,
+  bankPresets,
+  currentUserId,
+  onEdit,
+  onDelete,
+}: {
+  wallets: Wallet[]
+  bankPresets: BankPreset[]
+  currentUserId: string
+  onEdit: (w: Wallet) => void
+  onDelete: (w: Wallet) => void
+}) {
+  const mine = wallets.filter(w => w.owner_id === currentUserId)
+  const shared = wallets.filter(w => w.owner_id !== currentUserId)
+
+  return (
+    <div className="space-y-6">
+      <div className="space-y-3">
+        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          My wallets
+        </p>
+        {mine.length === 0 ? (
+          <p className="text-sm text-muted-foreground">No wallets yet.</p>
+        ) : (
+          mine.map(wallet => (
+            <WalletCard
+              key={wallet.id}
+              wallet={wallet}
+              preset={bankPresets.find(p => p.id === wallet.bank_preset_id)}
+              currentUserId={currentUserId}
+              onEdit={onEdit}
+              onDelete={onDelete}
+            />
+          ))
+        )}
+      </div>
+
+      {shared.length > 0 && (
+        <div className="space-y-3">
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            Shared by others
+          </p>
+          {shared.map(wallet => (
+            <WalletCard
+              key={wallet.id}
+              wallet={wallet}
+              preset={bankPresets.find(p => p.id === wallet.bank_preset_id)}
+              currentUserId={currentUserId}
+              onEdit={onEdit}
+              onDelete={onDelete}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
 interface Wallet {
   id: string
   name: string
@@ -170,67 +300,13 @@ export function WalletList({ wallets, bankPresets, members, currentUserId, group
           <Button variant="outline" onClick={openCreate}>Add your first wallet</Button>
         </div>
       ) : (
-        <div className="space-y-3">
-          {wallets.map(wallet => {
-            const preset = bankPresets.find(p => p.id === wallet.bank_preset_id)
-            return (
-              <Card key={wallet.id}>
-                <CardHeader className="pb-2">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <CardTitle className="text-base">{wallet.name}</CardTitle>
-                      {wallet.is_primary && (
-                        <span className="text-xs font-medium px-1.5 py-0.5 rounded border border-primary/40 text-primary bg-primary/10">
-                          Primary
-                        </span>
-                      )}
-                      {wallet.group_id ? (
-                        <span className="text-xs font-medium px-1.5 py-0.5 rounded border border-muted text-muted-foreground">
-                          Shared
-                        </span>
-                      ) : (
-                        <span className="text-xs px-1.5 py-0.5 rounded border border-dashed border-muted text-muted-foreground/60">
-                          Private
-                        </span>
-                      )}
-                    </div>
-                    {wallet.owner_id === currentUserId && (
-                      <div className="flex items-center gap-1">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-9 w-9 text-muted-foreground hover:text-foreground"
-                          onClick={() => openEdit(wallet)}
-                        >
-                          <Pencil className="h-3.5 w-3.5" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-9 w-9 text-muted-foreground hover:text-destructive"
-                          onClick={() => { setDeleteError(null); setDeletingWallet(wallet) }}
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </Button>
-                      </div>
-                    )}
-                  </div>
-                </CardHeader>
-                <CardContent className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">{preset?.name ?? 'Custom'}</span>
-                  <div className="flex items-center gap-3">
-                    <span className="text-xs font-mono border rounded px-1.5 py-0.5 text-muted-foreground">
-                      {wallet.currency}
-                    </span>
-                    <span className="font-medium tabular-nums">
-                      {formatBalance(wallet.balance, wallet.currency)}
-                    </span>
-                  </div>
-                </CardContent>
-              </Card>
-            )
-          })}
-        </div>
+        <WalletSections
+          wallets={wallets}
+          bankPresets={bankPresets}
+          currentUserId={currentUserId}
+          onEdit={openEdit}
+          onDelete={(wallet) => { setDeleteError(null); setDeletingWallet(wallet) }}
+        />
       )}
 
       {/* Create / Edit dialog */}
