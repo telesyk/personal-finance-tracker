@@ -10,22 +10,29 @@ Versioning: PATCH only (`0.0.x`) until a release is explicitly approved.
 
 ---
 
-## [0.3.2] — 2026-08-02
+## [0.4.0] — 2026-08-02
 
 ### Added
-- Wallet list split into "My wallets" and "Shared by others" sections
 - Transfer ownership action in Settings — group owner can pass admin rights to another member before leaving
 - Settings page no-group state — shows "Create a group" link instead of redirecting to `/onboarding`
 - Dashboard shows group name below welcome text when user belongs to a group
+- Dashboard: "Group wallets" summary block (indigo accent) showing total of all group-shared wallets
+- Wallets page: Personal / Group tab view — Personal tab shows primary wallet summary + all-personal total; Group tab shows all wallets shared with the group and group total
+- Transactions page: Personal / Group tab view filters transactions by wallet ownership
+- Analytics page: Personal / Group tab view — all KPIs, chart, and wallet list respond to the active tab
+- `TabSwitcher` shared component (`src/components/tab-switcher.tsx`)
+- `parseAmount` / `formatAmount` helpers in `src/lib/currency.ts`
+- `monthLabel` / `prevMonth` / `nextMonth` helpers in `src/lib/date.ts`
 
 ### Changed
 - Leave group blocked for group owner until ownership is transferred
 - "All wallets" on dashboard is now a link to `/wallets`
 - `/onboarding` is opt-in only — no longer auto-redirected from Settings
 - Dashboard: removed "not in a family group" nudge (now in Settings) and duplicate bottom nav links
+- Group tab across all pages shows wallets/transactions with `group_id ≠ null` (all members' shared data, not only current user's)
 
 ### Fixed
-- Removed unused `members` query from wallets page (no longer needed after section split)
+- Removed unused `members` query from wallets page
 
 ---
 
