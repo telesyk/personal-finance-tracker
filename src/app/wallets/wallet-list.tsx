@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Pencil, Trash2 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { currencySymbol } from '@/lib/currency'
+import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
@@ -90,64 +91,6 @@ function WalletCard({
   )
 }
 
-function WalletSections({
-  wallets,
-  bankPresets,
-  currentUserId,
-  onEdit,
-  onDelete,
-}: {
-  wallets: Wallet[]
-  bankPresets: BankPreset[]
-  currentUserId: string
-  onEdit: (w: Wallet) => void
-  onDelete: (w: Wallet) => void
-}) {
-  const mine = wallets.filter(w => w.owner_id === currentUserId)
-  const shared = wallets.filter(w => w.owner_id !== currentUserId)
-
-  return (
-    <div className="space-y-6">
-      <div className="space-y-3">
-        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-          My wallets
-        </p>
-        {mine.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No wallets yet.</p>
-        ) : (
-          mine.map(wallet => (
-            <WalletCard
-              key={wallet.id}
-              wallet={wallet}
-              preset={bankPresets.find(p => p.id === wallet.bank_preset_id)}
-              currentUserId={currentUserId}
-              onEdit={onEdit}
-              onDelete={onDelete}
-            />
-          ))
-        )}
-      </div>
-
-      {shared.length > 0 && (
-        <div className="space-y-3">
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            Shared by others
-          </p>
-          {shared.map(wallet => (
-            <WalletCard
-              key={wallet.id}
-              wallet={wallet}
-              preset={bankPresets.find(p => p.id === wallet.bank_preset_id)}
-              currentUserId={currentUserId}
-              onEdit={onEdit}
-              onDelete={onDelete}
-            />
-          ))}
-        </div>
-      )}
-    </div>
-  )
-}
 
 interface Wallet {
   id: string
@@ -189,6 +132,7 @@ export function WalletList({ wallets, bankPresets, currentUserId, groupId }: Pro
   const [currency, setCurrency] = useState('EUR')
   const [isPrimary, setIsPrimary] = useState(false)
   const [isShared, setIsShared] = useState(false)
+  const [activeTab, setActiveTab] = useState<'personal' | 'group'>('personal')
 
   function openCreate() {
     setEditingWallet(null)
@@ -298,13 +242,50 @@ export function WalletList({ wallets, bankPresets, currentUserId, groupId }: Pro
           <Button variant="outline" onClick={openCreate}>Add your first wallet</Button>
         </div>
       ) : (
-        <WalletSections
-          wallets={wallets}
-          bankPresets={bankPresets}
-          currentUserId={currentUserId}
-          onEdit={openEdit}
-          onDelete={(wallet) => { setDeleteError(null); setDeletingWallet(wallet) }}
-        />
+        <div className="space-y-4">
+          {groupId && (
+            <div className="flex gap-1 border-b">
+              {(['personal', 'group'] as const).map(tab => (
+                <button
+                  key={tab}
+                  type="button"
+                  onClick={() => setActiveTab(tab)}
+                  className={cn(
+                    'px-3 py-2 text-sm font-medium capitalize transition-colors border-b-2 -mb-px',
+                    activeTab === tab
+                      ? 'border-foreground text-foreground'
+                      : 'border-transparent text-muted-foreground hover:text-foreground',
+                  )}
+                >
+                  {tab === 'personal' ? 'Personal' : 'Group'}
+                </button>
+              ))}
+            </div>
+          )}
+          {(() => {
+            const visible = !groupId || activeTab === 'personal'
+              ? wallets.filter(w => w.owner_id === currentUserId)
+              : wallets.filter(w => w.owner_id !== currentUserId)
+            return visible.length === 0 ? (
+              <p className="text-sm text-muted-foreground py-8 text-center">
+                {activeTab === 'group' ? 'No wallets shared by group members yet.' : 'No wallets yet.'}
+              </p>
+            ) : (
+              <div className="space-y-3">
+                {visible.map(wallet => (
+                  <WalletCard
+                    key={wallet.id}
+                    wallet={wallet}
+                    preset={bankPresets.find(p => p.id === wallet.bank_preset_id)}
+                    currentUserId={currentUserId}
+                    onEdit={openEdit}
+                    onDelete={(w) => { setDeleteError(null); setDeletingWallet(w) }}
+                  />
+                ))}
+              </div>
+            )
+          })()}
+        </div>
       )}
 
       {/* Create / Edit dialog */}

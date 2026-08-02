@@ -14,7 +14,7 @@ export default async function DashboardPage() {
   const [{ data: wallets }, { data: transactions }, { data: recentTxs }, { data: group }] = await Promise.all([
     supabase
       .from('wallets')
-      .select('id, name, currency, balance, is_primary')
+      .select('id, name, currency, balance, is_primary, group_id')
       .order('is_primary', { ascending: false })
       .order('created_at', { ascending: true }),
     supabase
@@ -39,6 +39,8 @@ export default async function DashboardPage() {
 
   const primaryWallet = wallets?.[0] ?? null
   const totalBalance = (wallets ?? []).reduce((s, w) => s + parseFloat(String(w.balance)), 0)
+  const sharedWallets = (wallets ?? []).filter(w => w.group_id !== null)
+  const sharedWalletsTotal = sharedWallets.reduce((s, w) => s + parseFloat(String(w.balance)), 0)
   const symbol = primaryWallet ? currencySymbol(primaryWallet.currency) : '€'
 
   const income = (transactions ?? [])
@@ -79,6 +81,14 @@ export default async function DashboardPage() {
               <Link href="/wallets" className="text-xs text-muted-foreground hover:text-foreground transition-colors">All wallets</Link>
               <p className="text-sm font-medium tabular-nums text-muted-foreground">
                 {symbol} {totalBalance.toFixed(2)}
+              </p>
+            </div>
+          )}
+          {groupId && sharedWallets.length > 0 && (
+            <div className="border-t pt-3 flex items-baseline justify-between">
+              <Link href="/wallets" className="text-xs text-indigo-600 dark:text-indigo-400 hover:opacity-80 transition-opacity">Group wallets</Link>
+              <p className="text-sm font-medium tabular-nums text-indigo-600 dark:text-indigo-400">
+                {symbol} {sharedWalletsTotal.toFixed(2)}
               </p>
             </div>
           )}

@@ -18,7 +18,7 @@ export default async function TransactionsPage({
       .from('transactions')
       .select(`
         id, type, amount, date, note, wallet_id, transfer_to_wallet_id, category_id,
-        wallet:wallets!wallet_id(name, currency),
+        wallet:wallets!wallet_id(name, currency, owner_id, group_id),
         transfer_to_wallet:wallets!transfer_to_wallet_id(name),
         category:categories(name, icon)
       `)
