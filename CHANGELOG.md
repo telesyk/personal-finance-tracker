@@ -10,6 +10,42 @@ Versioning: PATCH only (`0.0.x`) until a release is explicitly approved.
 
 ---
 
+## [0.4.0] — 2026-08-02
+
+### Added
+- Transfer ownership action in Settings — group owner can pass admin rights to another member before leaving
+- Settings page no-group state — shows "Create a group" link instead of redirecting to `/onboarding`
+- Dashboard shows group name below welcome text when user belongs to a group
+- Dashboard: "Group wallets" summary block (indigo accent) showing total of all group-shared wallets
+- Wallets page: Personal / Group tab view — Personal tab shows primary wallet summary + all-personal total; Group tab shows all wallets shared with the group and group total
+- Transactions page: Personal / Group tab view filters transactions by wallet ownership
+- Analytics page: Personal / Group tab view — all KPIs, chart, and wallet list respond to the active tab
+- `TabSwitcher` shared component (`src/components/tab-switcher.tsx`)
+- `parseAmount` / `formatAmount` helpers in `src/lib/currency.ts`
+- `monthLabel` / `prevMonth` / `nextMonth` helpers in `src/lib/date.ts`
+
+### Changed
+- Leave group blocked for group owner until ownership is transferred
+- "All wallets" on dashboard is now a link to `/wallets`
+- `/onboarding` is opt-in only — no longer auto-redirected from Settings
+- Dashboard: removed "not in a family group" nudge (now in Settings) and duplicate bottom nav links
+- Group tab across all pages shows wallets/transactions with `group_id ≠ null` (all members' shared data, not only current user's)
+
+### Fixed
+- Removed unused `members` query from wallets page
+
+---
+
+## [0.3.1] — 2026-08-01
+
+### Added
+- `/settings` — group rename (inline form), invite link generation, Danger zone section
+- Leave group action — visible to non-sole members; clears `group_id` and redirects to `/onboarding`
+- Delete group action — visible to sole member only; `delete_my_group()` SECURITY DEFINER RPC cascades through transactions, wallets, categories, and the group record
+- Invite link moved from `/dashboard` to `/settings`
+
+---
+
 ## [0.3.0] — 2026-07-31
 
 ### Added

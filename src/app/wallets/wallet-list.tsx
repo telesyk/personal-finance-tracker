@@ -4,6 +4,8 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Pencil, Trash2 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
+import { currencySymbol, formatAmount, parseAmount } from '@/lib/currency'
+import { TabSwitcher } from '@/components/tab-switcher'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
@@ -13,15 +15,77 @@ import { Label } from '@/components/ui/label'
 
 const CURRENCIES = ['EUR', 'USD', 'GBP', 'UAH']
 
-const CURRENCY_SYMBOL: Record<string, string> = {
-  EUR: '€', USD: '$', GBP: '£', UAH: '₴',
+function WalletCard({
+  wallet,
+  preset,
+  currentUserId,
+  onEdit,
+  onDelete,
+}: {
+  wallet: Wallet
+  preset: BankPreset | undefined
+  currentUserId: string
+  onEdit: (w: Wallet) => void
+  onDelete: (w: Wallet) => void
+}) {
+  return (
+    <Card>
+      <CardHeader className="pb-2">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2 flex-wrap">
+            <CardTitle className="text-base">{wallet.name}</CardTitle>
+            {wallet.is_primary && (
+              <span className="text-xs font-medium px-1.5 py-0.5 rounded border border-primary/40 text-primary bg-primary/10">
+                Primary
+              </span>
+            )}
+            {wallet.group_id ? (
+              <span className="text-xs font-medium px-1.5 py-0.5 rounded border border-muted text-muted-foreground">
+                Shared
+              </span>
+            ) : (
+              <span className="text-xs px-1.5 py-0.5 rounded border border-dashed border-muted text-muted-foreground/60">
+                Private
+              </span>
+            )}
+          </div>
+          {wallet.owner_id === currentUserId && (
+            <div className="flex items-center gap-1">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-9 w-9 text-muted-foreground hover:text-foreground"
+                onClick={() => onEdit(wallet)}
+              >
+                <Pencil className="h-3.5 w-3.5" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-9 w-9 text-muted-foreground hover:text-destructive"
+                onClick={() => onDelete(wallet)}
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+              </Button>
+            </div>
+          )}
+        </div>
+      </CardHeader>
+      <CardContent className="flex items-center justify-between text-sm">
+        <span className="text-muted-foreground">{preset?.name ?? 'Custom'}</span>
+        <div className="flex items-center gap-3">
+          <span className="text-xs font-mono border rounded px-1.5 py-0.5 text-muted-foreground">
+            {wallet.currency}
+          </span>
+          <span className="font-medium tabular-nums">
+            {formatAmount(wallet.balance, wallet.currency)}
+          </span>
+        </div>
+      </CardContent>
+    </Card>
+  )
 }
 
-function formatBalance(balance: string | number, currency: string) {
-  const amount = typeof balance === 'string' ? parseFloat(balance) : balance
-  const symbol = CURRENCY_SYMBOL[currency] ?? currency
-  return `${symbol} ${amount.toFixed(2)}`
-}
 
 interface Wallet {
   id: string
@@ -30,21 +94,20 @@ interface Wallet {
   balance: string | number
   bank_preset_id: string | null
   owner_id: string | null
+  group_id: string | null
   is_primary: boolean
 }
 
 interface BankPreset { id: string; name: string; type: string }
-interface Member { id: string; display_name: string }
 
 interface Props {
   wallets: Wallet[]
   bankPresets: BankPreset[]
-  members: Member[]
   currentUserId: string
-  groupId: string
+  groupId: string | null
 }
 
-export function WalletList({ wallets, bankPresets, members, currentUserId, groupId }: Props) {
+export function WalletList({ wallets, bankPresets, currentUserId, groupId }: Props) {
   const router = useRouter()
 
   // form dialog state
@@ -62,16 +125,17 @@ export function WalletList({ wallets, bankPresets, members, currentUserId, group
   const [name, setName] = useState('')
   const [presetId, setPresetId] = useState('none')
   const [currency, setCurrency] = useState('EUR')
-  const [ownerId, setOwnerId] = useState(currentUserId)
   const [isPrimary, setIsPrimary] = useState(false)
+  const [isShared, setIsShared] = useState(false)
+  const [activeTab, setActiveTab] = useState<'personal' | 'group'>('personal')
 
   function openCreate() {
     setEditingWallet(null)
     setName('')
     setPresetId('none')
     setCurrency('EUR')
-    setOwnerId(currentUserId)
     setIsPrimary(!wallets.some(w => w.is_primary))
+    setIsShared(false)
     setFormError(null)
     setDialogOpen(true)
   }
@@ -81,8 +145,8 @@ export function WalletList({ wallets, bankPresets, members, currentUserId, group
     setName(wallet.name)
     setPresetId(wallet.bank_preset_id ?? 'none')
     setCurrency(wallet.currency)
-    setOwnerId(wallet.owner_id ?? currentUserId)
     setIsPrimary(wallet.is_primary)
+    setIsShared(wallet.group_id !== null)
     setFormError(null)
     setDialogOpen(true)
   }
@@ -92,7 +156,7 @@ export function WalletList({ wallets, bankPresets, members, currentUserId, group
     if (!v) setFormError(null)
   }
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     setLoading(true)
     setFormError(null)
@@ -102,8 +166,9 @@ export function WalletList({ wallets, bankPresets, members, currentUserId, group
       name: name.trim(),
       bank_preset_id: presetId === 'none' ? null : presetId,
       currency,
-      owner_id: ownerId,
+      owner_id: currentUserId,
       is_primary: isPrimary,
+      group_id: isShared && groupId ? groupId : null,
     }
 
     if (isPrimary) {
@@ -120,7 +185,7 @@ export function WalletList({ wallets, bankPresets, members, currentUserId, group
 
     const { error } = editingWallet
       ? await supabase.from('wallets').update(payload).eq('id', editingWallet.id)
-      : await supabase.from('wallets').insert({ ...payload, group_id: groupId })
+      : await supabase.from('wallets').insert(payload)
 
     setLoading(false)
 
@@ -171,58 +236,81 @@ export function WalletList({ wallets, bankPresets, members, currentUserId, group
           <p>No wallets yet.</p>
           <Button variant="outline" onClick={openCreate}>Add your first wallet</Button>
         </div>
-      ) : (
-        <div className="space-y-3">
-          {wallets.map(wallet => {
-            const preset = bankPresets.find(p => p.id === wallet.bank_preset_id)
-            return (
-              <Card key={wallet.id}>
-                <CardHeader className="pb-2">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <CardTitle className="text-base">{wallet.name}</CardTitle>
-                      {wallet.is_primary && (
-                        <span className="text-xs font-medium px-1.5 py-0.5 rounded border border-primary/40 text-primary bg-primary/10">
-                          Primary
-                        </span>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-9 w-9 text-muted-foreground hover:text-foreground"
-                        onClick={() => openEdit(wallet)}
-                      >
-                        <Pencil className="h-3.5 w-3.5" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-9 w-9 text-muted-foreground hover:text-destructive"
-                        onClick={() => { setDeleteError(null); setDeletingWallet(wallet) }}
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </Button>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">{preset?.name ?? 'Custom'}</span>
-                  <div className="flex items-center gap-3">
-                    <span className="text-xs font-mono border rounded px-1.5 py-0.5 text-muted-foreground">
-                      {wallet.currency}
-                    </span>
-                    <span className="font-medium tabular-nums">
-                      {formatBalance(wallet.balance, wallet.currency)}
+      ) : (() => {
+        const personalWallets = wallets.filter(w => w.owner_id === currentUserId)
+        const groupWallets = wallets.filter(w => w.group_id !== null)
+        const visibleWallets = !groupId || activeTab === 'personal' ? personalWallets : groupWallets
+        const primaryWallet = personalWallets.find(w => w.is_primary) ?? personalWallets[0] ?? null
+        const primarySymbol = primaryWallet ? currencySymbol(primaryWallet.currency) : ''
+        const personalTotal = personalWallets.reduce((s, w) => s + parseAmount(w.balance), 0)
+        const groupTotal = groupWallets.reduce((s, w) => s + parseAmount(w.balance), 0)
+
+        return (
+          <div className="space-y-4">
+            {groupId && (
+              <TabSwitcher
+                tabs={[{ value: 'personal', label: 'Personal' }, { value: 'group', label: 'Group' }]}
+                active={activeTab}
+                onChange={v => setActiveTab(v as 'personal' | 'group')}
+              />
+            )}
+
+            {/* Personal tab summary */}
+            {(!groupId || activeTab === 'personal') && primaryWallet && (
+              <div className="flex flex-col md:flex-row md:flex-wrap md:items-center gap-x-4 gap-y-1 rounded-lg bg-muted/40 border px-4 py-2.5 text-sm text-muted-foreground">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-xs uppercase tracking-wide">
+                    {primaryWallet.is_primary ? 'Primary' : 'Main'}
+                  </span>
+                  <span className="font-medium tabular-nums text-foreground">
+                    {formatAmount(primaryWallet.balance, primaryWallet.currency)}
+                  </span>
+                  <span className="text-muted-foreground/60">{primaryWallet.name}</span>
+                </div>
+                {personalWallets.length > 1 && (
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-xs uppercase tracking-wide">All personal</span>
+                    <span className="font-medium tabular-nums text-foreground">
+                      {primarySymbol} {personalTotal.toFixed(2)}
                     </span>
                   </div>
-                </CardContent>
-              </Card>
-            )
-          })}
-        </div>
-      )}
+                )}
+              </div>
+            )}
+
+            {/* Group tab summary */}
+            {groupId && activeTab === 'group' && groupWallets.length > 0 && (
+              <div className="flex items-center gap-x-4 rounded-lg bg-muted/40 border px-4 py-2.5 text-sm text-muted-foreground">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-xs uppercase tracking-wide">Group total</span>
+                  <span className="font-medium tabular-nums text-foreground">
+                    {primarySymbol} {groupTotal.toFixed(2)}
+                  </span>
+                </div>
+              </div>
+            )}
+
+            {visibleWallets.length === 0 ? (
+              <p className="text-sm text-muted-foreground py-8 text-center">
+                {activeTab === 'group' ? 'No wallets shared with the group yet.' : 'No wallets yet.'}
+              </p>
+            ) : (
+              <div className="space-y-3">
+                {visibleWallets.map(wallet => (
+                  <WalletCard
+                    key={wallet.id}
+                    wallet={wallet}
+                    preset={bankPresets.find(p => p.id === wallet.bank_preset_id)}
+                    currentUserId={currentUserId}
+                    onEdit={openEdit}
+                    onDelete={(w) => { setDeleteError(null); setDeletingWallet(w) }}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        )
+      })()}
 
       {/* Create / Edit dialog */}
       <Dialog open={dialogOpen} onOpenChange={handleDialogOpenChange}>
@@ -273,22 +361,6 @@ export function WalletList({ wallets, bankPresets, members, currentUserId, group
               </select>
             </div>
 
-            {members.length > 1 && (
-              <div className="space-y-2">
-                <Label htmlFor="wallet-owner">Owner</Label>
-                <select
-                  id="wallet-owner"
-                  value={ownerId}
-                  onChange={e => setOwnerId(e.target.value)}
-                  className="h-10 w-full border border-transparent border-b-input bg-transparent py-1 text-base text-foreground outline-none focus:border-b-ring md:text-sm disabled:opacity-50"
-                >
-                  {members.map(m => (
-                    <option key={m.id} value={m.id}>{m.display_name}</option>
-                  ))}
-                </select>
-              </div>
-            )}
-
             <div className="flex items-center gap-2">
               <input
                 id="wallet-primary"
@@ -301,6 +373,21 @@ export function WalletList({ wallets, bankPresets, members, currentUserId, group
                 Set as primary wallet
               </Label>
             </div>
+
+            {groupId && (
+              <div className="flex items-center gap-2">
+                <input
+                  id="wallet-shared"
+                  type="checkbox"
+                  checked={isShared}
+                  onChange={e => setIsShared(e.target.checked)}
+                  className="h-4 w-4 rounded border-input accent-primary cursor-pointer"
+                />
+                <Label htmlFor="wallet-shared" className="cursor-pointer font-normal">
+                  Share with family group
+                </Label>
+              </div>
+            )}
 
             {formError && <p className="text-sm text-destructive">{formError}</p>}
 

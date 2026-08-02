@@ -1,40 +1,20 @@
 import Link from 'next/link'
-import { redirect } from 'next/navigation'
-import { createClient } from '@/lib/supabase/server'
-import { InviteSection } from './invite-section'
 import { cn } from '@/lib/utils'
-
-const CURRENCY_SYMBOL: Record<string, string> = { EUR: '€', USD: '$', GBP: '£', UAH: '₴' }
-
-function currentMonthRange() {
-  const d = new Date()
-  const y = d.getFullYear()
-  const m = d.getMonth() + 1
-  const pad = (n: number) => String(n).padStart(2, '0')
-  const from = `${y}-${pad(m)}-01`
-  const to = new Date(y, m, 0).toLocaleDateString('en-CA')
-  const label = d.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })
-  return { from, to, label }
-}
+import { requireProfile } from '@/lib/auth'
+import { currencySymbol } from '@/lib/currency'
+import { currentMonthRange } from '@/lib/date'
 
 export default async function DashboardPage() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/sign-in')
-
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('group_id, display_name')
-    .eq('id', user.id)
-    .single()
-  if (!profile?.group_id) redirect('/onboarding')
+  const { supabase, user, profile } = await requireProfile()
 
   const { from, to, label } = currentMonthRange()
 
-  const [{ data: wallets }, { data: transactions }, { data: recentTxs }] = await Promise.all([
+  const groupId = profile?.group_id ?? null
+
+  const [{ data: wallets }, { data: transactions }, { data: recentTxs }, { data: group }] = await Promise.all([
     supabase
       .from('wallets')
-      .select('id, name, currency, balance, is_primary')
+      .select('id, name, currency, balance, is_primary, group_id')
       .order('is_primary', { ascending: false })
       .order('created_at', { ascending: true }),
     supabase
@@ -52,11 +32,16 @@ export default async function DashboardPage() {
       .order('date', { ascending: false })
       .order('created_at', { ascending: false })
       .limit(3),
+    groupId
+      ? supabase.from('groups').select('name').eq('id', groupId).single()
+      : Promise.resolve({ data: null }),
   ])
 
   const primaryWallet = wallets?.[0] ?? null
   const totalBalance = (wallets ?? []).reduce((s, w) => s + parseFloat(String(w.balance)), 0)
-  const symbol = primaryWallet ? (CURRENCY_SYMBOL[primaryWallet.currency] ?? primaryWallet.currency) : '€'
+  const sharedWallets = (wallets ?? []).filter(w => w.group_id !== null)
+  const sharedWalletsTotal = sharedWallets.reduce((s, w) => s + parseFloat(String(w.balance)), 0)
+  const symbol = primaryWallet ? currencySymbol(primaryWallet.currency) : '€'
 
   const income = (transactions ?? [])
     .filter(t => t.type === 'income')
@@ -70,9 +55,14 @@ export default async function DashboardPage() {
 
   return (
     <main className="w-full sm:max-w-lg sm:mx-auto p-4 sm:p-8 space-y-4 sm:space-y-6">
-      <p className="text-muted-foreground">
-        Welcome, <span className="text-foreground font-medium">{profile.display_name ?? user.email}</span>
-      </p>
+      <div>
+        <p className="text-muted-foreground">
+          Welcome, <span className="text-foreground font-medium">{profile?.display_name ?? user.email}</span>
+        </p>
+        {group?.name && (
+          <p className="text-xs text-muted-foreground">{group.name}</p>
+        )}
+      </div>
 
       {/* Primary wallet + all wallets total */}
       {primaryWallet && (
@@ -88,9 +78,17 @@ export default async function DashboardPage() {
           </div>
           {(wallets ?? []).length > 1 && (
             <div className="border-t pt-3 flex items-baseline justify-between">
-              <p className="text-xs text-muted-foreground">All wallets</p>
+              <Link href="/wallets" className="text-xs text-muted-foreground hover:text-foreground transition-colors">All wallets</Link>
               <p className="text-sm font-medium tabular-nums text-muted-foreground">
                 {symbol} {totalBalance.toFixed(2)}
+              </p>
+            </div>
+          )}
+          {groupId && sharedWallets.length > 0 && (
+            <div className="border-t pt-3 flex items-baseline justify-between">
+              <Link href="/wallets" className="text-xs text-indigo-600 dark:text-indigo-400 hover:opacity-80 transition-opacity">Group wallets</Link>
+              <p className="text-sm font-medium tabular-nums text-indigo-600 dark:text-indigo-400">
+                {symbol} {sharedWalletsTotal.toFixed(2)}
               </p>
             </div>
           )}
@@ -136,7 +134,7 @@ export default async function DashboardPage() {
           <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Recent transactions</p>
           <div className="rounded-lg border divide-y">
             {(recentTxs ?? []).map((tx: any) => {
-              const txSymbol = CURRENCY_SYMBOL[tx.wallet?.currency ?? ''] ?? '€'
+              const txSymbol = currencySymbol(tx.wallet?.currency ?? 'EUR')
               const amt = parseFloat(String(tx.amount)).toFixed(2)
               return (
                 <div key={tx.id} className="flex items-center justify-between px-4 py-2.5 text-sm">
@@ -171,16 +169,6 @@ export default async function DashboardPage() {
         </div>
       )}
 
-      {/* Nav links */}
-      <div className="flex gap-3 flex-wrap pt-2">
-        <Link href="/wallets" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Wallets</Link>
-        <span className="text-muted-foreground/30">·</span>
-        <Link href="/transactions" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Transactions</Link>
-        <span className="text-muted-foreground/30">·</span>
-        <Link href="/analytics" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Analytics</Link>
-      </div>
-
-      <InviteSection />
     </main>
   )
 }

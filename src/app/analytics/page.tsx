@@ -1,44 +1,28 @@
-import { redirect } from 'next/navigation'
-import { createClient } from '@/lib/supabase/server'
+import { requireProfile } from '@/lib/auth'
+import { currentMonthStr, monthDateRange } from '@/lib/date'
 import { AnalyticsDashboard } from './analytics-dashboard'
-
-function currentMonthStr() {
-  const d = new Date()
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
-}
 
 export default async function AnalyticsPage({
   searchParams,
 }: {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>
 }) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/sign-in')
-
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('group_id')
-    .eq('id', user.id)
-    .single()
-  if (!profile?.group_id) redirect('/onboarding')
+  const { supabase, user, profile } = await requireProfile()
 
   const params = await searchParams
   const month = typeof params.month === 'string' ? params.month : currentMonthStr()
 
-  const [year, mon] = month.split('-').map(Number)
-  const dateFrom = `${month}-01`
-  const dateTo = new Date(year, mon, 0).toLocaleDateString('en-CA') // last day of month
+  const { from: dateFrom, to: dateTo } = monthDateRange(month)
 
   const [{ data: transactions }, { data: wallets }] = await Promise.all([
     supabase
       .from('transactions')
-      .select('id, type, amount, category_id, category:categories(name, icon)')
+      .select('id, type, amount, category_id, wallet_id, category:categories(name, icon), wallet:wallets!wallet_id(owner_id, group_id)')
       .gte('date', dateFrom)
       .lte('date', dateTo),
     supabase
       .from('wallets')
-      .select('id, name, currency, balance, is_primary')
+      .select('id, name, currency, balance, is_primary, owner_id, group_id')
       .order('is_primary', { ascending: false })
       .order('created_at', { ascending: true }),
   ])
@@ -48,6 +32,8 @@ export default async function AnalyticsPage({
       month={month}
       transactions={(transactions ?? []) as unknown as AnalyticsTransaction[]}
       wallets={wallets ?? []}
+      groupId={profile?.group_id ?? null}
+      currentUserId={user.id}
     />
   )
 }
@@ -57,5 +43,7 @@ export interface AnalyticsTransaction {
   type: 'income' | 'expense' | 'transfer'
   amount: string | number
   category_id: string | null
+  wallet_id: string
   category: { name: string; icon: string | null } | null
+  wallet: { owner_id: string | null; group_id: string | null } | null
 }
