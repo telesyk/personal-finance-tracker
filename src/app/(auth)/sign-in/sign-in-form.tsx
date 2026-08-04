@@ -39,7 +39,7 @@ export function SignInForm({ inviteToken }: { inviteToken?: string }) {
       : `${window.location.origin}/auth/callback`
     await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: callbackUrl },
+      options: { redirectTo: callbackUrl, queryParams: { prompt: 'select_account' } },
     })
   }
 
