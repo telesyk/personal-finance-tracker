@@ -313,9 +313,24 @@ export function TransactionList({ transactions, wallets, categories, groupId, gr
         <div className="rounded-lg border divide-y">
           {groups.map(group => (
             <React.Fragment key={`date-${group.date}`}>
-              <div className="px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground bg-muted/30">
-                {formatDateHeader(group.date)}
-              </div>
+              {(() => {
+                const dayNet = group.items.reduce((s, tx) => {
+                  const n = parseFloat(String(tx.amount))
+                  if (tx.type === 'income') return s + n
+                  if (tx.type === 'expense') return s - n
+                  return s
+                }, 0)
+                return (
+                  <div className="px-4 py-1.5 flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-muted-foreground bg-muted/30">
+                    <span>{formatDateHeader(group.date)}</span>
+                    {dayNet !== 0 && (
+                      <span className={cn('tabular-nums normal-case font-medium', dayNet > 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-500')}>
+                        {dayNet > 0 ? '+' : '−'}{primarySymbol} {Math.abs(dayNet).toFixed(2)}
+                      </span>
+                    )}
+                  </div>
+                )
+              })()}
               {group.items.map(tx => (
                 <div
                   key={tx.id}
