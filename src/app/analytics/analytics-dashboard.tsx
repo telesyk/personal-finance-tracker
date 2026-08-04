@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useTabState } from '@/hooks/use-tab-state'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
@@ -32,7 +33,7 @@ interface Props {
 export function AnalyticsDashboard({ month, transactions, wallets, groupId, currentUserId }: Props) {
   const router = useRouter()
   const isCurrentMonth = month === currentMonthStr()
-  const [activeTab, setActiveTab] = useState<'personal' | 'group'>('personal')
+  const { activeTab, changeTab } = useTabState(groupId)
 
   const visibleTxs = !groupId || activeTab === 'personal'
     ? transactions.filter(t => t.wallet?.owner_id === currentUserId)
@@ -99,7 +100,7 @@ export function AnalyticsDashboard({ month, transactions, wallets, groupId, curr
         <TabSwitcher
           tabs={[{ value: 'personal', label: 'Personal' }, { value: 'group', label: 'Group' }]}
           active={activeTab}
-          onChange={v => setActiveTab(v as 'personal' | 'group')}
+          onChange={v => changeTab(v as 'personal' | 'group')}
         />
       )}
 

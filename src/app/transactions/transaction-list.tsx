@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useTabState } from '@/hooks/use-tab-state'
 import { useRouter } from 'next/navigation'
 import { Pencil, Trash2, ChevronLeft, ChevronRight, Plus } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
@@ -110,7 +111,7 @@ export function TransactionList({ transactions, wallets, categories, groupId, cu
   const [activeId, setActiveId] = useState<string | null>(null)
 
   // personal / group tab
-  const [activeTab, setActiveTab] = useState<'personal' | 'group'>('personal')
+  const { activeTab, changeTab } = useTabState(groupId)
 
   function openCreate() {
     setEditingTx(null)
@@ -281,7 +282,7 @@ export function TransactionList({ transactions, wallets, categories, groupId, cu
         <TabSwitcher
           tabs={[{ value: 'personal', label: 'Personal' }, { value: 'group', label: 'Group' }]}
           active={activeTab}
-          onChange={v => setActiveTab(v as 'personal' | 'group')}
+          onChange={v => changeTab(v as 'personal' | 'group')}
         />
       )}
 
