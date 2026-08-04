@@ -106,9 +106,10 @@ interface Props {
   bankPresets: BankPreset[]
   currentUserId: string
   groupId: string | null
+  groupName: string | null
 }
 
-export function WalletList({ wallets, bankPresets, currentUserId, groupId }: Props) {
+export function WalletList({ wallets, bankPresets, currentUserId, groupId, groupName }: Props) {
   const router = useRouter()
 
   // form dialog state
@@ -250,7 +251,7 @@ export function WalletList({ wallets, bankPresets, currentUserId, groupId }: Pro
           <div className="space-y-4">
             {groupId && (
               <TabSwitcher
-                tabs={[{ value: 'personal', label: 'Personal' }, { value: 'group', label: 'Group' }]}
+                tabs={[{ value: 'personal', label: 'Personal' }, { value: 'group', label: groupName ? groupName.slice(0, 50) : 'Group' }]}
                 active={activeTab}
                 onChange={v => changeTab(v as 'personal' | 'group')}
               />

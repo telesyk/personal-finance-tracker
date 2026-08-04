@@ -14,7 +14,9 @@ export default async function AnalyticsPage({
 
   const { from: dateFrom, to: dateTo } = monthDateRange(month)
 
-  const [{ data: transactions }, { data: wallets }] = await Promise.all([
+  const groupId = profile?.group_id ?? null
+
+  const [{ data: transactions }, { data: wallets }, { data: group }] = await Promise.all([
     supabase
       .from('transactions')
       .select('id, type, amount, category_id, wallet_id, category:categories(name, icon), wallet:wallets!wallet_id(owner_id, group_id)')
@@ -25,6 +27,9 @@ export default async function AnalyticsPage({
       .select('id, name, currency, balance, is_primary, owner_id, group_id')
       .order('is_primary', { ascending: false })
       .order('created_at', { ascending: true }),
+    groupId
+      ? supabase.from('groups').select('name').eq('id', groupId).single()
+      : Promise.resolve({ data: null }),
   ])
 
   return (
@@ -32,7 +37,8 @@ export default async function AnalyticsPage({
       month={month}
       transactions={(transactions ?? []) as unknown as AnalyticsTransaction[]}
       wallets={wallets ?? []}
-      groupId={profile?.group_id ?? null}
+      groupId={groupId}
+      groupName={group?.name ?? null}
       currentUserId={user.id}
     />
   )

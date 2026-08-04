@@ -27,10 +27,11 @@ interface Props {
   transactions: AnalyticsTransaction[]
   wallets: Wallet[]
   groupId: string | null
+  groupName: string | null
   currentUserId: string
 }
 
-export function AnalyticsDashboard({ month, transactions, wallets, groupId, currentUserId }: Props) {
+export function AnalyticsDashboard({ month, transactions, wallets, groupId, groupName, currentUserId }: Props) {
   const router = useRouter()
   const isCurrentMonth = month === currentMonthStr()
   const { activeTab, changeTab } = useTabState(groupId)
@@ -98,7 +99,7 @@ export function AnalyticsDashboard({ month, transactions, wallets, groupId, curr
       {/* Personal / Group tabs */}
       {groupId && (
         <TabSwitcher
-          tabs={[{ value: 'personal', label: 'Personal' }, { value: 'group', label: 'Group' }]}
+          tabs={[{ value: 'personal', label: 'Personal' }, { value: 'group', label: groupName ? groupName.slice(0, 50) : 'Group' }]}
           active={activeTab}
           onChange={v => changeTab(v as 'personal' | 'group')}
         />

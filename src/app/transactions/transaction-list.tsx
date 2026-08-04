@@ -39,6 +39,7 @@ interface Props {
   wallets: Wallet[]
   categories: Category[]
   groupId: string | null
+  groupName: string | null
   currentUserId: string
   month: string
 }
@@ -83,7 +84,7 @@ function formatDateHeader(dateStr: string) {
   })
 }
 
-export function TransactionList({ transactions, wallets, categories, groupId, currentUserId, month }: Props) {
+export function TransactionList({ transactions, wallets, categories, groupId, groupName, currentUserId, month }: Props) {
   const router = useRouter()
   const isCurrentMonth = month === currentMonthStr()
 
@@ -280,7 +281,7 @@ export function TransactionList({ transactions, wallets, categories, groupId, cu
 
       {groupId && (
         <TabSwitcher
-          tabs={[{ value: 'personal', label: 'Personal' }, { value: 'group', label: 'Group' }]}
+          tabs={[{ value: 'personal', label: 'Personal' }, { value: 'group', label: groupName ? groupName.slice(0, 50) : 'Group' }]}
           active={activeTab}
           onChange={v => changeTab(v as 'personal' | 'group')}
         />
