@@ -1,5 +1,5 @@
 import { requireProfile } from '@/lib/auth'
-import { WalletList } from './wallet-list'
+import { WalletList, type Wallet } from './wallet-list'
 
 export default async function WalletsPage() {
   const { supabase, user, profile } = await requireProfile()
@@ -9,7 +9,7 @@ export default async function WalletsPage() {
   const [{ data: wallets }, { data: bankPresets }, { data: group }] = await Promise.all([
     supabase
       .from('wallets')
-      .select('id, name, currency, balance, bank_preset_id, owner_id, group_id, is_primary')
+      .select('id, name, currency, balance, bank_preset_id, owner_id, group_id, is_primary, owner:profiles!owner_id(display_name)')
       .order('created_at'),
     supabase
       .from('bank_presets')
@@ -22,7 +22,7 @@ export default async function WalletsPage() {
 
   return (
     <WalletList
-      wallets={wallets ?? []}
+      wallets={(wallets ?? []) as unknown as Wallet[]}
       bankPresets={bankPresets ?? []}
       currentUserId={user.id}
       groupId={groupId}
