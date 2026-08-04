@@ -30,7 +30,7 @@ export default async function TransactionsPage({
       .order('created_at', { ascending: false }),
     supabase
       .from('wallets')
-      .select('id, name, currency, balance, is_primary')
+      .select('id, name, currency, balance, is_primary, owner_id, group_id')
       .order('is_primary', { ascending: false })
       .order('created_at', { ascending: true }),
     supabase

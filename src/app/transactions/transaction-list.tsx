@@ -31,7 +31,7 @@ export interface Transaction {
   category: { name: string; icon: string | null } | null
 }
 
-interface Wallet { id: string; name: string; currency: string; balance: string | number; is_primary: boolean }
+interface Wallet { id: string; name: string; currency: string; balance: string | number; is_primary: boolean; owner_id: string | null; group_id: string | null }
 interface Category { id: string; name: string; icon: string | null; type: 'income' | 'expense' | null }
 
 interface Props {
@@ -219,10 +219,12 @@ export function TransactionList({ transactions, wallets, categories, groupId, gr
     : transactions.filter(tx => tx.wallet?.group_id !== null)
   const groups = groupByDate(visibleTransactions)
 
-  const primaryWallet = wallets[0] ?? null
-  const totalBalance = wallets.reduce((sum, w) => sum + parseFloat(String(w.balance)), 0)
+  const personalWallets = wallets.filter(w => w.owner_id === currentUserId)
+  const groupWallets = wallets.filter(w => w.group_id !== null)
+  const primaryWallet = personalWallets.find(w => w.is_primary) ?? personalWallets[0] ?? null
   const primarySymbol = primaryWallet ? currencySymbol(primaryWallet.currency) : ''
-  const primaryBalance = primaryWallet ? parseFloat(String(primaryWallet.balance)).toFixed(2) : null
+  const personalTotal = personalWallets.reduce((s, w) => s + parseFloat(String(w.balance)), 0)
+  const groupTotal = groupWallets.reduce((s, w) => s + parseFloat(String(w.balance)), 0)
 
   return (
     <main className="w-full sm:max-w-4xl sm:mx-auto p-4 sm:p-8 space-y-4 sm:space-y-6">
@@ -257,34 +259,49 @@ export function TransactionList({ transactions, wallets, categories, groupId, gr
         </div>
       </div>
 
-      {primaryWallet && (
-        <div className="flex flex-col md:flex-row md:flex-wrap md:items-center gap-x-4 gap-y-1 rounded-lg bg-muted/40 border px-4 py-2.5 text-sm text-muted-foreground">
-          <div className="flex items-center gap-1.5">
-            <span className="text-xs uppercase tracking-wide">
-              {primaryWallet.is_primary ? 'Primary' : 'Main'}
-            </span>
-            <span className="font-medium tabular-nums text-foreground">
-              {primarySymbol} {primaryBalance}
-            </span>
-            <span className="text-muted-foreground/60">{primaryWallet.name}</span>
-          </div>
-          {wallets.length > 1 && (
-            <div className="flex items-center gap-1.5">
-              <span className="text-xs uppercase tracking-wide">All wallets</span>
-              <span className="font-medium tabular-nums text-foreground">
-                {primarySymbol} {totalBalance.toFixed(2)}
-              </span>
-            </div>
-          )}
-        </div>
-      )}
-
       {groupId && (
         <TabSwitcher
           tabs={[{ value: 'personal', label: 'Personal' }, { value: 'group', label: groupName ? groupName.slice(0, 50) : 'Group' }]}
           active={activeTab}
           onChange={v => changeTab(v as 'personal' | 'group')}
         />
+      )}
+
+      {/* Wallet summary — tab-aware */}
+      {(!groupId || activeTab === 'personal') && primaryWallet && (
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 rounded-lg bg-muted/40 border px-4 py-2.5 text-sm text-muted-foreground">
+          <div className="flex items-center gap-1.5">
+            <span className="text-xs uppercase tracking-wide">
+              {primaryWallet.is_primary ? 'Primary' : 'Main'}
+            </span>
+            <span className="font-medium tabular-nums text-foreground">
+              {primarySymbol} {parseFloat(String(primaryWallet.balance)).toFixed(2)}
+            </span>
+            <span className="text-muted-foreground/60">{primaryWallet.name}</span>
+          </div>
+          {personalWallets.length > 1 && (
+            <div className="flex items-center gap-1.5">
+              <span className="text-xs uppercase tracking-wide">All personal</span>
+              <span className="font-medium tabular-nums text-foreground">
+                {primarySymbol} {personalTotal.toFixed(2)}
+              </span>
+            </div>
+          )}
+        </div>
+      )}
+
+      {groupId && activeTab === 'group' && groupWallets.length > 0 && (
+        <div className="flex flex-wrap items-center gap-2 rounded-lg bg-muted/40 border px-4 py-2.5">
+          {groupWallets.map(w => (
+            <span key={w.id} className="inline-flex items-center gap-1.5 text-xs rounded-full border px-2.5 py-1">
+              <span className="text-muted-foreground">{w.name}</span>
+              <span className="font-medium tabular-nums">{currencySymbol(w.currency)} {parseFloat(String(w.balance)).toFixed(2)}</span>
+            </span>
+          ))}
+          <span className="ml-auto text-xs text-muted-foreground tabular-nums">
+            Total: {primarySymbol} {groupTotal.toFixed(2)}
+          </span>
+        </div>
       )}
 
       {visibleTransactions.length === 0 ? (
