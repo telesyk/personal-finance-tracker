@@ -10,6 +10,15 @@ Versioning: PATCH only (`0.0.x`) until a release is explicitly approved.
 
 ---
 
+## [0.5.2] — 2026-08-05
+
+### Changed
+- `README.md` fully rewritten — replaced Next.js boilerplate with a real project
+  description covering features, tech stack, local setup, project structure, branch
+  strategy, data model invariants, and versioning rules
+
+---
+
 ## [0.5.1] — 2026-08-05
 
 ### Fixed
