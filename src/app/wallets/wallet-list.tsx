@@ -57,6 +57,7 @@ function WalletCard({
             {showOwner && wallet.owner?.display_name && (
               <span className="text-xs text-muted-foreground/70">{wallet.owner.display_name}</span>
             )}
+          </div>
           {wallet.owner_id === currentUserId && (
             <div className="flex items-center gap-1">
               <Button
@@ -114,10 +115,6 @@ interface Props {
   bankPresets: BankPreset[]
   currentUserId: string
   groupId: string | null
-  groupName: string | null
-}
-
-export function WalletList({ wallets, bankPresets, currentUserId, groupId, groupName }: Props) {
   groupName: string | null
 }
 
