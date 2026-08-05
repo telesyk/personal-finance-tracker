@@ -10,7 +10,13 @@ Versioning: PATCH only (`0.0.x`) until a release is explicitly approved.
 
 ---
 
-<<<<<<< HEAD
+## [0.4.2] — 2026-08-05
+
+### Fixed
+- Resolved Git merge conflict markers accidentally committed in 8 source files (`auth.ts`, `wallet-list.tsx`, `wallets/page.tsx`, `transaction-list.tsx`, `transactions/page.tsx`, `analytics-dashboard.tsx`, `analytics/page.tsx`, `CHANGELOG.md`); kept dev (HEAD) version in all cases
+
+---
+
 ## [0.4.1] — 2026-08-05
 
 ### Added
@@ -34,8 +40,6 @@ Versioning: PATCH only (`0.0.x`) until a release is explicitly approved.
 
 ---
 
-=======
->>>>>>> origin/main
 ## [0.4.0] — 2026-08-02
 
 ### Added
