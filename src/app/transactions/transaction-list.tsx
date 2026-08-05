@@ -1,6 +1,8 @@
 'use client'
 
 import { useState } from 'react'
+import { useTabState } from '@/hooks/use-tab-state'
+import { useWalletRealtime } from '@/hooks/use-wallet-realtime'
 import { useRouter } from 'next/navigation'
 import { Pencil, Trash2, ChevronLeft, ChevronRight, Plus } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
@@ -30,7 +32,7 @@ export interface Transaction {
   category: { name: string; icon: string | null } | null
 }
 
-interface Wallet { id: string; name: string; currency: string; balance: string | number; is_primary: boolean }
+interface Wallet { id: string; name: string; currency: string; balance: string | number; is_primary: boolean; owner_id: string | null; group_id: string | null }
 interface Category { id: string; name: string; icon: string | null; type: 'income' | 'expense' | null }
 
 interface Props {
@@ -38,6 +40,10 @@ interface Props {
   wallets: Wallet[]
   categories: Category[]
   groupId: string | null
+<<<<<<< HEAD
+  groupName: string | null
+=======
+>>>>>>> origin/main
   currentUserId: string
   month: string
 }
@@ -82,7 +88,7 @@ function formatDateHeader(dateStr: string) {
   })
 }
 
-export function TransactionList({ transactions, wallets, categories, groupId, currentUserId, month }: Props) {
+export function TransactionList({ transactions, wallets, categories, groupId, groupName, currentUserId, month }: Props) {
   const router = useRouter()
   const isCurrentMonth = month === currentMonthStr()
 
@@ -110,7 +116,12 @@ export function TransactionList({ transactions, wallets, categories, groupId, cu
   const [activeId, setActiveId] = useState<string | null>(null)
 
   // personal / group tab
+<<<<<<< HEAD
+  const { activeTab, changeTab } = useTabState(groupId)
+  useWalletRealtime()
+=======
   const [activeTab, setActiveTab] = useState<'personal' | 'group'>('personal')
+>>>>>>> origin/main
 
   function openCreate() {
     setEditingTx(null)
@@ -217,10 +228,19 @@ export function TransactionList({ transactions, wallets, categories, groupId, cu
     : transactions.filter(tx => tx.wallet?.group_id !== null)
   const groups = groupByDate(visibleTransactions)
 
+<<<<<<< HEAD
+  const personalWallets = wallets.filter(w => w.owner_id === currentUserId)
+  const groupWallets = wallets.filter(w => w.group_id !== null)
+  const primaryWallet = personalWallets.find(w => w.is_primary) ?? personalWallets[0] ?? null
+  const primarySymbol = primaryWallet ? currencySymbol(primaryWallet.currency) : ''
+  const personalTotal = personalWallets.reduce((s, w) => s + parseFloat(String(w.balance)), 0)
+  const groupTotal = groupWallets.reduce((s, w) => s + parseFloat(String(w.balance)), 0)
+=======
   const primaryWallet = wallets[0] ?? null
   const totalBalance = wallets.reduce((sum, w) => sum + parseFloat(String(w.balance)), 0)
   const primarySymbol = primaryWallet ? currencySymbol(primaryWallet.currency) : ''
   const primaryBalance = primaryWallet ? parseFloat(String(primaryWallet.balance)).toFixed(2) : null
+>>>>>>> origin/main
 
   return (
     <main className="w-full sm:max-w-4xl sm:mx-auto p-4 sm:p-8 space-y-4 sm:space-y-6">
@@ -255,34 +275,58 @@ export function TransactionList({ transactions, wallets, categories, groupId, cu
         </div>
       </div>
 
-      {primaryWallet && (
-        <div className="flex flex-col md:flex-row md:flex-wrap md:items-center gap-x-4 gap-y-1 rounded-lg bg-muted/40 border px-4 py-2.5 text-sm text-muted-foreground">
+      {groupId && (
+        <TabSwitcher
+          tabs={[{ value: 'personal', label: 'Personal' }, { value: 'group', label: groupName ? groupName.slice(0, 50) : 'Group' }]}
+          active={activeTab}
+          onChange={v => changeTab(v as 'personal' | 'group')}
+        />
+      )}
+
+      {/* Wallet summary — tab-aware */}
+      {(!groupId || activeTab === 'personal') && primaryWallet && (
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 rounded-lg bg-muted/40 border px-4 py-2.5 text-sm text-muted-foreground">
           <div className="flex items-center gap-1.5">
             <span className="text-xs uppercase tracking-wide">
               {primaryWallet.is_primary ? 'Primary' : 'Main'}
             </span>
             <span className="font-medium tabular-nums text-foreground">
-              {primarySymbol} {primaryBalance}
+              {primarySymbol} {parseFloat(String(primaryWallet.balance)).toFixed(2)}
             </span>
             <span className="text-muted-foreground/60">{primaryWallet.name}</span>
           </div>
-          {wallets.length > 1 && (
+          {personalWallets.length > 1 && (
             <div className="flex items-center gap-1.5">
-              <span className="text-xs uppercase tracking-wide">All wallets</span>
+              <span className="text-xs uppercase tracking-wide">All personal</span>
               <span className="font-medium tabular-nums text-foreground">
-                {primarySymbol} {totalBalance.toFixed(2)}
+                {primarySymbol} {personalTotal.toFixed(2)}
               </span>
             </div>
           )}
         </div>
       )}
 
+<<<<<<< HEAD
+      {groupId && activeTab === 'group' && groupWallets.length > 0 && (
+        <div className="flex flex-wrap items-center gap-2 rounded-lg bg-muted/40 border px-4 py-2.5">
+          {groupWallets.map(w => (
+            <span key={w.id} className="inline-flex items-center gap-1.5 text-xs rounded-full border px-2.5 py-1">
+              <span className="text-muted-foreground">{w.name}</span>
+              <span className="font-medium tabular-nums">{currencySymbol(w.currency)} {parseFloat(String(w.balance)).toFixed(2)}</span>
+            </span>
+          ))}
+          <span className="ml-auto text-xs text-muted-foreground tabular-nums">
+            Total: {primarySymbol} {groupTotal.toFixed(2)}
+          </span>
+        </div>
+=======
       {groupId && (
         <TabSwitcher
           tabs={[{ value: 'personal', label: 'Personal' }, { value: 'group', label: 'Group' }]}
           active={activeTab}
           onChange={v => setActiveTab(v as 'personal' | 'group')}
         />
+>>>>>>> origin/main
       )}
 
       {visibleTransactions.length === 0 ? (
@@ -294,9 +338,24 @@ export function TransactionList({ transactions, wallets, categories, groupId, cu
         <div className="rounded-lg border divide-y">
           {groups.map(group => (
             <React.Fragment key={`date-${group.date}`}>
-              <div className="px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground bg-muted/30">
-                {formatDateHeader(group.date)}
-              </div>
+              {(() => {
+                const dayNet = group.items.reduce((s, tx) => {
+                  const n = parseFloat(String(tx.amount))
+                  if (tx.type === 'income') return s + n
+                  if (tx.type === 'expense') return s - n
+                  return s
+                }, 0)
+                return (
+                  <div className="px-4 py-1.5 flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-muted-foreground bg-muted/30">
+                    <span>{formatDateHeader(group.date)}</span>
+                    {dayNet !== 0 && (
+                      <span className={cn('tabular-nums normal-case font-medium', dayNet > 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-500')}>
+                        {dayNet > 0 ? '+' : '−'}{primarySymbol} {Math.abs(dayNet).toFixed(2)}
+                      </span>
+                    )}
+                  </div>
+                )
+              })()}
               {group.items.map(tx => (
                 <div
                   key={tx.id}

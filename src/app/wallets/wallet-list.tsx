@@ -1,6 +1,8 @@
 'use client'
 
 import { useState } from 'react'
+import { useTabState } from '@/hooks/use-tab-state'
+import { useWalletRealtime } from '@/hooks/use-wallet-realtime'
 import { useRouter } from 'next/navigation'
 import { Pencil, Trash2 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
@@ -19,12 +21,20 @@ function WalletCard({
   wallet,
   preset,
   currentUserId,
+<<<<<<< HEAD
+  showOwner,
+=======
+>>>>>>> origin/main
   onEdit,
   onDelete,
 }: {
   wallet: Wallet
   preset: BankPreset | undefined
   currentUserId: string
+<<<<<<< HEAD
+  showOwner: boolean
+=======
+>>>>>>> origin/main
   onEdit: (w: Wallet) => void
   onDelete: (w: Wallet) => void
 }) {
@@ -32,8 +42,14 @@ function WalletCard({
     <Card>
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
+<<<<<<< HEAD
+          <div className="flex flex-col gap-0.5">
+            <div className="flex items-center gap-2 flex-wrap">
+              <CardTitle className="text-base">{wallet.name}</CardTitle>
+=======
           <div className="flex items-center gap-2 flex-wrap">
             <CardTitle className="text-base">{wallet.name}</CardTitle>
+>>>>>>> origin/main
             {wallet.is_primary && (
               <span className="text-xs font-medium px-1.5 py-0.5 rounded border border-primary/40 text-primary bg-primary/10">
                 Primary
@@ -49,6 +65,13 @@ function WalletCard({
               </span>
             )}
           </div>
+<<<<<<< HEAD
+            {showOwner && wallet.owner?.display_name && (
+              <span className="text-xs text-muted-foreground/70">{wallet.owner.display_name}</span>
+            )}
+          </div>
+=======
+>>>>>>> origin/main
           {wallet.owner_id === currentUserId && (
             <div className="flex items-center gap-1">
               <Button
@@ -87,7 +110,7 @@ function WalletCard({
 }
 
 
-interface Wallet {
+export interface Wallet {
   id: string
   name: string
   currency: string
@@ -96,6 +119,7 @@ interface Wallet {
   owner_id: string | null
   group_id: string | null
   is_primary: boolean
+  owner: { display_name: string } | null
 }
 
 interface BankPreset { id: string; name: string; type: string }
@@ -105,9 +129,16 @@ interface Props {
   bankPresets: BankPreset[]
   currentUserId: string
   groupId: string | null
+<<<<<<< HEAD
+  groupName: string | null
+}
+
+export function WalletList({ wallets, bankPresets, currentUserId, groupId, groupName }: Props) {
+=======
 }
 
 export function WalletList({ wallets, bankPresets, currentUserId, groupId }: Props) {
+>>>>>>> origin/main
   const router = useRouter()
 
   // form dialog state
@@ -127,7 +158,12 @@ export function WalletList({ wallets, bankPresets, currentUserId, groupId }: Pro
   const [currency, setCurrency] = useState('EUR')
   const [isPrimary, setIsPrimary] = useState(false)
   const [isShared, setIsShared] = useState(false)
+<<<<<<< HEAD
+  const { activeTab, changeTab } = useTabState(groupId)
+  useWalletRealtime()
+=======
   const [activeTab, setActiveTab] = useState<'personal' | 'group'>('personal')
+>>>>>>> origin/main
 
   function openCreate() {
     setEditingWallet(null)
@@ -200,8 +236,18 @@ export function WalletList({ wallets, bankPresets, currentUserId, groupId }: Pro
 
   async function handleDelete() {
     if (!deletingWallet) return
-    setDeleteLoading(true)
     setDeleteError(null)
+
+    if (parseAmount(deletingWallet.balance) !== 0) {
+      setDeleteError('Cannot delete a wallet with a non-zero balance. Transfer the balance out first.')
+      return
+    }
+    if (deletingWallet.group_id !== null) {
+      setDeleteError('Cannot delete a wallet that is shared with the group. Unshare it first.')
+      return
+    }
+
+    setDeleteLoading(true)
 
     const supabase = createClient()
     const { error } = await supabase.from('wallets').delete().eq('id', deletingWallet.id)
@@ -209,7 +255,6 @@ export function WalletList({ wallets, bankPresets, currentUserId, groupId }: Pro
     setDeleteLoading(false)
 
     if (error) {
-      // Postgres ON DELETE RESTRICT fires when the wallet has transactions
       setDeleteError(
         error.code === '23503'
           ? 'Cannot delete a wallet that has transactions.'
@@ -249,9 +294,15 @@ export function WalletList({ wallets, bankPresets, currentUserId, groupId }: Pro
           <div className="space-y-4">
             {groupId && (
               <TabSwitcher
+<<<<<<< HEAD
+                tabs={[{ value: 'personal', label: 'Personal' }, { value: 'group', label: groupName ? groupName.slice(0, 50) : 'Group' }]}
+                active={activeTab}
+                onChange={v => changeTab(v as 'personal' | 'group')}
+=======
                 tabs={[{ value: 'personal', label: 'Personal' }, { value: 'group', label: 'Group' }]}
                 active={activeTab}
                 onChange={v => setActiveTab(v as 'personal' | 'group')}
+>>>>>>> origin/main
               />
             )}
 
@@ -302,6 +353,10 @@ export function WalletList({ wallets, bankPresets, currentUserId, groupId }: Pro
                     wallet={wallet}
                     preset={bankPresets.find(p => p.id === wallet.bank_preset_id)}
                     currentUserId={currentUserId}
+<<<<<<< HEAD
+                    showOwner={!!groupId && activeTab === 'group'}
+=======
+>>>>>>> origin/main
                     onEdit={openEdit}
                     onDelete={(w) => { setDeleteError(null); setDeletingWallet(w) }}
                   />
