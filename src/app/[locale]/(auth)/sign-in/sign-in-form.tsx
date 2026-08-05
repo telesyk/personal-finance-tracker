@@ -1,37 +1,34 @@
 'use client'
 
 import { useState } from 'react'
-import Link from 'next/link'
+import { useRouter } from '@/i18n/navigation'
+import { Link } from '@/i18n/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 
-export function SignUpForm({ inviteToken }: { inviteToken?: string }) {
+export function SignInForm({ inviteToken }: { inviteToken?: string }) {
+  const router = useRouter()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
-  const [success, setSuccess] = useState(false)
   const [loading, setLoading] = useState(false)
 
-  async function handleEmailSignUp(e: React.FormEvent) {
+  const postAuthPath = inviteToken ? `/invite/${inviteToken}` : '/dashboard'
+
+  async function handleEmailSignIn(e: React.FormEvent) {
     e.preventDefault()
     setError(null)
     setLoading(true)
     const supabase = createClient()
-    const callbackUrl = inviteToken
-      ? `${window.location.origin}/auth/callback?invite=${inviteToken}`
-      : `${window.location.origin}/auth/callback`
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: { emailRedirectTo: callbackUrl },
-    })
+    const { error } = await supabase.auth.signInWithPassword({ email, password })
     if (error) {
       setError(error.message)
       setLoading(false)
     } else {
-      setSuccess(true)
+      router.push(postAuthPath)
+      router.refresh()
     }
   }
 
@@ -46,30 +43,16 @@ export function SignUpForm({ inviteToken }: { inviteToken?: string }) {
     })
   }
 
-  if (success) {
-    return (
-      <Card className="w-full max-w-sm">
-        <CardHeader>
-          <CardTitle>Check your email</CardTitle>
-          <CardDescription>
-            We sent a confirmation link to <strong>{email}</strong>. Click it to activate your account
-            {inviteToken ? ' and accept your invite' : ''}.
-          </CardDescription>
-        </CardHeader>
-      </Card>
-    )
-  }
-
   return (
     <Card className="w-full max-w-sm">
       <CardHeader>
-        <CardTitle>Create Account</CardTitle>
+        <CardTitle>Sign In</CardTitle>
         <CardDescription>
-          {inviteToken ? 'Create an account to accept your invite' : 'Join your family finance tracker'}
+          {inviteToken ? 'Sign in to accept your invite' : 'Access your family finance tracker'}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        <form onSubmit={handleEmailSignUp} className="space-y-3">
+        <form onSubmit={handleEmailSignIn} className="space-y-3">
           <div className="space-y-1">
             <label className="text-sm font-medium" htmlFor="email">Email</label>
             <Input
@@ -86,16 +69,15 @@ export function SignUpForm({ inviteToken }: { inviteToken?: string }) {
             <Input
               id="password"
               type="password"
-              autoComplete="new-password"
+              autoComplete="current-password"
               value={password}
               onChange={e => setPassword(e.target.value)}
               required
-              minLength={6}
             />
           </div>
           {error && <p className="text-sm text-destructive">{error}</p>}
           <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? 'Creating account…' : 'Create Account'}
+            {loading ? 'Signing in…' : 'Sign In'}
           </Button>
         </form>
         <div className="relative">
@@ -111,12 +93,12 @@ export function SignUpForm({ inviteToken }: { inviteToken?: string }) {
         </Button>
       </CardContent>
       <CardFooter className="justify-center text-sm">
-        <span className="text-muted-foreground">Already have an account?&nbsp;</span>
+        <span className="text-muted-foreground">No account?&nbsp;</span>
         <Link
-          href={inviteToken ? `/sign-in?invite=${inviteToken}` : '/sign-in'}
+          href={inviteToken ? `/sign-up?invite=${inviteToken}` : '/sign-up'}
           className="underline underline-offset-4"
         >
-          Sign in
+          Sign up
         </Link>
       </CardFooter>
     </Card>

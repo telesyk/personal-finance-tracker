@@ -2,8 +2,6 @@ import type { Metadata, Viewport } from "next";
 import { Geist_Mono, Montserrat, Poppins } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
-import { Header } from "@/components/header";
-import { BottomNav } from "@/components/bottom-nav";
 import { ThemeProvider } from "@/components/theme-provider";
 
 const poppins = Poppins({ subsets: ['latin'], weight: ['400', '500', '600', '700'], variable: '--font-heading' });
@@ -47,9 +45,7 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col pb-16 md:pb-0">
         <ThemeProvider>
-          <Header />
           {children}
-          <BottomNav />
         </ThemeProvider>
       </body>
     </html>

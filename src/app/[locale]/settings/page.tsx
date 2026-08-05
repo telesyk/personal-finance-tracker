@@ -1,4 +1,4 @@
-import Link from 'next/link'
+import { Link } from '@/i18n/navigation'
 import { requireProfile } from '@/lib/auth'
 import { RenameGroupForm } from './rename-group-form'
 import { InviteSection } from './invite-section'

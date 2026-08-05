@@ -1,8 +1,8 @@
+// Root path — the next-intl middleware redirects / to /{locale}/ automatically.
+// This page is a fallback for edge cases where middleware does not run
+// (e.g. static export or direct server rendering without a proxy).
 import { redirect } from 'next/navigation'
-import { createClient } from '@/lib/supabase/server'
 
-export default async function Home() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  redirect(user ? '/dashboard' : '/sign-in')
+export default function RootPage() {
+  redirect('/en')
 }

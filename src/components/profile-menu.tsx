@@ -1,6 +1,6 @@
 'use client'
 
-import Link from 'next/link'
+import { Link } from '@/i18n/navigation'
 import { Settings, LogOut } from 'lucide-react'
 import {
   DropdownMenu,

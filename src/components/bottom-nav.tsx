@@ -1,7 +1,6 @@
 'use client'
 
-import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { Link, usePathname } from '@/i18n/navigation'
 import { LayoutDashboard, Wallet, ArrowLeftRight, BarChart2, UserCircle } from 'lucide-react'
 import { cn } from '@/lib/utils'
 

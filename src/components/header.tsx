@@ -1,7 +1,7 @@
-import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { ProfileMenu } from './profile-menu'
 import { ThemeToggle } from './theme-toggle'
+import { Link } from '@/i18n/navigation'
 
 export async function Header() {
   const supabase = await createClient()
