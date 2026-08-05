@@ -40,10 +40,7 @@ interface Props {
   wallets: Wallet[]
   categories: Category[]
   groupId: string | null
-<<<<<<< HEAD
   groupName: string | null
-=======
->>>>>>> origin/main
   currentUserId: string
   month: string
 }
@@ -116,12 +113,8 @@ export function TransactionList({ transactions, wallets, categories, groupId, gr
   const [activeId, setActiveId] = useState<string | null>(null)
 
   // personal / group tab
-<<<<<<< HEAD
   const { activeTab, changeTab } = useTabState(groupId)
   useWalletRealtime()
-=======
-  const [activeTab, setActiveTab] = useState<'personal' | 'group'>('personal')
->>>>>>> origin/main
 
   function openCreate() {
     setEditingTx(null)
@@ -228,19 +221,12 @@ export function TransactionList({ transactions, wallets, categories, groupId, gr
     : transactions.filter(tx => tx.wallet?.group_id !== null)
   const groups = groupByDate(visibleTransactions)
 
-<<<<<<< HEAD
   const personalWallets = wallets.filter(w => w.owner_id === currentUserId)
   const groupWallets = wallets.filter(w => w.group_id !== null)
   const primaryWallet = personalWallets.find(w => w.is_primary) ?? personalWallets[0] ?? null
   const primarySymbol = primaryWallet ? currencySymbol(primaryWallet.currency) : ''
   const personalTotal = personalWallets.reduce((s, w) => s + parseFloat(String(w.balance)), 0)
   const groupTotal = groupWallets.reduce((s, w) => s + parseFloat(String(w.balance)), 0)
-=======
-  const primaryWallet = wallets[0] ?? null
-  const totalBalance = wallets.reduce((sum, w) => sum + parseFloat(String(w.balance)), 0)
-  const primarySymbol = primaryWallet ? currencySymbol(primaryWallet.currency) : ''
-  const primaryBalance = primaryWallet ? parseFloat(String(primaryWallet.balance)).toFixed(2) : null
->>>>>>> origin/main
 
   return (
     <main className="w-full sm:max-w-4xl sm:mx-auto p-4 sm:p-8 space-y-4 sm:space-y-6">
@@ -306,7 +292,6 @@ export function TransactionList({ transactions, wallets, categories, groupId, gr
         </div>
       )}
 
-<<<<<<< HEAD
       {groupId && activeTab === 'group' && groupWallets.length > 0 && (
         <div className="flex flex-wrap items-center gap-2 rounded-lg bg-muted/40 border px-4 py-2.5">
           {groupWallets.map(w => (
@@ -319,14 +304,6 @@ export function TransactionList({ transactions, wallets, categories, groupId, gr
             Total: {primarySymbol} {groupTotal.toFixed(2)}
           </span>
         </div>
-=======
-      {groupId && (
-        <TabSwitcher
-          tabs={[{ value: 'personal', label: 'Personal' }, { value: 'group', label: 'Group' }]}
-          active={activeTab}
-          onChange={v => setActiveTab(v as 'personal' | 'group')}
-        />
->>>>>>> origin/main
       )}
 
       {visibleTransactions.length === 0 ? (

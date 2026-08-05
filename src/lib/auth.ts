@@ -10,16 +10,11 @@ export async function requireUser() {
 
 export async function requireProfile() {
   const { supabase, user } = await requireUser()
-<<<<<<< HEAD
   let { data: profile } = await supabase
-=======
-  const { data: profile } = await supabase
->>>>>>> origin/main
     .from('profiles')
     .select('group_id, display_name')
     .eq('id', user.id)
     .single()
-<<<<<<< HEAD
 
   // Fallback: trigger may have missed this user (e.g. registered before migration ran)
   if (!profile) {
@@ -36,7 +31,5 @@ export async function requireProfile() {
     profile = data
   }
 
-=======
->>>>>>> origin/main
   return { supabase, user, profile }
 }

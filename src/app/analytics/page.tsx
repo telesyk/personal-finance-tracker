@@ -37,12 +37,8 @@ export default async function AnalyticsPage({
       month={month}
       transactions={(transactions ?? []) as unknown as AnalyticsTransaction[]}
       wallets={wallets ?? []}
-<<<<<<< HEAD
       groupId={groupId}
       groupName={group?.name ?? null}
-=======
-      groupId={profile?.group_id ?? null}
->>>>>>> origin/main
       currentUserId={user.id}
     />
   )

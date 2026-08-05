@@ -1,10 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-<<<<<<< HEAD
 import { useTabState } from '@/hooks/use-tab-state'
-=======
->>>>>>> origin/main
+import { useTabState } from '@/hooks/use-tab-state'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
@@ -30,7 +28,6 @@ interface Props {
   transactions: AnalyticsTransaction[]
   wallets: Wallet[]
   groupId: string | null
-<<<<<<< HEAD
   groupName: string | null
   currentUserId: string
 }
@@ -39,15 +36,13 @@ export function AnalyticsDashboard({ month, transactions, wallets, groupId, grou
   const router = useRouter()
   const isCurrentMonth = month === currentMonthStr()
   const { activeTab, changeTab } = useTabState(groupId)
-=======
   currentUserId: string
 }
 
-export function AnalyticsDashboard({ month, transactions, wallets, groupId, currentUserId }: Props) {
+export function AnalyticsDashboard({ month, transactions, wallets, groupId, groupName, currentUserId }: Props) {
   const router = useRouter()
   const isCurrentMonth = month === currentMonthStr()
-  const [activeTab, setActiveTab] = useState<'personal' | 'group'>('personal')
->>>>>>> origin/main
+  const { activeTab, changeTab } = useTabState(groupId)
 
   const visibleTxs = !groupId || activeTab === 'personal'
     ? transactions.filter(t => t.wallet?.owner_id === currentUserId)
@@ -112,15 +107,12 @@ export function AnalyticsDashboard({ month, transactions, wallets, groupId, curr
       {/* Personal / Group tabs */}
       {groupId && (
         <TabSwitcher
-<<<<<<< HEAD
           tabs={[{ value: 'personal', label: 'Personal' }, { value: 'group', label: groupName ? groupName.slice(0, 50) : 'Group' }]}
           active={activeTab}
           onChange={v => changeTab(v as 'personal' | 'group')}
-=======
-          tabs={[{ value: 'personal', label: 'Personal' }, { value: 'group', label: 'Group' }]}
+          tabs={[{ value: 'personal', label: 'Personal' }, { value: 'group', label: groupName ? groupName.slice(0, 50) : 'Group' }]}
           active={activeTab}
-          onChange={v => setActiveTab(v as 'personal' | 'group')}
->>>>>>> origin/main
+          onChange={v => changeTab(v as 'personal' | 'group')}
         />
       )}
 
