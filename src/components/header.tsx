@@ -1,3 +1,4 @@
+import { getTranslations } from 'next-intl/server'
 import { createClient } from '@/lib/supabase/server'
 import { ProfileMenu } from './profile-menu'
 import { ThemeToggle } from './theme-toggle'
@@ -9,6 +10,8 @@ export async function Header() {
 
   if (!user) return null
 
+  const t = await getTranslations('nav')
+
   return (
     <header className="border-b px-4 py-2 flex items-center justify-between">
       <div className="flex items-center gap-6">
@@ -16,9 +19,9 @@ export async function Header() {
           Finance Tracker
         </Link>
         <nav className="hidden md:flex items-center gap-4 text-sm text-muted-foreground">
-          <Link href="/wallets" className="hover:text-foreground transition-colors">Wallets</Link>
-          <Link href="/transactions" className="hover:text-foreground transition-colors">Transactions</Link>
-          <Link href="/analytics" className="hover:text-foreground transition-colors">Analytics</Link>
+          <Link href="/wallets" className="hover:text-foreground transition-colors">{t('wallets')}</Link>
+          <Link href="/transactions" className="hover:text-foreground transition-colors">{t('transactions')}</Link>
+          <Link href="/analytics" className="hover:text-foreground transition-colors">{t('analytics')}</Link>
         </nav>
       </div>
       <div className="flex items-center gap-1">

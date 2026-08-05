@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { useRouter } from '@/i18n/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
@@ -8,6 +9,8 @@ import { Input } from '@/components/ui/input'
 
 export function RenameGroupForm({ groupId, currentName }: { groupId: string; currentName: string }) {
   const router = useRouter()
+  const t = useTranslations('settings')
+  const tc = useTranslations('common')
   const [name, setName] = useState(currentName)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -39,7 +42,7 @@ export function RenameGroupForm({ groupId, currentName }: { groupId: string; cur
         <Input
           value={name}
           onChange={e => { setName(e.target.value); setSaved(false) }}
-          placeholder="Group name"
+          placeholder={t('groupName')}
           className="flex-1"
         />
         <Button
@@ -48,7 +51,7 @@ export function RenameGroupForm({ groupId, currentName }: { groupId: string; cur
           onClick={handleSave}
           disabled={loading || unchanged}
         >
-          {loading ? 'Saving…' : saved ? 'Saved' : 'Save'}
+          {loading ? t('renaming') : saved ? tc('confirm') : t('rename')}
         </Button>
       </div>
       {error && <p className="text-xs text-red-600 dark:text-red-400">{error}</p>}

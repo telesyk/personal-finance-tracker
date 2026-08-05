@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { useTabState } from '@/hooks/use-tab-state'
 import { useWalletRealtime } from '@/hooks/use-wallet-realtime'
 import { useRouter } from '@/i18n/navigation'
@@ -41,16 +42,16 @@ function WalletCard({
               <CardTitle className="text-base">{wallet.name}</CardTitle>
             {wallet.is_primary && (
               <span className="text-xs font-medium px-1.5 py-0.5 rounded border border-primary/40 text-primary bg-primary/10">
-                Primary
+                {t('primary')}
               </span>
             )}
             {wallet.group_id ? (
               <span className="text-xs font-medium px-1.5 py-0.5 rounded border border-muted text-muted-foreground">
-                Shared
+                {t('shared')}
               </span>
             ) : (
               <span className="text-xs px-1.5 py-0.5 rounded border border-dashed border-muted text-muted-foreground/60">
-                Private
+                {t('private')}
               </span>
             )}
           </div>
@@ -120,6 +121,10 @@ interface Props {
 
 export function WalletList({ wallets, bankPresets, currentUserId, groupId, groupName }: Props) {
   const router = useRouter()
+  const t = useTranslations('wallets')
+  const tf = useTranslations('wallets.form')
+  const td = useTranslations('wallets.delete')
+  const tc = useTranslations('common')
 
   // form dialog state
   const [editingWallet, setEditingWallet] = useState<Wallet | null>(null)
@@ -215,11 +220,11 @@ export function WalletList({ wallets, bankPresets, currentUserId, groupId, group
     setDeleteError(null)
 
     if (parseAmount(deletingWallet.balance) !== 0) {
-      setDeleteError('Cannot delete a wallet with a non-zero balance. Transfer the balance out first.')
+      setDeleteError(td('errorBalance'))
       return
     }
     if (deletingWallet.group_id !== null) {
-      setDeleteError('Cannot delete a wallet that is shared with the group. Unshare it first.')
+      setDeleteError(td('errorShared'))
       return
     }
 
@@ -233,7 +238,7 @@ export function WalletList({ wallets, bankPresets, currentUserId, groupId, group
     if (error) {
       setDeleteError(
         error.code === '23503'
-          ? 'Cannot delete a wallet that has transactions.'
+          ? td('errorTransactions')
           : error.message
       )
       return
@@ -248,14 +253,14 @@ export function WalletList({ wallets, bankPresets, currentUserId, groupId, group
   return (
     <main className="w-full sm:max-w-2xl sm:mx-auto p-4 sm:p-8 space-y-4 sm:space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="font-heading text-2xl font-semibold">Wallets</h1>
-        <Button onClick={openCreate}>New wallet</Button>
+        <h1 className="font-heading text-2xl font-semibold">{t('title')}</h1>
+        <Button onClick={openCreate}>{t('new')}</Button>
       </div>
 
       {wallets.length === 0 ? (
         <div className="flex flex-col items-center gap-4 py-20 text-muted-foreground">
-          <p>No wallets yet.</p>
-          <Button variant="outline" onClick={openCreate}>Add your first wallet</Button>
+          <p>{t('empty')}</p>
+          <Button variant="outline" onClick={openCreate}>{t('addFirst')}</Button>
         </div>
       ) : (() => {
         const personalWallets = wallets.filter(w => w.owner_id === currentUserId)
@@ -270,7 +275,7 @@ export function WalletList({ wallets, bankPresets, currentUserId, groupId, group
           <div className="space-y-4">
             {groupId && (
               <TabSwitcher
-                tabs={[{ value: 'personal', label: 'Personal' }, { value: 'group', label: groupName ? groupName.slice(0, 50) : 'Group' }]}
+                tabs={[{ value: 'personal', label: t('tabPersonal') }, { value: 'group', label: groupName ? groupName.slice(0, 50) : t('tabGroup') }]}
                 active={activeTab}
                 onChange={v => changeTab(v as 'personal' | 'group')}
               />
@@ -281,7 +286,7 @@ export function WalletList({ wallets, bankPresets, currentUserId, groupId, group
               <div className="flex flex-col md:flex-row md:flex-wrap md:items-center gap-x-4 gap-y-1 rounded-lg bg-muted/40 border px-4 py-2.5 text-sm text-muted-foreground">
                 <div className="flex items-center gap-1.5">
                   <span className="text-xs uppercase tracking-wide">
-                    {primaryWallet.is_primary ? 'Primary' : 'Main'}
+                    {primaryWallet.is_primary ? t('primary') : t('primary')}
                   </span>
                   <span className="font-medium tabular-nums text-foreground">
                     {formatAmount(primaryWallet.balance, primaryWallet.currency)}
@@ -290,7 +295,7 @@ export function WalletList({ wallets, bankPresets, currentUserId, groupId, group
                 </div>
                 {personalWallets.length > 1 && (
                   <div className="flex items-center gap-1.5">
-                    <span className="text-xs uppercase tracking-wide">All personal</span>
+                    <span className="text-xs uppercase tracking-wide">{t('allPersonal')}</span>
                     <span className="font-medium tabular-nums text-foreground">
                       {primarySymbol} {personalTotal.toFixed(2)}
                     </span>
@@ -303,7 +308,7 @@ export function WalletList({ wallets, bankPresets, currentUserId, groupId, group
             {groupId && activeTab === 'group' && groupWallets.length > 0 && (
               <div className="flex items-center gap-x-4 rounded-lg bg-muted/40 border px-4 py-2.5 text-sm text-muted-foreground">
                 <div className="flex items-center gap-1.5">
-                  <span className="text-xs uppercase tracking-wide">Group total</span>
+                  <span className="text-xs uppercase tracking-wide">{t('groupTotal')}</span>
                   <span className="font-medium tabular-nums text-foreground">
                     {primarySymbol} {groupTotal.toFixed(2)}
                   </span>
@@ -313,7 +318,7 @@ export function WalletList({ wallets, bankPresets, currentUserId, groupId, group
 
             {visibleWallets.length === 0 ? (
               <p className="text-sm text-muted-foreground py-8 text-center">
-                {activeTab === 'group' ? 'No wallets shared with the group yet.' : 'No wallets yet.'}
+                {activeTab === 'group' ? t('emptyGroup') : t('empty')}
               </p>
             ) : (
               <div className="space-y-3">
@@ -338,14 +343,14 @@ export function WalletList({ wallets, bankPresets, currentUserId, groupId, group
       <Dialog open={dialogOpen} onOpenChange={handleDialogOpenChange}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle className="font-heading">{isEdit ? 'Edit wallet' : 'New wallet'}</DialogTitle>
+            <DialogTitle className="font-heading">{isEdit ? tf('titleEdit') : tf('titleNew')}</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4 pt-2">
             <div className="space-y-2">
-              <Label htmlFor="wallet-name">Name</Label>
+              <Label htmlFor="wallet-name">{tf('name')}</Label>
               <Input
                 id="wallet-name"
-                placeholder="e.g. Jonas – Revolut"
+                placeholder={tf('namePlaceholder')}
                 value={name}
                 onChange={e => setName(e.target.value)}
                 required
@@ -355,14 +360,14 @@ export function WalletList({ wallets, bankPresets, currentUserId, groupId, group
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="wallet-preset">Bank preset</Label>
+              <Label htmlFor="wallet-preset">{tf('bankPreset')}</Label>
               <select
                 id="wallet-preset"
                 value={presetId}
                 onChange={e => setPresetId(e.target.value)}
                 className="h-10 w-full border border-transparent border-b-input bg-transparent py-1 text-base text-foreground outline-none focus:border-b-ring md:text-sm disabled:opacity-50"
               >
-                <option value="none">None / Custom</option>
+                <option value="none">{tf('bankPresetNone')}</option>
                 {bankPresets.map(p => (
                   <option key={p.id} value={p.id}>{p.name}</option>
                 ))}
@@ -370,7 +375,7 @@ export function WalletList({ wallets, bankPresets, currentUserId, groupId, group
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="wallet-currency">Currency</Label>
+              <Label htmlFor="wallet-currency">{tf('currency')}</Label>
               <select
                 id="wallet-currency"
                 value={currency}
@@ -392,7 +397,7 @@ export function WalletList({ wallets, bankPresets, currentUserId, groupId, group
                 className="h-4 w-4 rounded border-input accent-primary cursor-pointer"
               />
               <Label htmlFor="wallet-primary" className="cursor-pointer font-normal">
-                Set as primary wallet
+                {tf('setPrimary')}
               </Label>
             </div>
 
@@ -406,7 +411,7 @@ export function WalletList({ wallets, bankPresets, currentUserId, groupId, group
                   className="h-4 w-4 rounded border-input accent-primary cursor-pointer"
                 />
                 <Label htmlFor="wallet-shared" className="cursor-pointer font-normal">
-                  Share with family group
+                  {tf('shareWithGroup')}
                 </Label>
               </div>
             )}
@@ -415,7 +420,7 @@ export function WalletList({ wallets, bankPresets, currentUserId, groupId, group
 
             <DialogFooter>
               <Button type="submit" className="w-full" disabled={loading || !name.trim()}>
-                {loading ? (isEdit ? 'Saving…' : 'Creating…') : (isEdit ? 'Save changes' : 'Create wallet')}
+                {loading ? (isEdit ? tc('saving') : tf('creating')) : (isEdit ? tf('submitEdit') : tf('submitNew'))}
               </Button>
             </DialogFooter>
           </form>
@@ -426,20 +431,18 @@ export function WalletList({ wallets, bankPresets, currentUserId, groupId, group
       <AlertDialog open={!!deletingWallet} onOpenChange={v => { if (!v) setDeletingWallet(null) }}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete "{deletingWallet?.name}"?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This action cannot be undone.
-            </AlertDialogDescription>
+            <AlertDialogTitle>{td('title', { name: deletingWallet?.name ?? '' })}</AlertDialogTitle>
+            <AlertDialogDescription>{td('description')}</AlertDialogDescription>
           </AlertDialogHeader>
           {deleteError && <p className="text-sm text-destructive px-1">{deleteError}</p>}
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={deleteLoading}>Cancel</AlertDialogCancel>
+            <AlertDialogCancel disabled={deleteLoading}>{tc('cancel')}</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDelete}
               disabled={deleteLoading}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              {deleteLoading ? 'Deleting…' : 'Delete'}
+              {deleteLoading ? tc('deleting') : tc('delete')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

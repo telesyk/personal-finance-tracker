@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { Link } from '@/i18n/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
@@ -8,6 +9,7 @@ import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 
 export function SignUpForm({ inviteToken }: { inviteToken?: string }) {
+  const t = useTranslations('auth')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
@@ -63,7 +65,7 @@ export function SignUpForm({ inviteToken }: { inviteToken?: string }) {
   return (
     <Card className="w-full max-w-sm">
       <CardHeader>
-        <CardTitle>Create Account</CardTitle>
+        <CardTitle>{t('signUp')}</CardTitle>
         <CardDescription>
           {inviteToken ? 'Create an account to accept your invite' : 'Join your family finance tracker'}
         </CardDescription>
@@ -71,7 +73,7 @@ export function SignUpForm({ inviteToken }: { inviteToken?: string }) {
       <CardContent className="space-y-4">
         <form onSubmit={handleEmailSignUp} className="space-y-3">
           <div className="space-y-1">
-            <label className="text-sm font-medium" htmlFor="email">Email</label>
+            <label className="text-sm font-medium" htmlFor="email">{t('email')}</label>
             <Input
               id="email"
               type="email"
@@ -82,7 +84,7 @@ export function SignUpForm({ inviteToken }: { inviteToken?: string }) {
             />
           </div>
           <div className="space-y-1">
-            <label className="text-sm font-medium" htmlFor="password">Password</label>
+            <label className="text-sm font-medium" htmlFor="password">{t('password')}</label>
             <Input
               id="password"
               type="password"
@@ -95,7 +97,7 @@ export function SignUpForm({ inviteToken }: { inviteToken?: string }) {
           </div>
           {error && <p className="text-sm text-destructive">{error}</p>}
           <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? 'Creating account…' : 'Create Account'}
+            {loading ? t('signingUp') : t('signUp')}
           </Button>
         </form>
         <div className="relative">
@@ -107,16 +109,16 @@ export function SignUpForm({ inviteToken }: { inviteToken?: string }) {
           </div>
         </div>
         <Button variant="outline" type="button" className="w-full" onClick={handleGoogleSignIn}>
-          Continue with Google
+          {t('continueWithGoogle')}
         </Button>
       </CardContent>
       <CardFooter className="justify-center text-sm">
-        <span className="text-muted-foreground">Already have an account?&nbsp;</span>
+        <span className="text-muted-foreground">{t('haveAccount')}&nbsp;</span>
         <Link
           href={inviteToken ? `/sign-in?invite=${inviteToken}` : '/sign-in'}
           className="underline underline-offset-4"
         >
-          Sign in
+          {t('signIn')}
         </Link>
       </CardFooter>
     </Card>

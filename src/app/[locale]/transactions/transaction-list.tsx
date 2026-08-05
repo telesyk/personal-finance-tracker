@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { useTabState } from '@/hooks/use-tab-state'
 import { useWalletRealtime } from '@/hooks/use-wallet-realtime'
 import { useRouter } from '@/i18n/navigation'
@@ -87,6 +88,9 @@ function formatDateHeader(dateStr: string) {
 
 export function TransactionList({ transactions, wallets, categories, groupId, groupName, currentUserId, month }: Props) {
   const router = useRouter()
+  const t = useTranslations('transactions')
+  const tf = useTranslations('transactions.form')
+  const tc = useTranslations('common')
   const isCurrentMonth = month === currentMonthStr()
 
   // form dialog
@@ -153,15 +157,15 @@ export function TransactionList({ transactions, wallets, categories, groupId, gr
 
     const n = parseFloat(amount)
     if (!isFinite(n) || n <= 0) {
-      setFormError('Amount must be a positive number.')
+      setFormError(tf('errors.positiveAmount'))
       return
     }
     if (type === 'transfer' && !toWalletId) {
-      setFormError('Please select a destination wallet.')
+      setFormError(tf('errors.selectDestination'))
       return
     }
     if (type === 'transfer' && toWalletId === walletId) {
-      setFormError('Source and destination wallets must be different.')
+      setFormError(tf('errors.sameWallet'))
       return
     }
 
@@ -234,7 +238,7 @@ export function TransactionList({ transactions, wallets, categories, groupId, gr
   return (
     <main className="w-full sm:max-w-4xl sm:mx-auto p-4 sm:p-8 space-y-4 sm:space-y-6">
       <div className="flex flex-col md:flex-row md:items-center  md:justify-between gap-2">
-        <h1 className="font-heading text-2xl font-semibold">Transactions</h1>
+        <h1 className="font-heading text-2xl font-semibold">{t('title')}</h1>
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-1">
             <button
@@ -259,14 +263,14 @@ export function TransactionList({ transactions, wallets, categories, groupId, gr
           </div>
           <Button onClick={openCreate} disabled={wallets.length === 0} size="sm">
             <Plus className="h-4 w-4 sm:hidden" />
-            <span className="hidden sm:inline">Add transaction</span>
+            <span className="hidden sm:inline">{t('add')}</span>
           </Button>
         </div>
       </div>
 
       {groupId && (
         <TabSwitcher
-          tabs={[{ value: 'personal', label: 'Personal' }, { value: 'group', label: groupName ? groupName.slice(0, 50) : 'Group' }]}
+          tabs={[{ value: 'personal', label: t('tabPersonal') }, { value: 'group', label: groupName ? groupName.slice(0, 50) : t('tabGroup') }]}
           active={activeTab}
           onChange={v => changeTab(v as 'personal' | 'group')}
         />
@@ -277,7 +281,7 @@ export function TransactionList({ transactions, wallets, categories, groupId, gr
         <div className="flex flex-wrap items-center gap-x-4 gap-y-1 rounded-lg bg-muted/40 border px-4 py-2.5 text-sm text-muted-foreground">
           <div className="flex items-center gap-1.5">
             <span className="text-xs uppercase tracking-wide">
-              {primaryWallet.is_primary ? 'Primary' : 'Main'}
+              {primaryWallet.is_primary ? t('primaryWallet') : t('mainWallet')}
             </span>
             <span className="font-medium tabular-nums text-foreground">
               {primarySymbol} {parseFloat(String(primaryWallet.balance)).toFixed(2)}
@@ -286,7 +290,7 @@ export function TransactionList({ transactions, wallets, categories, groupId, gr
           </div>
           {personalWallets.length > 1 && (
             <div className="flex items-center gap-1.5">
-              <span className="text-xs uppercase tracking-wide">All personal</span>
+              <span className="text-xs uppercase tracking-wide">{t('allPersonal')}</span>
               <span className="font-medium tabular-nums text-foreground">
                 {primarySymbol} {personalTotal.toFixed(2)}
               </span>
@@ -304,15 +308,15 @@ export function TransactionList({ transactions, wallets, categories, groupId, gr
             </span>
           ))}
           <span className="ml-auto text-xs text-muted-foreground tabular-nums">
-            Total: {primarySymbol} {groupTotal.toFixed(2)}
+            {t('groupTotal')}: {primarySymbol} {groupTotal.toFixed(2)}
           </span>
         </div>
       )}
 
       {visibleTransactions.length === 0 ? (
         <div className="flex flex-col items-center gap-2 py-20 text-muted-foreground">
-          <p>{isCurrentMonth ? 'No transactions yet.' : `No transactions in ${monthLabel(month)}.`}</p>
-          {isCurrentMonth && <p className="text-sm">Add your first income or expense to get started.</p>}
+          <p>{isCurrentMonth ? t('empty') : t('emptyMonth', { month: monthLabel(month) })}</p>
+          {isCurrentMonth && <p className="text-sm">{t('emptyHint')}</p>}
         </div>
       ) : (
         <div className="rounded-lg border divide-y">
@@ -348,7 +352,7 @@ export function TransactionList({ transactions, wallets, categories, groupId, gr
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium leading-tight truncate">
                       {tx.type === 'transfer'
-                        ? 'Transfer'
+                        ? t('types.transfer')
                         : (tx.category?.name ?? 'Uncategorised')}
                     </p>
                     <p className="text-xs text-muted-foreground truncate">
@@ -399,34 +403,34 @@ export function TransactionList({ transactions, wallets, categories, groupId, gr
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="font-heading">
-              {isEdit ? 'Edit transaction' : 'Add transaction'}
+              {isEdit ? tf('titleEdit') : tf('titleNew')}
             </DialogTitle>
           </DialogHeader>
 
           <form onSubmit={handleSubmit} className="space-y-4 pt-2">
             <div className="space-y-2">
-              <Label>Type</Label>
+              <Label>{tf('type')}</Label>
               <div className="flex rounded-md border overflow-hidden">
-                {(['expense', 'income', 'transfer'] as TxType[]).map(t => (
+                {(['expense', 'income', 'transfer'] as TxType[]).map(txType => (
                   <button
-                    key={t}
+                    key={txType}
                     type="button"
-                    onClick={() => { setType(t); setCategoryId('none') }}
+                    onClick={() => { setType(txType); setCategoryId('none') }}
                     className={cn(
                       'flex-1 py-2 text-sm font-medium capitalize transition-colors',
-                      type === t
+                      type === txType
                         ? 'bg-primary text-primary-foreground'
                         : 'bg-background text-muted-foreground hover:bg-muted',
                     )}
                   >
-                    {t.charAt(0).toUpperCase() + t.slice(1)}
+                    {t(`types.${txType}`)}
                   </button>
                 ))}
               </div>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="tx-wallet">{type === 'transfer' ? 'From wallet' : 'Wallet'}</Label>
+              <Label htmlFor="tx-wallet">{type === 'transfer' ? tf('fromWallet') : tf('wallet')}</Label>
               <select
                 id="tx-wallet"
                 value={walletId}
@@ -442,7 +446,7 @@ export function TransactionList({ transactions, wallets, categories, groupId, gr
 
             {type === 'transfer' && (
               <div className="space-y-2">
-                <Label htmlFor="tx-to-wallet">To wallet</Label>
+                <Label htmlFor="tx-to-wallet">{tf('toWallet')}</Label>
                 <select
                   id="tx-to-wallet"
                   value={toWalletId}
@@ -450,7 +454,7 @@ export function TransactionList({ transactions, wallets, categories, groupId, gr
                   required
                   className="h-10 w-full border border-transparent border-b-input bg-transparent py-1 text-base text-foreground outline-none focus:border-b-ring md:text-sm disabled:opacity-50"
                 >
-                  <option value="">Select destination</option>
+                  <option value="">{tf('toWalletPlaceholder')}</option>
                   {toWalletOptions.map(w => (
                     <option key={w.id} value={w.id}>{w.name}</option>
                   ))}
@@ -459,7 +463,7 @@ export function TransactionList({ transactions, wallets, categories, groupId, gr
             )}
 
             <div className="space-y-2">
-              <Label htmlFor="tx-amount">Amount</Label>
+              <Label htmlFor="tx-amount">{tf('amount')}</Label>
               <Input
                 id="tx-amount"
                 type="text"
@@ -474,14 +478,14 @@ export function TransactionList({ transactions, wallets, categories, groupId, gr
 
             {type !== 'transfer' && (
               <div className="space-y-2">
-                <Label htmlFor="tx-category">Category</Label>
+                <Label htmlFor="tx-category">{tf('category')}</Label>
                 <select
                   id="tx-category"
                   value={categoryId}
                   onChange={e => setCategoryId(e.target.value)}
                   className="h-10 w-full border border-transparent border-b-input bg-transparent py-1 text-base text-foreground outline-none focus:border-b-ring md:text-sm disabled:opacity-50"
                 >
-                  <option value="none">— None —</option>
+                  <option value="none">{tf('categoryNone')}</option>
                   {parentCategories.map(parent => {
                     const children = childCategories.filter(c => c.parent_id === parent.id)
                     if (children.length === 0) {
@@ -508,7 +512,7 @@ export function TransactionList({ transactions, wallets, categories, groupId, gr
             )}
 
             <div className="space-y-2">
-              <Label htmlFor="tx-date">Date</Label>
+              <Label htmlFor="tx-date">{tf('date')}</Label>
               <Input
                 id="tx-date"
                 type="date"
@@ -520,7 +524,7 @@ export function TransactionList({ transactions, wallets, categories, groupId, gr
 
             <div className="space-y-2">
               <Label htmlFor="tx-note">
-                Note <span className="text-muted-foreground font-normal">(optional)</span>
+                {tf('note')} <span className="text-muted-foreground font-normal">({tc('optional')})</span>
               </Label>
               <Textarea
                 id="tx-note"
@@ -537,8 +541,8 @@ export function TransactionList({ transactions, wallets, categories, groupId, gr
             <DialogFooter>
               <Button type="submit" className="w-full" disabled={loading || !walletId || !amount}>
                 {loading
-                  ? (isEdit ? 'Saving…' : 'Adding…')
-                  : (isEdit ? 'Save changes' : 'Add transaction')}
+                  ? (isEdit ? tc('saving') : tf('adding'))
+                  : (isEdit ? tf('submitEdit') : tf('submitNew'))}
               </Button>
             </DialogFooter>
           </form>
@@ -549,20 +553,18 @@ export function TransactionList({ transactions, wallets, categories, groupId, gr
       <AlertDialog open={!!deletingTx} onOpenChange={v => { if (!v) setDeletingTx(null) }}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete this transaction?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This action cannot be undone. The wallet balance will be updated automatically.
-            </AlertDialogDescription>
+            <AlertDialogTitle>{t('delete.title')}</AlertDialogTitle>
+            <AlertDialogDescription>{t('delete.description')}</AlertDialogDescription>
           </AlertDialogHeader>
           {deleteError && <p className="text-sm text-destructive px-1">{deleteError}</p>}
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={deleteLoading}>Cancel</AlertDialogCancel>
+            <AlertDialogCancel disabled={deleteLoading}>{tc('cancel')}</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDelete}
               disabled={deleteLoading}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              {deleteLoading ? 'Deleting…' : 'Delete'}
+              {deleteLoading ? tc('deleting') : tc('delete')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

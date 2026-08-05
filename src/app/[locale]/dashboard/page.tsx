@@ -1,3 +1,4 @@
+import { getTranslations } from 'next-intl/server'
 import { Link } from '@/i18n/navigation'
 import { cn } from '@/lib/utils'
 import { requireProfile } from '@/lib/auth'
@@ -6,6 +7,9 @@ import { currentMonthRange } from '@/lib/date'
 
 export default async function DashboardPage() {
   const { supabase, user, profile } = await requireProfile()
+  const t = await getTranslations('dashboard')
+  const ta = await getTranslations('analytics')
+  const tt = await getTranslations('transactions')
 
   const { from, to, label } = currentMonthRange()
 
@@ -57,7 +61,7 @@ export default async function DashboardPage() {
     <main className="w-full sm:max-w-lg sm:mx-auto p-4 sm:p-8 space-y-4 sm:space-y-6">
       <div>
         <p className="text-muted-foreground">
-          Welcome, <span className="text-foreground font-medium">{profile?.display_name ?? user.email}</span>
+          {t('welcome')}, <span className="text-foreground font-medium">{profile?.display_name ?? user.email}</span>
         </p>
         {group?.name && (
           <p className="text-xs text-muted-foreground">{group.name}</p>
@@ -69,7 +73,7 @@ export default async function DashboardPage() {
         <div className="rounded-lg border p-4 space-y-3">
           <div className="space-y-1">
             <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              {primaryWallet.is_primary ? 'Primary wallet' : 'Main wallet'}
+              {primaryWallet.is_primary ? t('primaryWallet') : t('primaryWallet')}
             </p>
             <p className="font-heading text-2xl font-semibold tabular-nums">
               {symbol} {parseFloat(String(primaryWallet.balance)).toFixed(2)}
@@ -78,7 +82,7 @@ export default async function DashboardPage() {
           </div>
           {(wallets ?? []).length > 1 && (
             <div className="border-t pt-3 flex items-baseline justify-between">
-              <Link href="/wallets" className="text-xs text-muted-foreground hover:text-foreground transition-colors">All wallets</Link>
+              <Link href="/wallets" className="text-xs text-muted-foreground hover:text-foreground transition-colors">{t('allWallets')}</Link>
               <p className="text-sm font-medium tabular-nums text-muted-foreground">
                 {symbol} {totalBalance.toFixed(2)}
               </p>
@@ -86,7 +90,7 @@ export default async function DashboardPage() {
           )}
           {groupId && sharedWallets.length > 0 && (
             <div className="border-t pt-3 flex items-baseline justify-between">
-              <Link href="/wallets" className="text-xs text-indigo-600 dark:text-indigo-400 hover:opacity-80 transition-opacity">Group wallets</Link>
+              <Link href="/wallets" className="text-xs text-indigo-600 dark:text-indigo-400 hover:opacity-80 transition-opacity">{t('groupWallets')}</Link>
               <p className="text-sm font-medium tabular-nums text-indigo-600 dark:text-indigo-400">
                 {symbol} {sharedWalletsTotal.toFixed(2)}
               </p>
@@ -100,24 +104,24 @@ export default async function DashboardPage() {
         <div className="flex items-center justify-between">
           <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{label}</p>
           <Link href="/analytics" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
-            Full analytics →
+            {t('fullAnalytics')}
           </Link>
         </div>
         <div className="grid grid-cols-3 gap-3">
           <div className="rounded-lg border px-3 py-2.5 space-y-0.5">
-            <p className="text-xs text-muted-foreground">Income</p>
+            <p className="text-xs text-muted-foreground">{ta('income')}</p>
             <p className="text-sm font-semibold tabular-nums text-green-600 dark:text-green-400">
               {symbol} {income.toFixed(2)}
             </p>
           </div>
           <div className="rounded-lg border px-3 py-2.5 space-y-0.5">
-            <p className="text-xs text-muted-foreground">Expenses</p>
+            <p className="text-xs text-muted-foreground">{ta('expenses')}</p>
             <p className="text-sm font-semibold tabular-nums text-red-600 dark:text-red-500">
               {symbol} {expenses.toFixed(2)}
             </p>
           </div>
           <div className="rounded-lg border px-3 py-2.5 space-y-0.5">
-            <p className="text-xs text-muted-foreground">Net</p>
+            <p className="text-xs text-muted-foreground">{ta('net')}</p>
             <p className={cn(
               'text-sm font-semibold tabular-nums',
               net >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-500',
@@ -131,7 +135,7 @@ export default async function DashboardPage() {
       {/* Last 3 transactions */}
       {(recentTxs ?? []).length > 0 && (
         <div className="space-y-2">
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Recent transactions</p>
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t('recentTransactions')}</p>
           <div className="rounded-lg border divide-y">
             {(recentTxs ?? []).map((tx: any) => {
               const txSymbol = currencySymbol(tx.wallet?.currency ?? 'EUR')
@@ -144,7 +148,7 @@ export default async function DashboardPage() {
                     </span>
                     <div>
                       <p className="font-medium leading-tight">
-                        {tx.type === 'transfer' ? 'Transfer' : (tx.category?.name ?? 'Uncategorised')}
+                        {tx.type === 'transfer' ? tt('types.transfer') : (tx.category?.name ?? 'Uncategorised')}
                       </p>
                       <p className="text-xs text-muted-foreground">{tx.wallet?.name}</p>
                     </div>
@@ -163,7 +167,7 @@ export default async function DashboardPage() {
           </div>
           <div className="text-right">
             <Link href="/transactions" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
-              All transactions →
+              {t('allTransactions')}
             </Link>
           </div>
         </div>

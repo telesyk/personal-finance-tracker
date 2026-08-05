@@ -1,11 +1,13 @@
 'use client'
 
 import { useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 
 export function InviteSection() {
+  const t = useTranslations('settings')
   const [link, setLink] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [copied, setCopied] = useState(false)
@@ -32,12 +34,12 @@ export function InviteSection() {
         <div className="flex gap-2">
           <Input value={link} readOnly className="font-mono text-xs" />
           <Button variant="outline" size="sm" onClick={copyLink}>
-            {copied ? 'Copied!' : 'Copy'}
+            {copied ? t('copied') : t('copyLink')}
           </Button>
         </div>
       ) : (
         <Button variant="outline" size="sm" onClick={generateInvite} disabled={loading}>
-          {loading ? 'Generating…' : 'Invite family member'}
+          {loading ? 'Generating…' : t('invite')}
         </Button>
       )}
       {link && (

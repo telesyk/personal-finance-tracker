@@ -1,5 +1,6 @@
 'use client'
 
+import { useTranslations } from 'next-intl'
 import { Link } from '@/i18n/navigation'
 import { Settings, LogOut } from 'lucide-react'
 import {
@@ -25,6 +26,8 @@ function initials(email: string): string {
 }
 
 export function ProfileMenu({ email }: Props) {
+  const t = useTranslations('nav')
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -32,7 +35,7 @@ export function ProfileMenu({ email }: Props) {
           variant="ghost"
           size="sm"
           className="h-8 w-8 rounded-full p-0 font-semibold text-xs"
-          aria-label="Profile menu"
+          aria-label={t('profile')}
         >
           {initials(email)}
         </Button>
@@ -45,7 +48,7 @@ export function ProfileMenu({ email }: Props) {
         <DropdownMenuItem asChild>
           <Link href="/settings" className="flex items-center gap-2 cursor-pointer">
             <Settings className="h-4 w-4" />
-            Settings
+            {t('settings')}
           </Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
@@ -53,7 +56,7 @@ export function ProfileMenu({ email }: Props) {
           <form action="/sign-out" method="post" className="w-full">
             <button type="submit" className="flex w-full items-center gap-2 text-destructive">
               <LogOut className="h-4 w-4" />
-              Sign out
+              {t('signOut')}
             </button>
           </form>
         </DropdownMenuItem>

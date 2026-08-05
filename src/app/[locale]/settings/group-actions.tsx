@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import {
@@ -32,6 +33,8 @@ interface Props {
 }
 
 export function GroupActions({ isSoleMember, isOwner, otherMembers }: Props) {
+  const t = useTranslations('settings')
+  const tc = useTranslations('common')
   const [leaveError, setLeaveError] = useState<string | null>(null)
   const [deleteError, setDeleteError] = useState<string | null>(null)
   const [transferError, setTransferError] = useState<string | null>(null)
@@ -98,18 +101,16 @@ export function GroupActions({ isSoleMember, isOwner, otherMembers }: Props) {
       {isOwner && !isSoleMember && (
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-sm font-medium">Transfer ownership</p>
-            <p className="text-xs text-muted-foreground">
-              Pass admin rights to another member before leaving.
-            </p>
+            <p className="text-sm font-medium">{t('transferOwnership')}</p>
+            <p className="text-xs text-muted-foreground">{t('transferHint')}</p>
           </div>
           <Dialog open={transferOpen} onOpenChange={v => { setTransferOpen(v); if (!v) { setTransferError(null); setSelectedMemberId('') } }}>
             <DialogTrigger asChild>
-              <Button variant="outline" size="sm">Transfer</Button>
+              <Button variant="outline" size="sm">{t('transferTo')}</Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-sm">
               <DialogHeader>
-                <DialogTitle className="font-heading">Transfer ownership</DialogTitle>
+                <DialogTitle className="font-heading">{t('transferOwnership')}</DialogTitle>
               </DialogHeader>
               <div className="space-y-4 pt-2">
                 <p className="text-sm text-muted-foreground">
@@ -133,7 +134,7 @@ export function GroupActions({ isSoleMember, isOwner, otherMembers }: Props) {
                   disabled={!selectedMemberId || transferLoading}
                   className="w-full"
                 >
-                  {transferLoading ? 'Transferring…' : 'Confirm transfer'}
+                  {transferLoading ? 'Transferring…' : t('transferConfirm')}
                 </Button>
               </DialogFooter>
             </DialogContent>
@@ -145,30 +146,28 @@ export function GroupActions({ isSoleMember, isOwner, otherMembers }: Props) {
       {!isSoleMember && (
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-sm font-medium">Leave group</p>
+            <p className="text-sm font-medium">{t('leave')}</p>
             <p className="text-xs text-muted-foreground">
               {isOwner
-                ? 'Transfer ownership first before you can leave.'
-                : 'Your wallets stay with you; shared access is removed.'}
+                ? t('transferHint')
+                : t('leaveDescription')}
             </p>
           </div>
           {isOwner ? (
-            <Button variant="outline" size="sm" disabled>Leave</Button>
+            <Button variant="outline" size="sm" disabled>{t('leave')}</Button>
           ) : (
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <Button variant="outline" size="sm">Leave</Button>
+                <Button variant="outline" size="sm">{t('leave')}</Button>
               </AlertDialogTrigger>
               <AlertDialogContent>
                 <AlertDialogHeader>
-                  <AlertDialogTitle>Leave this group?</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    Your wallets will be unshared and become private again. You will lose access to wallets shared by other group members. This cannot be undone.
-                  </AlertDialogDescription>
+                  <AlertDialogTitle>{t('leaveConfirm')}</AlertDialogTitle>
+                  <AlertDialogDescription>{t('leaveDescription')}</AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction onClick={handleLeave}>Leave group</AlertDialogAction>
+                  <AlertDialogCancel>{tc('cancel')}</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleLeave}>{t('leaveConfirm')}</AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>
             </AlertDialog>
@@ -182,27 +181,25 @@ export function GroupActions({ isSoleMember, isOwner, otherMembers }: Props) {
         <>
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium">Delete group</p>
-              <p className="text-xs text-muted-foreground">Permanently deletes all wallets, transactions, and data.</p>
+              <p className="text-sm font-medium">{t('delete')}</p>
+              <p className="text-xs text-muted-foreground">{t('deleteDescription')}</p>
             </div>
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <Button variant="destructive" size="sm">Delete</Button>
+                <Button variant="destructive" size="sm">{t('delete')}</Button>
               </AlertDialogTrigger>
               <AlertDialogContent>
                 <AlertDialogHeader>
-                  <AlertDialogTitle>Delete this group?</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    All wallets, transactions, and categories in this group will be permanently deleted. This cannot be undone.
-                  </AlertDialogDescription>
+                  <AlertDialogTitle>{t('deleteConfirm')}</AlertDialogTitle>
+                  <AlertDialogDescription>{t('deleteDescription')}</AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogCancel>{tc('cancel')}</AlertDialogCancel>
                   <AlertDialogAction
                     onClick={handleDelete}
                     className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                   >
-                    Delete group
+                    {t('deleteConfirm')}
                   </AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>

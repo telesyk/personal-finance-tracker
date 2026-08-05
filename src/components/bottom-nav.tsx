@@ -1,19 +1,21 @@
 'use client'
 
+import { useTranslations } from 'next-intl'
 import { Link, usePathname } from '@/i18n/navigation'
 import { LayoutDashboard, Wallet, ArrowLeftRight, BarChart2, UserCircle } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
-const NAV_ITEMS = [
-  { href: '/dashboard',    label: 'Dashboard',    icon: LayoutDashboard },
-  { href: '/wallets',      label: 'Wallets',      icon: Wallet },
-  { href: '/transactions', label: 'Transactions', icon: ArrowLeftRight },
-  { href: '/analytics',   label: 'Analytics',    icon: BarChart2 },
-  { href: '/settings',    label: 'Profile',      icon: UserCircle },
-]
-
 export function BottomNav() {
+  const t = useTranslations('nav')
   const pathname = usePathname()
+
+  const NAV_ITEMS = [
+    { href: '/dashboard'    as const, label: t('dashboard'),    icon: LayoutDashboard },
+    { href: '/wallets'      as const, label: t('wallets'),      icon: Wallet },
+    { href: '/transactions' as const, label: t('transactions'), icon: ArrowLeftRight },
+    { href: '/analytics'   as const, label: t('analytics'),    icon: BarChart2 },
+    { href: '/settings'    as const, label: t('profile'),      icon: UserCircle },
+  ]
 
   return (
     <nav className="md:hidden fixed bottom-0 inset-x-0 z-50 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
