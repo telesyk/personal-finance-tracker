@@ -35,7 +35,7 @@ export default async function TransactionsPage({
       .order('created_at', { ascending: true }),
     supabase
       .from('categories')
-      .select('id, name, icon, type')
+      .select('id, name, icon, type, parent_id')
       .order('name'),
     groupId
       ? supabase.from('groups').select('name').eq('id', groupId).single()

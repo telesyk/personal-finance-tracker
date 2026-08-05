@@ -33,7 +33,7 @@ export interface Transaction {
 }
 
 interface Wallet { id: string; name: string; currency: string; balance: string | number; is_primary: boolean; owner_id: string | null; group_id: string | null }
-interface Category { id: string; name: string; icon: string | null; type: 'income' | 'expense' | null }
+interface Category { id: string; name: string; icon: string | null; type: 'income' | 'expense' | null; parent_id: string | null }
 
 interface Props {
   transactions: Transaction[]
@@ -215,6 +215,9 @@ export function TransactionList({ transactions, wallets, categories, groupId, gr
   const isEdit = editingTx !== null
   const toWalletOptions = wallets.filter(w => w.id !== walletId)
   const filteredCategories = categories.filter(c => c.type === type)
+  // Split into parents (no parent_id) and children, for grouped <select>
+  const parentCategories = filteredCategories.filter(c => !c.parent_id)
+  const childCategories  = filteredCategories.filter(c =>  c.parent_id)
 
   const visibleTransactions = !groupId || activeTab === 'personal'
     ? transactions.filter(tx => tx.wallet?.owner_id === currentUserId)
@@ -479,11 +482,27 @@ export function TransactionList({ transactions, wallets, categories, groupId, gr
                   className="h-10 w-full border border-transparent border-b-input bg-transparent py-1 text-base text-foreground outline-none focus:border-b-ring md:text-sm disabled:opacity-50"
                 >
                   <option value="none">— None —</option>
-                  {filteredCategories.map(c => (
-                    <option key={c.id} value={c.id}>
-                      {c.icon ? `${c.icon} ${c.name}` : c.name}
-                    </option>
-                  ))}
+                  {parentCategories.map(parent => {
+                    const children = childCategories.filter(c => c.parent_id === parent.id)
+                    if (children.length === 0) {
+                      // Leaf parent — directly selectable
+                      return (
+                        <option key={parent.id} value={parent.id}>
+                          {parent.icon ? `${parent.icon} ${parent.name}` : parent.name}
+                        </option>
+                      )
+                    }
+                    // Parent with children — render as optgroup
+                    return (
+                      <optgroup key={parent.id} label={parent.icon ? `${parent.icon} ${parent.name}` : parent.name}>
+                        {children.map(child => (
+                          <option key={child.id} value={child.id}>
+                            {child.icon ? `${child.icon} ${child.name}` : child.name}
+                          </option>
+                        ))}
+                      </optgroup>
+                    )
+                  })}
                 </select>
               </div>
             )}
