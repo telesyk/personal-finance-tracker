@@ -10,6 +10,13 @@ Versioning: PATCH only (`0.0.x`) until a release is explicitly approved.
 
 ---
 
+## [0.4.3] — 2026-08-05
+
+### Fixed
+- Restored src/ files from last known-good dev commit after broken automated conflict resolution left duplicate code in analytics-dashboard, wallet-list, and settings pages
+
+---
+
 ## [0.4.2] — 2026-08-05
 
 ### Fixed
