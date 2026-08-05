@@ -2,6 +2,7 @@ import { getTranslations } from 'next-intl/server'
 import { createClient } from '@/lib/supabase/server'
 import { ProfileMenu } from './profile-menu'
 import { ThemeToggle } from './theme-toggle'
+import { LanguageSwitcher } from './language-switcher'
 import { Link } from '@/i18n/navigation'
 
 export async function Header() {
@@ -25,6 +26,7 @@ export async function Header() {
         </nav>
       </div>
       <div className="flex items-center gap-1">
+        <LanguageSwitcher />
         <ThemeToggle />
         <ProfileMenu email={user.email ?? ''} />
       </div>

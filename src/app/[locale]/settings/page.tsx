@@ -4,7 +4,6 @@ import { requireProfile } from '@/lib/auth'
 import { RenameGroupForm } from './rename-group-form'
 import { InviteSection } from './invite-section'
 import { GroupActions } from './group-actions'
-import { LanguageSwitcher } from '@/components/language-switcher'
 
 export default async function SettingsPage() {
   const { supabase, user, profile } = await requireProfile()
@@ -29,7 +28,6 @@ export default async function SettingsPage() {
             </p>
           </div>
         </div>
-        <LanguageSwitcher />
       </main>
     )
   }
@@ -76,8 +74,6 @@ export default async function SettingsPage() {
         <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t('invite')}</p>
         <InviteSection />
       </section>
-
-      <LanguageSwitcher />
 
       <section className="space-y-2 pt-2 border-t">
         <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t('dangerZone')}</p>

@@ -33,6 +33,9 @@ function WalletCard({
   onEdit: (w: Wallet) => void
   onDelete: (w: Wallet) => void
 }) {
+  // WalletCard is at module scope — it must own its translations rather than
+  // relying on closure access to `t` declared inside WalletList.
+  const t = useTranslations('wallets')
   return (
     <Card>
       <CardHeader className="pb-2">

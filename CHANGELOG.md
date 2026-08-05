@@ -10,6 +10,27 @@ Versioning: PATCH only (`0.0.x`) until a release is explicitly approved.
 
 ---
 
+## [0.5.1] — 2026-08-05
+
+### Fixed
+- `/en/undefinedundefined` redirect loop on homepage — next-intl v4 `redirect()` expects
+  `{ href, locale }`, not a bare string; passing a string caused `getPathname` to destructure
+  it as an object, yielding `href = undefined` and `locale = undefined`, which produced
+  `'/undefined' + undefined = '/undefinedundefined'` as the redirect target
+  (`src/app/[locale]/page.tsx`, `src/app/[locale]/onboarding/page.tsx`)
+- `WalletCard` crash — `useTranslations` hook called from inside the component's closure
+  but declared only in `WalletList`; added own `const t = useTranslations('wallets')`
+  inside `WalletCard` (`src/app/[locale]/wallets/wallet-list.tsx`)
+- Locale-stripping "Go to dashboard" links in error and 404 pages — swapped `next/link`
+  for `@/i18n/navigation` `Link` so the locale prefix is preserved on navigation
+  (`src/components/error-page.tsx`, `src/app/[locale]/not-found.tsx`)
+
+### Added
+- `src/app/[locale]/not-found.tsx` — locale-aware 404 page shown for unknown routes
+  (e.g. `/en/undefinedundefined`); static Server Component with a "Go to dashboard" link
+
+---
+
 ## [0.5.0] — 2026-08-05
 
 ### Added
