@@ -10,6 +10,18 @@ Versioning: PATCH only (`0.0.x`) until a release is explicitly approved.
 
 ---
 
+## [0.4.4] — 2026-08-05
+
+### Added
+- Two-level expense category hierarchy: 13 parent groups + 18 subcategories replacing the original 9 flat categories
+- `parent_id` column on `categories` table (self-referencing FK)
+- Transaction form category select uses native `<optgroup>` grouping — parent groups with children render as non-selectable headers; leaf parents (Groceries, Insurance, etc.) remain directly selectable
+
+### Changed
+- Existing transactions linked to old expense categories become uncategorised (expected — old categories deleted)
+
+---
+
 ## [0.4.3] — 2026-08-05
 
 ### Fixed
