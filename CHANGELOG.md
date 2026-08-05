@@ -29,6 +29,13 @@ Versioning: PATCH only (`0.0.x`) until a release is explicitly approved.
 - `src/app/[locale]/not-found.tsx` — locale-aware 404 page shown for unknown routes
   (e.g. `/en/undefinedundefined`); static Server Component with a "Go to dashboard" link
 
+### Changed
+- Language switcher moved from the Settings page to the top navigation bar; redesigned
+  as a globe icon-button (`🌐 EN`) that opens a `DropdownMenuRadioGroup` — always
+  accessible regardless of which page the user is on
+  (`src/components/language-switcher.tsx`, `src/components/header.tsx`,
+  `src/app/[locale]/settings/page.tsx`)
+
 ---
 
 ## [0.5.0] — 2026-08-05
@@ -36,7 +43,7 @@ Versioning: PATCH only (`0.0.x`) until a release is explicitly approved.
 ### Added
 - Multilanguage support (Stage 9): English, Ukrainian, and German via next-intl v4
 - Locale-prefixed URL routing — all app pages served under `/en/`, `/uk/`, `/de/`
-- Language switcher in Settings — switches locale in-place without page reload
+- Language switcher in Settings — switches locale in-place without page reload (moved to header in 0.5.1)
 - `src/messages/en.json`, `uk.json`, `de.json` — ~130 translation keys across 10 namespaces (common, nav, auth, onboarding, dashboard, wallets, transactions, analytics, settings, errors)
 - `src/i18n/routing.ts`, `request.ts`, `navigation.ts` — next-intl configuration and locale-aware navigation helpers
 
