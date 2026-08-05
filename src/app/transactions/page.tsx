@@ -12,8 +12,11 @@ export default async function TransactionsPage({
   const params = await searchParams
   const month = typeof params.month === 'string' ? params.month : currentMonthStr()
   const { from: dateFrom, to: dateTo } = monthDateRange(month)
+<<<<<<< HEAD
 
   const groupId = profile?.group_id ?? null
+=======
+>>>>>>> origin/main
 
   const [{ data: transactions }, { data: wallets }, { data: categories }, { data: group }] = await Promise.all([
     supabase
@@ -47,8 +50,12 @@ export default async function TransactionsPage({
       transactions={(transactions ?? []) as unknown as Transaction[]}
       wallets={wallets ?? []}
       categories={categories ?? []}
+<<<<<<< HEAD
       groupId={groupId}
       groupName={group?.name ?? null}
+=======
+      groupId={profile?.group_id ?? null}
+>>>>>>> origin/main
       currentUserId={user.id}
       month={month}
     />

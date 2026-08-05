@@ -10,6 +10,7 @@ Versioning: PATCH only (`0.0.x`) until a release is explicitly approved.
 
 ---
 
+<<<<<<< HEAD
 ## [0.4.1] — 2026-08-05
 
 ### Added
@@ -33,6 +34,8 @@ Versioning: PATCH only (`0.0.x`) until a release is explicitly approved.
 
 ---
 
+=======
+>>>>>>> origin/main
 ## [0.4.0] — 2026-08-02
 
 ### Added
