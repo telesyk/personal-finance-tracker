@@ -89,7 +89,7 @@
       "creating": "Erstellen…"
     },
     "delete": {
-      "title": "„{name}" löschen?",
+      "title": "„{name}” löschen?",
       "description": "Diese Aktion kann nicht rückgängig gemacht werden.",
       "errorBalance": "Eine Geldbörse mit einem Saldo ungleich null kann nicht gelöscht werden. Überweisen Sie zuerst das Guthaben.",
       "errorShared": "Eine geteilte Geldbörse kann nicht gelöscht werden. Heben Sie zuerst die Freigabe auf.",

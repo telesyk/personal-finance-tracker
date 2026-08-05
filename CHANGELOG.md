@@ -10,6 +10,27 @@ Versioning: PATCH only (`0.0.x`) until a release is explicitly approved.
 
 ---
 
+## [0.5.0] — 2026-08-05
+
+### Added
+- Multilanguage support (Stage 9): English, Ukrainian, and German via next-intl v4
+- Locale-prefixed URL routing — all app pages served under `/en/`, `/uk/`, `/de/`
+- Language switcher in Settings — switches locale in-place without page reload
+- `src/messages/en.json`, `uk.json`, `de.json` — ~130 translation keys across 10 namespaces (common, nav, auth, onboarding, dashboard, wallets, transactions, analytics, settings, errors)
+- `src/i18n/routing.ts`, `request.ts`, `navigation.ts` — next-intl configuration and locale-aware navigation helpers
+
+### Changed
+- Combined Supabase session middleware + next-intl locale middleware in `src/proxy.ts`; auth guard and locale detection both work in a single middleware pass
+- All UI strings replaced with `useTranslations()` / `getTranslations()` across every page and component
+- Header, bottom nav, and profile menu use locale-aware `Link`, `usePathname`, `useRouter` from `@/i18n/navigation`
+- `src/app/[locale]/layout.tsx` wraps all app pages with `NextIntlClientProvider`; root `layout.tsx` retains only the HTML shell
+
+### Fixed
+- Turbopack incompatibility with dynamic template-literal imports in `request.ts` — replaced with explicit `messageLoaders` map
+- Invalid JSON in `de.json` — ASCII `"` used as German closing quotation mark in `wallets.delete.title`; replaced with U+201D
+
+---
+
 ## [0.4.4] — 2026-08-05
 
 ### Added
