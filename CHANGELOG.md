@@ -10,6 +10,29 @@ Versioning: PATCH only (`0.0.x`) until a release is explicitly approved.
 
 ---
 
+## [0.4.1] — 2026-08-05
+
+### Added
+- Profile dropdown menu in the nav bar — Settings and Sign out moved from standalone links into a popover triggered by an initials avatar button (`ProfileMenu` component, `shadcn/ui` DropdownMenu)
+- Bottom nav: "Profile" icon button replaces separate Settings link
+- `useTabState` hook — persists the selected Personal / Group tab in `localStorage` (`ft-active-tab` key); shared across Wallets, Transactions, and Analytics pages
+- Group tab label shows actual group name (truncated to 50 chars) instead of generic "Group"
+- Transactions page: wallet summary bar moved below tab switcher; Personal tab shows primary wallet + all-personal total; Group tab shows per-wallet balance badges + group total
+- Transactions page: per-day net total (income − expenses) shown in each date header; green for net positive, red for net negative, hidden when zero
+- Wallets page (Group tab): wallet owner's display name shown below the wallet title in secondary color
+- Wallet deletion guards — blocks deletion if balance ≠ 0 (with message to transfer out first) or if wallet is shared with a group (with message to unshare first); error shown inline in the confirmation dialog
+- Supabase real-time subscription on `wallets` table — wallet balances stay in sync across group members without a manual page refresh (`useWalletRealtime` hook used on Wallets and Transactions pages)
+- Google OAuth `prompt: 'select_account'` — always shows Google account picker instead of auto-selecting the last account
+- `requireProfile()` auto-creates a missing profile row for users who registered before the `handle_new_user` trigger was applied
+
+### Changed
+- `useTabState` replaces inline `useState` for tab selection on all three tabbed pages
+
+### Fixed
+- Google OAuth account auto-selection bypassed — now forces account picker on every sign-in and sign-up flow
+
+---
+
 ## [0.4.0] — 2026-08-02
 
 ### Added

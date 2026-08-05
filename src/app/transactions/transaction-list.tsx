@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useTabState } from '@/hooks/use-tab-state'
+import { useWalletRealtime } from '@/hooks/use-wallet-realtime'
 import { useRouter } from 'next/navigation'
 import { Pencil, Trash2, ChevronLeft, ChevronRight, Plus } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
@@ -113,6 +114,7 @@ export function TransactionList({ transactions, wallets, categories, groupId, gr
 
   // personal / group tab
   const { activeTab, changeTab } = useTabState(groupId)
+  useWalletRealtime()
 
   function openCreate() {
     setEditingTx(null)

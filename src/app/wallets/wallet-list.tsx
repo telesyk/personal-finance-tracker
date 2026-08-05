@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useTabState } from '@/hooks/use-tab-state'
+import { useWalletRealtime } from '@/hooks/use-wallet-realtime'
 import { useRouter } from 'next/navigation'
 import { Pencil, Trash2 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
@@ -138,6 +139,7 @@ export function WalletList({ wallets, bankPresets, currentUserId, groupId, group
   const [isPrimary, setIsPrimary] = useState(false)
   const [isShared, setIsShared] = useState(false)
   const { activeTab, changeTab } = useTabState(groupId)
+  useWalletRealtime()
 
   function openCreate() {
     setEditingWallet(null)
