@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useTabState } from '@/hooks/use-tab-state'
+import { useTabState } from '@/hooks/use-tab-state'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
@@ -28,6 +29,13 @@ interface Props {
   wallets: Wallet[]
   groupId: string | null
   groupName: string | null
+  currentUserId: string
+}
+
+export function AnalyticsDashboard({ month, transactions, wallets, groupId, groupName, currentUserId }: Props) {
+  const router = useRouter()
+  const isCurrentMonth = month === currentMonthStr()
+  const { activeTab, changeTab } = useTabState(groupId)
   currentUserId: string
 }
 
@@ -99,6 +107,9 @@ export function AnalyticsDashboard({ month, transactions, wallets, groupId, grou
       {/* Personal / Group tabs */}
       {groupId && (
         <TabSwitcher
+          tabs={[{ value: 'personal', label: 'Personal' }, { value: 'group', label: groupName ? groupName.slice(0, 50) : 'Group' }]}
+          active={activeTab}
+          onChange={v => changeTab(v as 'personal' | 'group')}
           tabs={[{ value: 'personal', label: 'Personal' }, { value: 'group', label: groupName ? groupName.slice(0, 50) : 'Group' }]}
           active={activeTab}
           onChange={v => changeTab(v as 'personal' | 'group')}
