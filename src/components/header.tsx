@@ -23,6 +23,7 @@ export async function Header() {
           <Link href="/wallets" className="hover:text-foreground transition-colors">{t('wallets')}</Link>
           <Link href="/transactions" className="hover:text-foreground transition-colors">{t('transactions')}</Link>
           <Link href="/analytics" className="hover:text-foreground transition-colors">{t('analytics')}</Link>
+          <Link href="/budget" className="hover:text-foreground transition-colors">{t('budget')}</Link>
         </nav>
       </div>
       <div className="flex items-center gap-1">

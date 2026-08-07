@@ -2,7 +2,7 @@
 
 import { useTranslations } from 'next-intl'
 import { Link, usePathname } from '@/i18n/navigation'
-import { LayoutDashboard, Wallet, ArrowLeftRight, BarChart2, UserCircle } from 'lucide-react'
+import { LayoutDashboard, Wallet, ArrowLeftRight, BarChart2, PiggyBank } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 export function BottomNav() {
@@ -14,7 +14,7 @@ export function BottomNav() {
     { href: '/wallets'      as const, label: t('wallets'),      icon: Wallet },
     { href: '/transactions' as const, label: t('transactions'), icon: ArrowLeftRight },
     { href: '/analytics'   as const, label: t('analytics'),    icon: BarChart2 },
-    { href: '/settings'    as const, label: t('profile'),      icon: UserCircle },
+    { href: '/budget'      as const, label: t('budget'),       icon: PiggyBank },
   ]
 
   return (
