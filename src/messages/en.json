@@ -185,5 +185,15 @@
     "notFound": "Page not found.",
     "serverError": "Server error. Please try again.",
     "unauthorized": "You must be signed in to view this page."
+  },
+  "budget": {
+    "title": "Budget",
+    "tabPersonal": "Personal",
+    "tabGroup": "Group",
+    "empty": "No budgets set yet.",
+    "emptyGroup": "No group budgets set yet.",
+    "emptyHint": "Set a monthly limit for a spending category.",
+    "addFirst": "Add your first budget",
+    "new": "Add"
   }
 }

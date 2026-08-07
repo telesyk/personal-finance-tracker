@@ -185,5 +185,15 @@
     "notFound": "Seite nicht gefunden.",
     "serverError": "Serverfehler. Bitte versuchen Sie es erneut.",
     "unauthorized": "Sie müssen angemeldet sein, um diese Seite zu sehen."
+  },
+  "budget": {
+    "title": "Budget",
+    "tabPersonal": "Persönlich",
+    "tabGroup": "Gruppe",
+    "empty": "Noch keine Budgets.",
+    "emptyGroup": "Noch keine Gruppenbudgets.",
+    "emptyHint": "Legen Sie ein monatliches Limit für eine Ausgabenkategorie fest.",
+    "addFirst": "Erstes Budget hinzufügen",
+    "new": "Hinzufügen"
   }
 }
