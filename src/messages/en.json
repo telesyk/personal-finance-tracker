@@ -13,7 +13,8 @@
     "none": "None",
     "optional": "optional",
     "confirm": "Confirm",
-    "back": "Back"
+    "back": "Back",
+    "overall": "Overall"
   },
   "nav": {
     "dashboard": "Dashboard",
@@ -194,6 +195,10 @@
     "emptyGroup": "No group budgets set yet.",
     "emptyHint": "Set a monthly limit for a spending category.",
     "addFirst": "Add your first budget",
-    "new": "Add"
+    "new": "Add",
+    "overBudget": "over budget",
+    "nearLimit": "approaching limit",
+    "used": "used",
+    "overall": "Overall"
   }
 }

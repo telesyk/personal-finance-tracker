@@ -13,7 +13,8 @@
     "none": "Keine",
     "optional": "optional",
     "confirm": "Bestätigen",
-    "back": "Zurück"
+    "back": "Zurück",
+    "overall": "Gesamt"
   },
   "nav": {
     "dashboard": "Übersicht",
@@ -194,6 +195,10 @@
     "emptyGroup": "Noch keine Gruppenbudgets.",
     "emptyHint": "Legen Sie ein monatliches Limit für eine Ausgabenkategorie fest.",
     "addFirst": "Erstes Budget hinzufügen",
-    "new": "Hinzufügen"
+    "new": "Hinzufügen",
+    "overBudget": "überschritten",
+    "nearLimit": "fast ausgeschöpft",
+    "used": "genutzt",
+    "overall": "Gesamt"
   }
 }
