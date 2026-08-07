@@ -199,6 +199,25 @@
     "overBudget": "over budget",
     "nearLimit": "approaching limit",
     "used": "used",
-    "overall": "Overall"
+    "overall": "Overall",
+    "form": {
+      "titleNew": "Add budget",
+      "titleEdit": "Edit budget",
+      "category": "Category",
+      "categoryNone": "— Overall (no category) —",
+      "amount": "Monthly limit",
+      "amountPlaceholder": "0.00",
+      "submitNew": "Add budget",
+      "submitEdit": "Save changes",
+      "creating": "Adding…",
+      "errors": {
+        "amountPositive": "Amount must be greater than zero.",
+        "duplicate": "A budget for this category already exists."
+      }
+    },
+    "delete": {
+      "title": "Delete budget?",
+      "description": "This action cannot be undone."
+    }
   }
 }

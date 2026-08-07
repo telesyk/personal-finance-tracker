@@ -1,6 +1,6 @@
 import { requireProfile } from '@/lib/auth'
 import { currentMonthRange } from '@/lib/date'
-import { BudgetList, type Budget, type Actuals } from './budget-list'
+import { BudgetList, type Budget, type Actuals, type Category } from './budget-list'
 
 export default async function BudgetPage() {
   const { supabase, user, profile } = await requireProfile()
@@ -8,7 +8,7 @@ export default async function BudgetPage() {
   const groupId = profile?.group_id ?? null
   const { from, to } = currentMonthRange()
 
-  const [{ data: budgets }, { data: group }, { data: txns }] = await Promise.all([
+  const [{ data: budgets }, { data: group }, { data: txns }, { data: categories }] = await Promise.all([
     supabase
       .from('budgets')
       .select('id, group_id, owner_id, category_id, amount, created_at, category:categories!category_id(id, name, icon, parent_id)')
@@ -25,6 +25,13 @@ export default async function BudgetPage() {
       .eq('type', 'expense')
       .gte('date', from)
       .lte('date', to),
+
+    // Expense categories only — used by the Add / Edit form
+    supabase
+      .from('categories')
+      .select('id, name, icon, type, parent_id')
+      .eq('type', 'expense')
+      .order('name'),
   ])
 
   // Aggregate actuals by category for each scope.
@@ -40,7 +47,7 @@ export default async function BudgetPage() {
     const wallet = tx.wallet as unknown as { owner_id: string | null } | null
     const isOwn  = wallet?.owner_id === user.id
 
-    // Overall: every transaction counts toward '__overall__'
+    // Every expense counts toward the overall budget key
     groupActuals['__overall__']    = (groupActuals['__overall__'] ?? 0) + amount
     if (isOwn) personalActuals['__overall__'] = (personalActuals['__overall__'] ?? 0) + amount
 
@@ -54,6 +61,7 @@ export default async function BudgetPage() {
   return (
     <BudgetList
       budgets={(budgets ?? []) as unknown as Budget[]}
+      categories={(categories ?? []) as Category[]}
       currentUserId={user.id}
       groupId={groupId}
       groupName={group?.name ?? null}
