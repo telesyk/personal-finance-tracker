@@ -152,7 +152,12 @@
     "categoryBreakdown": "Витрати за категоріями",
     "walletSummary": "Гаманці",
     "noExpenses": "Витрат за цей місяць немає.",
-    "noWallets": "Гаманців немає."
+    "noWallets": "Гаманців немає.",
+    "budgetKpi": "Бюджет",
+    "budgetPct": "{pct}% місячного бюджету",
+    "budgetTracking": "vs. бюджет",
+    "noBudget": "бюджет не встановлено",
+    "setBudget": "встановити →"
   },
   "settings": {
     "title": "Налаштування",

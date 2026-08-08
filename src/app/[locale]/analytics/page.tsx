@@ -16,7 +16,7 @@ export default async function AnalyticsPage({
 
   const groupId = profile?.group_id ?? null
 
-  const [{ data: transactions }, { data: wallets }, { data: group }] = await Promise.all([
+  const [{ data: transactions }, { data: wallets }, { data: group }, { data: budgets }] = await Promise.all([
     supabase
       .from('transactions')
       .select('id, type, amount, category_id, wallet_id, category:categories(name, icon), wallet:wallets!wallet_id(owner_id, group_id)')
@@ -30,6 +30,8 @@ export default async function AnalyticsPage({
     groupId
       ? supabase.from('groups').select('name').eq('id', groupId).single()
       : Promise.resolve({ data: null }),
+    // Budgets — used for the vs-budget section and overall KPI tile
+    supabase.from('budgets').select('id, owner_id, category_id, amount'),
   ])
 
   return (
@@ -40,6 +42,7 @@ export default async function AnalyticsPage({
       groupId={groupId}
       groupName={group?.name ?? null}
       currentUserId={user.id}
+      budgets={(budgets ?? []) as AnalyticsBudget[]}
     />
   )
 }
@@ -52,4 +55,11 @@ export interface AnalyticsTransaction {
   wallet_id: string
   category: { name: string; icon: string | null } | null
   wallet: { owner_id: string | null; group_id: string | null } | null
+}
+
+export interface AnalyticsBudget {
+  id: string
+  owner_id: string | null   // null = group budget, uid = personal
+  category_id: string | null // null = overall budget
+  amount: string | number
 }

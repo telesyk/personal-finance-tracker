@@ -152,7 +152,12 @@
     "categoryBreakdown": "Spending by category",
     "walletSummary": "Wallets",
     "noExpenses": "No expenses recorded for this month.",
-    "noWallets": "No wallets."
+    "noWallets": "No wallets.",
+    "budgetKpi": "Budget",
+    "budgetPct": "{pct}% of monthly budget",
+    "budgetTracking": "vs. budget",
+    "noBudget": "no budget set",
+    "setBudget": "set one →"
   },
   "settings": {
     "title": "Settings",

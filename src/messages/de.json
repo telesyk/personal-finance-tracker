@@ -152,7 +152,12 @@
     "categoryBreakdown": "Ausgaben nach Kategorie",
     "walletSummary": "Geldbörsen",
     "noExpenses": "Keine Ausgaben für diesen Monat.",
-    "noWallets": "Keine Geldbörsen."
+    "noWallets": "Keine Geldbörsen.",
+    "budgetKpi": "Budget",
+    "budgetPct": "{pct}% des Monatsbudgets",
+    "budgetTracking": "vs. Budget",
+    "noBudget": "kein Budget festgelegt",
+    "setBudget": "festlegen →"
   },
   "settings": {
     "title": "Einstellungen",
