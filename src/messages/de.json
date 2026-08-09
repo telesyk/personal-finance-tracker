@@ -13,7 +13,8 @@
     "none": "Keine",
     "optional": "optional",
     "confirm": "Bestätigen",
-    "back": "Zurück"
+    "back": "Zurück",
+    "overall": "Gesamt"
   },
   "nav": {
     "dashboard": "Übersicht",
@@ -151,7 +152,12 @@
     "categoryBreakdown": "Ausgaben nach Kategorie",
     "walletSummary": "Geldbörsen",
     "noExpenses": "Keine Ausgaben für diesen Monat.",
-    "noWallets": "Keine Geldbörsen."
+    "noWallets": "Keine Geldbörsen.",
+    "budgetKpi": "Budget",
+    "budgetPct": "{pct}% des Monatsbudgets",
+    "budgetTracking": "vs. Budget",
+    "noBudget": "kein Budget festgelegt",
+    "setBudget": "festlegen →"
   },
   "settings": {
     "title": "Einstellungen",
@@ -185,5 +191,38 @@
     "notFound": "Seite nicht gefunden.",
     "serverError": "Serverfehler. Bitte versuchen Sie es erneut.",
     "unauthorized": "Sie müssen angemeldet sein, um diese Seite zu sehen."
+  },
+  "budget": {
+    "title": "Budget",
+    "tabPersonal": "Persönlich",
+    "tabGroup": "Gruppe",
+    "empty": "Noch keine Budgets.",
+    "emptyGroup": "Noch keine Gruppenbudgets.",
+    "emptyHint": "Legen Sie ein monatliches Limit für eine Ausgabenkategorie fest.",
+    "addFirst": "Erstes Budget hinzufügen",
+    "new": "Hinzufügen",
+    "overBudget": "überschritten",
+    "nearLimit": "fast ausgeschöpft",
+    "used": "genutzt",
+    "overall": "Gesamt",
+    "form": {
+      "titleNew": "Budget hinzufügen",
+      "titleEdit": "Budget bearbeiten",
+      "category": "Kategorie",
+      "categoryNone": "— Gesamt (keine Kategorie) —",
+      "amount": "Monatliches Limit",
+      "amountPlaceholder": "0,00",
+      "submitNew": "Budget hinzufügen",
+      "submitEdit": "Änderungen speichern",
+      "creating": "Wird hinzugefügt…",
+      "errors": {
+        "amountPositive": "Der Betrag muss größer als null sein.",
+        "duplicate": "Für diese Kategorie existiert bereits ein Budget."
+      }
+    },
+    "delete": {
+      "title": "Budget löschen?",
+      "description": "Diese Aktion kann nicht rückgängig gemacht werden."
+    }
   }
 }

@@ -10,6 +10,61 @@ Versioning: PATCH only (`0.0.x`) until a release is explicitly approved.
 
 ---
 
+## [0.6.1] — 2026-08-09
+
+### Changed
+- **Expense category tree v2** — comprehensive restructure of the default expense
+  categories; existing category row ids preserved wherever possible so foreign keys
+  in `transactions` and `budgets` remain valid with minimal reassignment
+  - **Housing**: added "Housing Other" subcategory
+  - **Insurance**: promoted from leaf to parent; 5 new children — Health Insurance,
+    Car Insurance, Liability Insurance, Home & Contents Insurance, Insurance Other;
+    existing transactions on the Insurance parent reassigned to Insurance Other
+  - **Transport**: added Car Repairs 🔧, Parking & Tolls 🅿️, Transport Other
+  - **Health**: renamed → "Health & Personal Care"; "Personal Care" child renamed →
+    "Personal Care & Beauty"
+  - **Shopping** (was "Clothing & Goods" 👕): renamed + new icon 🛍️; added children
+    Clothing, Shopping Other; "Online Purchases" moved here from Online & Subscriptions;
+    existing transactions on the old parent reassigned to Clothing child
+  - **Online & Subscriptions**: "Subscriptions" renamed → "Other Subscriptions";
+    "Online Purchases" moved to Shopping; 3 new children — Streaming & Media 📺,
+    Software & Tools 🖥️, News & Books 📰
+  - **Leisure & Personal** (was "Leisure" 🎮): renamed + new icon 🎭; "Sports" child
+    renamed → "Sports & Fitness"; absorbed Pocket Money and Gifts & Celebrations
+    from Family & Personal; 3 new children — Travel ✈️, Hobbies 🎨, Leisure Other 🎪
+  - **Family & Personal**: removed — children merged into Leisure & Personal; any
+    transactions on the parent reassigned to Leisure Other before deletion
+  - **Savings & Debt** 💰: new top-level category with children Savings 🏦 and
+    Debt Repayment 💳
+  - Migration: `supabase/migrations/20260808000000_category_tree_v2.sql` applied to
+    both dev and prod
+
+---
+
+## [0.6.0] — 2026-08-08
+
+### Added
+- **Budget Planning — Stage 10 complete**
+- `supabase/migrations/20260807000000_budgets.sql` — new `budgets` table with
+  `group_id`, nullable `owner_id` (null = group budget, uid = personal), nullable
+  `category_id` (null = overall budget), positive `amount`; `UNIQUE NULLS NOT DISTINCT`
+  constraint; RLS policy scoped by `my_group_id()` + `owner_id`; applied to dev and prod
+- Bottom nav "Profile" slot replaced with **Budget** (`PiggyBank` icon → `/budget`)
+- Budget link added to desktop header nav after Analytics
+- `/budget` page — Personal / Group tab switcher (reuses `useTabState` + `TabSwitcher`);
+  budget list with progress bars (green < 80%, amber 80–99%, red ≥ 100%); Add / Edit
+  dialog (grouped category `<select>` + amount input; category + scope locked on edit);
+  Delete `AlertDialog`; `23505` unique-violation surfaced as friendly duplicate message
+- `budget` translation namespace in `en.json`, `uk.json`, `de.json`
+- `/analytics` page — **vs. budget** section: per-category actual vs. limit progress bars
+  with the same colour thresholds; "set one →" inline CTA for categories with spend but
+  no budget; Overall budget KPI tile replaces the Net tile when an overall budget is set
+  (shows `€spent / €limit`, mini progress bar, `{pct}% of monthly budget` subtitle)
+- `analytics.budgetKpi`, `analytics.budgetPct`, `analytics.budgetTracking`,
+  `analytics.noBudget`, `analytics.setBudget` translation keys (all three locales)
+
+---
+
 ## [0.5.2] — 2026-08-05
 
 ### Changed

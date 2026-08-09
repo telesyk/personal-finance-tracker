@@ -13,7 +13,8 @@
     "none": "None",
     "optional": "optional",
     "confirm": "Confirm",
-    "back": "Back"
+    "back": "Back",
+    "overall": "Overall"
   },
   "nav": {
     "dashboard": "Dashboard",
@@ -151,7 +152,12 @@
     "categoryBreakdown": "Spending by category",
     "walletSummary": "Wallets",
     "noExpenses": "No expenses recorded for this month.",
-    "noWallets": "No wallets."
+    "noWallets": "No wallets.",
+    "budgetKpi": "Budget",
+    "budgetPct": "{pct}% of monthly budget",
+    "budgetTracking": "vs. budget",
+    "noBudget": "no budget set",
+    "setBudget": "set one →"
   },
   "settings": {
     "title": "Settings",
@@ -185,5 +191,38 @@
     "notFound": "Page not found.",
     "serverError": "Server error. Please try again.",
     "unauthorized": "You must be signed in to view this page."
+  },
+  "budget": {
+    "title": "Budget",
+    "tabPersonal": "Personal",
+    "tabGroup": "Group",
+    "empty": "No budgets set yet.",
+    "emptyGroup": "No group budgets set yet.",
+    "emptyHint": "Set a monthly limit for a spending category.",
+    "addFirst": "Add your first budget",
+    "new": "Add",
+    "overBudget": "over budget",
+    "nearLimit": "approaching limit",
+    "used": "used",
+    "overall": "Overall",
+    "form": {
+      "titleNew": "Add budget",
+      "titleEdit": "Edit budget",
+      "category": "Category",
+      "categoryNone": "— Overall (no category) —",
+      "amount": "Monthly limit",
+      "amountPlaceholder": "0.00",
+      "submitNew": "Add budget",
+      "submitEdit": "Save changes",
+      "creating": "Adding…",
+      "errors": {
+        "amountPositive": "Amount must be greater than zero.",
+        "duplicate": "A budget for this category already exists."
+      }
+    },
+    "delete": {
+      "title": "Delete budget?",
+      "description": "This action cannot be undone."
+    }
   }
 }
