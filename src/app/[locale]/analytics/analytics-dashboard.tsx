@@ -185,41 +185,33 @@ export function AnalyticsDashboard({ month, transactions, wallets, groupId, grou
         )}
       </div>
 
-      {/* Category bar chart */}
+      {/* Wallet summary */}
       <div className="space-y-3">
-        <h2 className="font-heading text-base font-semibold">{t('categoryBreakdown')}</h2>
-        {categoryData.length === 0 ? (
-          <p className="text-sm text-muted-foreground py-8 text-center">{t('noExpenses')}</p>
+        <h2 className="font-heading text-base font-semibold">{t('walletSummary')}</h2>
+        {visibleWallets.length === 0 ? (
+          <p className="text-sm text-muted-foreground">
+            {activeTab === 'group' ? tw('emptyGroup') : t('noWallets')}
+          </p>
         ) : (
-          <div className="rounded-lg border p-4">
-            <ResponsiveContainer width="100%" height={Math.max(180, categoryData.length * 44)}>
-              <BarChart
-                data={categoryData}
-                layout="vertical"
-                margin={{ top: 0, right: 16, left: 8, bottom: 0 }}
-              >
-                <XAxis type="number" tick={{ fontSize: 11 }} tickFormatter={v => `${symbol}${v}`} />
-                <YAxis
-                  type="category"
-                  dataKey="name"
-                  width={110}
-                  tick={{ fontSize: 12 }}
-                  tickFormatter={(name, i) => {
-                    const icon = categoryData[i]?.icon
-                    return icon ? `${icon} ${name}` : name
-                  }}
-                />
-                <Tooltip
-                  formatter={(value) => [`${symbol} ${Number(value).toFixed(2)}`, 'Amount']}
-                  cursor={{ fill: 'hsl(var(--muted))' }}
-                />
-                <Bar dataKey="total" radius={[0, 4, 4, 0]}>
-                  {categoryData.map((_, i) => (
-                    <Cell key={i} fill="hsl(var(--primary))" fillOpacity={1 - i * 0.06} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
+          <div className="rounded-lg border divide-y">
+            {visibleWallets.map(w => {
+              const s = currencySymbol(w.currency)
+              return (
+                <div key={w.id} className="flex items-center justify-between px-4 py-3 text-sm">
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium">{w.name}</span>
+                    {w.is_primary && (
+                      <span className="text-xs px-1.5 py-0.5 rounded border border-primary/40 text-primary bg-primary/10">
+                        {tw('primary')}
+                      </span>
+                    )}
+                  </div>
+                  <span className="font-medium tabular-nums">
+                    {s} {parseAmount(w.balance).toFixed(2)}
+                  </span>
+                </div>
+              )
+            })}
           </div>
         )}
       </div>
@@ -290,33 +282,41 @@ export function AnalyticsDashboard({ month, transactions, wallets, groupId, grou
         </div>
       )}
 
-      {/* Wallet summary */}
+      {/* Category bar chart */}
       <div className="space-y-3">
-        <h2 className="font-heading text-base font-semibold">{t('walletSummary')}</h2>
-        {visibleWallets.length === 0 ? (
-          <p className="text-sm text-muted-foreground">
-            {activeTab === 'group' ? tw('emptyGroup') : t('noWallets')}
-          </p>
+        <h2 className="font-heading text-base font-semibold">{t('categoryBreakdown')}</h2>
+        {categoryData.length === 0 ? (
+          <p className="text-sm text-muted-foreground py-8 text-center">{t('noExpenses')}</p>
         ) : (
-          <div className="rounded-lg border divide-y">
-            {visibleWallets.map(w => {
-              const s = currencySymbol(w.currency)
-              return (
-                <div key={w.id} className="flex items-center justify-between px-4 py-3 text-sm">
-                  <div className="flex items-center gap-2">
-                    <span className="font-medium">{w.name}</span>
-                    {w.is_primary && (
-                      <span className="text-xs px-1.5 py-0.5 rounded border border-primary/40 text-primary bg-primary/10">
-                        {tw('primary')}
-                      </span>
-                    )}
-                  </div>
-                  <span className="font-medium tabular-nums">
-                    {s} {parseAmount(w.balance).toFixed(2)}
-                  </span>
-                </div>
-              )
-            })}
+          <div className="rounded-lg border p-4">
+            <ResponsiveContainer width="100%" height={Math.max(180, categoryData.length * 44)}>
+              <BarChart
+                data={categoryData}
+                layout="vertical"
+                margin={{ top: 0, right: 16, left: 8, bottom: 0 }}
+              >
+                <XAxis type="number" tick={{ fontSize: 11 }} tickFormatter={v => `${symbol}${v}`} />
+                <YAxis
+                  type="category"
+                  dataKey="name"
+                  width={110}
+                  tick={{ fontSize: 12 }}
+                  tickFormatter={(name, i) => {
+                    const icon = categoryData[i]?.icon
+                    return icon ? `${icon} ${name}` : name
+                  }}
+                />
+                <Tooltip
+                  formatter={(value) => [`${symbol} ${Number(value).toFixed(2)}`, 'Amount']}
+                  cursor={{ fill: 'hsl(var(--muted))' }}
+                />
+                <Bar dataKey="total" radius={[0, 4, 4, 0]}>
+                  {categoryData.map((_, i) => (
+                    <Cell key={i} fill="hsl(var(--primary))" fillOpacity={1 - i * 0.06} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
           </div>
         )}
       </div>
