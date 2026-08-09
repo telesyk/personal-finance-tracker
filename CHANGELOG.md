@@ -10,6 +10,16 @@ Versioning: PATCH only (`0.0.x`) until a release is explicitly approved.
 
 ---
 
+## [0.6.2] — 2026-08-09
+
+### Fixed
+- **Analytics "Budget" KPI missing on production** — root cause: Stage 10 / 10.1 (`dev` branch) was never merged to `main`; production was still at `0.5.2`; no code change required — resolved by merging `dev → main`
+
+### Changed
+- **Analytics page section order** — new order: KPI cards → Wallets → vs. Budget → Category bar chart; previously the category chart appeared before the wallet summary and vs-budget section
+
+---
+
 ## [0.6.1] — 2026-08-09
 
 ### Changed
