@@ -156,6 +156,7 @@
     "budgetKpi": "Бюджет",
     "budgetPct": "{pct}% місячного бюджету",
     "budgetTracking": "vs. бюджет",
+    "manageBudget": "Керувати →",
     "noBudget": "бюджет не встановлено",
     "setBudget": "встановити →"
   },
@@ -205,11 +206,16 @@
     "nearLimit": "наближається до ліміту",
     "used": "використано",
     "overall": "Загальний",
+    "summary": {
+      "planned": "Всього заплановано",
+      "available": "Доступно",
+      "warning": "перевищує баланс гаманця"
+    },
     "form": {
       "titleNew": "Додати бюджет",
       "titleEdit": "Редагувати бюджет",
       "category": "Категорія",
-      "categoryNone": "— Загальний (без категорії) —",
+      "categoryPlaceholder": "— Оберіть категорію —",
       "amount": "Місячний ліміт",
       "amountPlaceholder": "0.00",
       "submitNew": "Додати бюджет",
@@ -217,6 +223,7 @@
       "creating": "Додавання…",
       "errors": {
         "amountPositive": "Сума має бути більше нуля.",
+        "categoryRequired": "Будь ласка, оберіть категорію витрат.",
         "duplicate": "Бюджет для цієї категорії вже існує."
       }
     },

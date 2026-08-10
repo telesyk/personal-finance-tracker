@@ -84,10 +84,13 @@ export function AnalyticsDashboard({ month, transactions, wallets, groupId, grou
   )
   const budgetMap = new Map<string, number>()
   for (const b of scopeBudgets) {
-    budgetMap.set(b.category_id ?? '__overall__', parseAmount(b.amount))
+    if (b.category_id !== null) budgetMap.set(b.category_id, parseAmount(b.amount))
   }
 
-  const overallBudget = budgetMap.get('__overall__')
+  // Auto-computed: sum of all category budgets in scope; undefined when none set
+  const overallBudget = budgetMap.size > 0
+    ? Array.from(budgetMap.values()).reduce((s, v) => s + v, 0)
+    : undefined
 
   // ── Render ────────────────────────────────────────────────────────────────────
 
@@ -151,7 +154,7 @@ export function AnalyticsDashboard({ month, transactions, wallets, groupId, grou
         {/* Net OR Overall budget */}
         {overallBudget != null ? (() => {
           const pct      = Math.round((expenses / overallBudget) * 100)
-          const barColor = pct >= 100 ? 'bg-destructive' : pct >= 80 ? 'bg-amber-500' : 'bg-emerald-500'
+          const barColor = pct >= 100 ? 'bg-destructive' : pct >= 70 ? 'bg-amber-500' : 'bg-emerald-500'
           return (
             <div className="rounded-lg border p-3 sm:p-4 space-y-1.5">
               <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t('budgetKpi')}</p>
@@ -219,7 +222,12 @@ export function AnalyticsDashboard({ month, transactions, wallets, groupId, grou
       {/* vs. budget — per-category actual vs limit; "set one →" CTA for unbudgeted categories */}
       {categoryData.filter(c => c.key !== '__none__').length > 0 && (
         <div className="space-y-3">
-          <h2 className="font-heading text-base font-semibold">{t('budgetTracking')}</h2>
+          <div className="flex items-center justify-between">
+            <h2 className="font-heading text-base font-semibold">{t('budgetTracking')}</h2>
+            <Link href="/budget" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
+              {t('manageBudget')}
+            </Link>
+          </div>
           <div className="rounded-lg border divide-y">
             {categoryData
               .filter(c => c.key !== '__none__')

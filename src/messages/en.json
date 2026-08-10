@@ -156,6 +156,7 @@
     "budgetKpi": "Budget",
     "budgetPct": "{pct}% of monthly budget",
     "budgetTracking": "vs. budget",
+    "manageBudget": "Manage →",
     "noBudget": "no budget set",
     "setBudget": "set one →"
   },
@@ -205,11 +206,16 @@
     "nearLimit": "approaching limit",
     "used": "used",
     "overall": "Overall",
+    "summary": {
+      "planned": "Planned total",
+      "available": "Available",
+      "warning": "exceeds wallet balance"
+    },
     "form": {
       "titleNew": "Add budget",
       "titleEdit": "Edit budget",
       "category": "Category",
-      "categoryNone": "— Overall (no category) —",
+      "categoryPlaceholder": "— Select category —",
       "amount": "Monthly limit",
       "amountPlaceholder": "0.00",
       "submitNew": "Add budget",
@@ -217,6 +223,7 @@
       "creating": "Adding…",
       "errors": {
         "amountPositive": "Amount must be greater than zero.",
+        "categoryRequired": "Please select a spending category.",
         "duplicate": "A budget for this category already exists."
       }
     },

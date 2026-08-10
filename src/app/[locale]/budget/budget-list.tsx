@@ -13,6 +13,7 @@ import { Label } from '@/components/ui/label'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog'
 import { cn } from '@/lib/utils'
+import { currencySymbol, parseAmount } from '@/lib/currency'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -39,12 +40,22 @@ export interface Category {
   parent_id: string | null
 }
 
-// categoryId → actual spend this month; '__overall__' key for overall budgets
+// categoryId → actual spend this month
 export type Actuals = Record<string, number>
+
+export interface Wallet {
+  id: string
+  currency: string
+  balance: string | number
+  is_primary: boolean
+  owner_id: string | null
+  group_id: string | null
+}
 
 interface Props {
   budgets: Budget[]
   categories: Category[]
+  wallets: Wallet[]
   currentUserId: string
   groupId: string | null
   groupName: string | null
@@ -57,16 +68,17 @@ interface Props {
 function BudgetRow({
   budget,
   actual,
+  symbol,
   onEdit,
   onDelete,
 }: {
   budget: Budget
   actual: number
+  symbol: string
   onEdit: (b: Budget) => void
   onDelete: (b: Budget) => void
 }) {
-  const t  = useTranslations('budget')
-  const tc = useTranslations('common')
+  const t = useTranslations('budget')
 
   const limit = Number(budget.amount)
   const pct   = limit > 0 ? Math.round((actual / limit) * 100) : 0
@@ -80,13 +92,11 @@ function BudgetRow({
       <div className="flex items-center justify-between gap-2">
         {/* Category label */}
         <div className="flex items-center gap-2 text-sm font-medium min-w-0">
-          {budget.category ? (
+          {budget.category && (
             <>
               <span aria-hidden="true">{budget.category.icon}</span>
               <span className="truncate">{budget.category.name}</span>
             </>
-          ) : (
-            <span className="text-muted-foreground italic">{tc('overall')}</span>
           )}
         </div>
 
@@ -94,10 +104,10 @@ function BudgetRow({
         <div className="flex items-center gap-1.5 shrink-0">
           <span className="text-xs text-muted-foreground tabular-nums whitespace-nowrap">
             <span className={cn('font-semibold', pct >= 100 ? 'text-destructive' : 'text-foreground')}>
-              €{actual.toFixed(2)}
+              {symbol}{actual.toFixed(2)}
             </span>
             {' / '}
-            €{limit.toFixed(2)}
+            {symbol}{limit.toFixed(2)}
           </span>
           <Button
             variant="ghost"
@@ -137,6 +147,7 @@ function BudgetRow({
 export function BudgetList({
   budgets,
   categories,
+  wallets,
   currentUserId,
   groupId,
   groupName,
@@ -170,6 +181,19 @@ export function BudgetList({
   const visibleBudgets  = !groupId || activeTab === 'personal' ? personalBudgets : groupBudgets
   const actuals         = activeTab === 'personal' ? personalActuals : groupActuals
 
+  // ── wallet / currency helpers ──
+  const visibleWallets = !groupId || activeTab === 'personal'
+    ? wallets.filter(w => w.owner_id === currentUserId)
+    : wallets.filter(w => w.group_id !== null)
+  const symbol       = currencySymbol(visibleWallets[0]?.currency ?? 'EUR')
+  const totalBalance = visibleWallets.reduce((s, w) => s + parseAmount(w.balance), 0)
+
+  // ── budget total summary ──
+  const totalPlanned   = visibleBudgets.reduce((s, b) => s + Number(b.amount), 0)
+  const isOverBalance  = totalBalance > 0 && totalPlanned > totalBalance
+  const summaryColor   = isOverBalance ? 'text-destructive' : 'text-emerald-600 dark:text-emerald-500'
+  const summaryBarCol  = isOverBalance ? 'bg-destructive' : 'bg-emerald-500'
+
   // Category helpers — expense only (already filtered by page.tsx)
   const parentCategories = categories.filter(c => !c.parent_id)
   const childCategories  = categories.filter(c => !!c.parent_id)
@@ -200,6 +224,11 @@ export function BudgetList({
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     if (!groupId) return
+
+    if (categoryId === 'none') {
+      setFormError(tf('errors.categoryRequired'))
+      return
+    }
 
     const parsedAmount = parseFloat(amount.replace(',', '.'))
     if (!parsedAmount || parsedAmount <= 0) {
@@ -288,11 +317,39 @@ export function BudgetList({
         </div>
       ) : (
         <div className="space-y-3">
+
+          {/* Budget total summary vs wallet balance */}
+          <div className="rounded-lg border px-4 py-3 space-y-2">
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-muted-foreground">{t('summary.planned')}</span>
+              <span className={cn('font-semibold tabular-nums', summaryColor)}>
+                {symbol}{totalPlanned.toFixed(2)}
+              </span>
+            </div>
+            {totalBalance > 0 && (
+              <>
+                <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
+                  <div
+                    className={cn('h-full rounded-full', summaryBarCol)}
+                    style={{ width: `${Math.min((totalPlanned / totalBalance) * 100, 100)}%` }}
+                  />
+                </div>
+                <div className="flex items-center justify-between text-xs text-muted-foreground">
+                  <span className={cn(isOverBalance && 'text-destructive')}>
+                    {isOverBalance && '⚠ '}{isOverBalance ? t('summary.warning') : t('summary.available')}
+                  </span>
+                  <span className="tabular-nums">{symbol}{totalBalance.toFixed(2)}</span>
+                </div>
+              </>
+            )}
+          </div>
+
           {visibleBudgets.map(budget => (
             <BudgetRow
               key={budget.id}
               budget={budget}
-              actual={actuals[budget.category_id ?? '__overall__'] ?? 0}
+              actual={actuals[budget.category_id ?? ''] ?? 0}
+              symbol={symbol}
               onEdit={openEdit}
               onDelete={b => { setDeleteError(null); setDeletingBudget(b) }}
             />
@@ -321,7 +378,7 @@ export function BudgetList({
                 disabled={isEdit}
                 className="h-10 w-full border border-transparent border-b-input bg-transparent py-1 text-base text-foreground outline-none focus:border-b-ring md:text-sm disabled:opacity-50"
               >
-                <option value="none">{tf('categoryNone')}</option>
+                <option value="none" disabled hidden>{tf('categoryPlaceholder')}</option>
                 {parentCategories.map(parent => {
                   const children = childCategories.filter(c => c.parent_id === parent.id)
                   if (children.length === 0) {
