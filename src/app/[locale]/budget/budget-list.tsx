@@ -2,8 +2,9 @@
 
 import { useState } from 'react'
 import { useTranslations } from 'next-intl'
-import { Pencil, Trash2 } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Pencil, Trash2 } from 'lucide-react'
 import { useRouter } from '@/i18n/navigation'
+import { currentMonthStr, monthLabel, prevMonth, nextMonth } from '@/lib/date'
 import { createClient } from '@/lib/supabase/client'
 import { useTabState } from '@/hooks/use-tab-state'
 import { TabSwitcher } from '@/components/tab-switcher'
@@ -21,8 +22,9 @@ export interface Budget {
   id: string
   group_id: string
   owner_id: string | null   // null = group budget, uid = personal budget
-  category_id: string | null // null = overall budget
+  category_id: string | null
   amount: number
+  month: string             // YYYY-MM — budget is scoped to this month
   created_at: string
   category: {
     id: string
@@ -59,6 +61,7 @@ interface Props {
   currentUserId: string
   groupId: string | null
   groupName: string | null
+  month: string
   personalActuals: Actuals
   groupActuals: Actuals
 }
@@ -151,6 +154,7 @@ export function BudgetList({
   currentUserId,
   groupId,
   groupName,
+  month,
   personalActuals,
   groupActuals,
 }: Props) {
@@ -159,6 +163,8 @@ export function BudgetList({
   const tf = useTranslations('budget.form')
   const td = useTranslations('budget.delete')
   const tc = useTranslations('common')
+
+  const isCurrentMonth = month === currentMonthStr()
 
   const { activeTab, changeTab } = useTabState(groupId)
 
@@ -247,6 +253,7 @@ export function BudgetList({
       owner_id:    editingBudget ? editingBudget.owner_id : activeTab === 'personal' ? currentUserId : null,
       category_id: categoryId === 'none' ? null : categoryId,
       amount:      parsedAmount,
+      month,
     }
 
     const { error } = editingBudget
@@ -289,9 +296,30 @@ export function BudgetList({
     <main className="w-full sm:max-w-2xl sm:mx-auto p-4 sm:p-8 space-y-4 sm:space-y-6">
 
       {/* Page header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-2">
         <h1 className="font-heading text-2xl font-semibold">{t('title')}</h1>
-        <Button size="sm" onClick={openCreate}>{t('new')}</Button>
+        <div className="flex items-center gap-1">
+          <button
+            onClick={() => router.push(`/budget?month=${prevMonth(month)}`)}
+            className="p-1.5 rounded hover:bg-muted transition-colors"
+            aria-label="Previous month"
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </button>
+          <span className="text-sm font-medium min-w-[110px] text-center">{monthLabel(month)}</span>
+          <button
+            onClick={() => router.push(`/budget?month=${nextMonth(month)}`)}
+            disabled={isCurrentMonth}
+            className={cn(
+              'p-1.5 rounded transition-colors',
+              isCurrentMonth ? 'text-muted-foreground/30 cursor-not-allowed' : 'hover:bg-muted',
+            )}
+            aria-label="Next month"
+          >
+            <ChevronRight className="h-4 w-4" />
+          </button>
+          <Button size="sm" onClick={openCreate}>{t('new')}</Button>
+        </div>
       </div>
 
       {/* Tab switcher */}

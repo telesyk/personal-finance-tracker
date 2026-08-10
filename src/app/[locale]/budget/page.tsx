@@ -1,17 +1,24 @@
 import { requireProfile } from '@/lib/auth'
-import { currentMonthRange } from '@/lib/date'
+import { currentMonthStr, monthDateRange } from '@/lib/date'
 import { BudgetList, type Budget, type Actuals, type Category, type Wallet } from './budget-list'
 
-export default async function BudgetPage() {
+export default async function BudgetPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>
+}) {
   const { supabase, user, profile } = await requireProfile()
 
   const groupId = profile?.group_id ?? null
-  const { from, to } = currentMonthRange()
+  const params  = await searchParams
+  const month   = typeof params.month === 'string' ? params.month : currentMonthStr()
+  const { from, to } = monthDateRange(month)
 
   const [{ data: budgets }, { data: group }, { data: txns }, { data: categories }, { data: wallets }] = await Promise.all([
     supabase
       .from('budgets')
-      .select('id, group_id, owner_id, category_id, amount, created_at, category:categories!category_id(id, name, icon, parent_id)')
+      .select('id, group_id, owner_id, category_id, amount, month, created_at, category:categories!category_id(id, name, icon, parent_id)')
+      .eq('month', month)
       .order('created_at'),
 
     groupId
@@ -66,6 +73,7 @@ export default async function BudgetPage() {
       currentUserId={user.id}
       groupId={groupId}
       groupName={group?.name ?? null}
+      month={month}
       personalActuals={personalActuals}
       groupActuals={groupActuals}
     />
