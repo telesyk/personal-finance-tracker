@@ -30,8 +30,8 @@ export default async function AnalyticsPage({
     groupId
       ? supabase.from('groups').select('name').eq('id', groupId).single()
       : Promise.resolve({ data: null }),
-    // Budgets — used for the vs-budget section and overall KPI tile
-    supabase.from('budgets').select('id, owner_id, category_id, amount'),
+    // Budgets — used for the vs-budget section and overall KPI tile; scoped to current month
+    supabase.from('budgets').select('id, owner_id, category_id, amount').eq('month', month),
   ])
 
   return (
