@@ -1,6 +1,5 @@
 'use client'
 
-import { useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { useTabState } from '@/hooks/use-tab-state'
 import { Link } from '@/i18n/navigation'
