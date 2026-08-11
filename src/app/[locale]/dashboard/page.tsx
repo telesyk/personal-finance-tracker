@@ -4,12 +4,12 @@ import { cn } from '@/lib/utils'
 import { requireProfile } from '@/lib/auth'
 import { currencySymbol } from '@/lib/currency'
 import { currentMonthRange, currentMonthStr } from '@/lib/date'
+import { DashboardBudgetTabs, type BudgetScopeData } from '@/components/dashboard-budget-tabs'
 
 export default async function DashboardPage() {
   const { supabase, user, profile } = await requireProfile()
   const t  = await getTranslations('dashboard')
   const ta = await getTranslations('analytics')
-  const tb = await getTranslations('budget')
   const tt = await getTranslations('transactions')
 
   const { from, to, label } = currentMonthRange()
@@ -17,15 +17,22 @@ export default async function DashboardPage() {
 
   const groupId = profile?.group_id ?? null
 
-  const [{ data: wallets }, { data: transactions }, { data: recentTxs }, { data: group }, { data: budgets }] = await Promise.all([
+  const [
+    { data: wallets },
+    { data: transactions },
+    { data: recentTxs },
+    { data: group },
+    { data: personalBudgets },
+    { data: groupBudgets },
+  ] = await Promise.all([
     supabase
       .from('wallets')
-      .select('id, name, currency, balance, is_primary, group_id')
+      .select('id, name, currency, balance, is_primary, owner_id, group_id')
       .order('is_primary', { ascending: false })
       .order('created_at', { ascending: true }),
     supabase
       .from('transactions')
-      .select('type, amount, category_id, wallet:wallets!wallet_id(owner_id), category:categories(name, icon)')
+      .select('type, amount, category_id, wallet:wallets!wallet_id(owner_id, group_id), category:categories(name, icon)')
       .gte('date', from)
       .lte('date', to),
     supabase
@@ -41,59 +48,80 @@ export default async function DashboardPage() {
     groupId
       ? supabase.from('groups').select('name').eq('id', groupId).single()
       : Promise.resolve({ data: null }),
-    // Personal category budgets for current month — used for Budget KPI card
+    // Personal category budgets — current month
     supabase
       .from('budgets')
       .select('category_id, amount')
       .eq('owner_id', user.id)
       .eq('month', month)
       .not('category_id', 'is', null),
+    // Group category budgets — current month (owner_id = null means group-scoped)
+    groupId
+      ? supabase
+          .from('budgets')
+          .select('category_id, amount')
+          .is('owner_id', null)
+          .eq('month', month)
+          .not('category_id', 'is', null)
+      : Promise.resolve({ data: [] }),
   ])
 
-  const primaryWallet = wallets?.[0] ?? null
-  const totalBalance = (wallets ?? []).reduce((s, w) => s + parseFloat(String(w.balance)), 0)
-  const sharedWallets = (wallets ?? []).filter(w => w.group_id !== null)
+  // ── Wallet helpers ────────────────────────────────────────────────────────────
+  const primaryWallet     = wallets?.[0] ?? null
+  const totalBalance      = (wallets ?? []).reduce((s, w) => s + parseFloat(String(w.balance)), 0)
+  const sharedWallets     = (wallets ?? []).filter(w => w.group_id !== null)
   const sharedWalletsTotal = sharedWallets.reduce((s, w) => s + parseFloat(String(w.balance)), 0)
-  const symbol = primaryWallet ? currencySymbol(primaryWallet.currency) : '€'
+  const symbol            = primaryWallet ? currencySymbol(primaryWallet.currency) : '€'
+  const groupSymbol       = sharedWallets[0] ? currencySymbol(sharedWallets[0].currency) : symbol
 
-  const income = (transactions ?? [])
-    .filter(t => t.type === 'income')
-    .reduce((s, t) => s + parseFloat(String(t.amount)), 0)
+  // ── Monthly KPI (all wallets combined) ────────────────────────────────────────
+  const income   = (transactions ?? []).filter(t => t.type === 'income').reduce((s, t) => s + parseFloat(String(t.amount)), 0)
+  const expenses = (transactions ?? []).filter(t => t.type === 'expense').reduce((s, t) => s + parseFloat(String(t.amount)), 0)
+  const net      = income - expenses
 
-  const expenses = (transactions ?? [])
-    .filter(t => t.type === 'expense')
-    .reduce((s, t) => s + parseFloat(String(t.amount)), 0)
+  // ── Budget scope builder ───────────────────────────────────────────────────────
+  function buildScopeData(
+    budgetRows: { category_id: string | null; amount: string | number }[] | null,
+    txFilter: (tx: any) => boolean,
+    scopeSymbol: string,
+  ): BudgetScopeData {
+    const bmap: Record<string, number> = {}
+    for (const b of budgetRows ?? []) {
+      if (b.category_id) bmap[b.category_id] = parseFloat(String(b.amount))
+    }
+    const overallBudget = Object.keys(bmap).length > 0
+      ? Object.values(bmap).reduce((s, v) => s + v, 0)
+      : undefined
 
-  const net = income - expenses
+    const scopeExpenses = (transactions ?? [])
+      .filter(t => t.type === 'expense' && txFilter(t))
+      .reduce((s, t) => s + parseFloat(String(t.amount)), 0)
 
-  // Personal expenses only (wallets owned by current user) — for Budget KPI + category breakdown
-  const personalExpenses = (transactions ?? [])
-    .filter(t => t.type === 'expense' && (t.wallet as any)?.owner_id === user.id)
-    .reduce((s, t) => s + parseFloat(String(t.amount)), 0)
+    const catMap = new Map<string, { key: string; name: string; icon: string | null; total: number }>()
+    for (const tx of transactions ?? []) {
+      if (tx.type !== 'expense' || !txFilter(tx)) continue
+      const key  = (tx as any).category_id ?? '__none__'
+      if (key === '__none__') continue
+      const name = (tx as any).category?.name ?? 'Uncategorised'
+      const icon = (tx as any).category?.icon ?? null
+      const prev = catMap.get(key) ?? { key, name, icon, total: 0 }
+      catMap.set(key, { ...prev, total: prev.total + parseFloat(String(tx.amount)) })
+    }
+    const top3 = Array.from(catMap.values()).sort((a, b) => b.total - a.total).slice(0, 3)
 
-  // Budget map: category_id → budget amount (personal scope, current month)
-  const budgetMap = new Map<string, number>()
-  for (const b of budgets ?? []) {
-    if (b.category_id) budgetMap.set(b.category_id, parseFloat(String(b.amount)))
+    return { expenses: scopeExpenses, overallBudget, budgetMap: bmap, top3, symbol: scopeSymbol }
   }
-  const overallBudget = budgetMap.size > 0
-    ? Array.from(budgetMap.values()).reduce((s, v) => s + v, 0)
-    : undefined
 
-  // Top-3 personal expense categories by spend (excludes uncategorised)
-  const categoryMap = new Map<string, { key: string; name: string; icon: string | null; total: number }>()
-  for (const tx of transactions ?? []) {
-    if (tx.type !== 'expense' || (tx.wallet as any)?.owner_id !== user.id) continue
-    const key  = (tx as any).category_id ?? '__none__'
-    if (key === '__none__') continue
-    const name = (tx as any).category?.name ?? 'Uncategorised'
-    const icon = (tx as any).category?.icon ?? null
-    const prev = categoryMap.get(key) ?? { key, name, icon, total: 0 }
-    categoryMap.set(key, { ...prev, total: prev.total + parseFloat(String(tx.amount)) })
-  }
-  const top3Categories = Array.from(categoryMap.values())
-    .sort((a, b) => b.total - a.total)
-    .slice(0, 3)
+  const personalData = buildScopeData(
+    personalBudgets,
+    tx => (tx.wallet as any)?.owner_id === user.id,
+    symbol,
+  )
+  const groupData = groupId ? buildScopeData(
+    groupBudgets ?? [],
+    tx => (tx.wallet as any)?.group_id !== null,
+    groupSymbol,
+  ) : null
 
   return (
     <main className="w-full sm:max-w-lg sm:mx-auto p-4 sm:p-8 space-y-4 sm:space-y-6">
@@ -172,47 +200,13 @@ export default async function DashboardPage() {
         </div>
       </div>
 
-      {/* Budget KPI card */}
-      {overallBudget != null ? (() => {
-        const pct      = Math.round((personalExpenses / overallBudget) * 100)
-        const barColor = pct >= 100 ? 'bg-destructive' : pct >= 70 ? 'bg-amber-500' : 'bg-emerald-500'
-        return (
-          <div className="rounded-lg border p-4 space-y-2">
-            <div className="flex items-center justify-between">
-              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                {ta('budgetKpi')}
-              </p>
-              <Link href="/budget" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
-                {ta('manageBudget')}
-              </Link>
-            </div>
-            <p className={cn(
-              'font-heading text-2xl font-semibold tabular-nums',
-              pct >= 100 ? 'text-destructive' : 'text-foreground',
-            )}>
-              {symbol} {personalExpenses.toFixed(2)}
-              <span className="text-sm font-normal text-muted-foreground ml-1">
-                / {symbol}{overallBudget.toFixed(0)}
-              </span>
-            </p>
-            <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
-              <div className={cn('h-full rounded-full', barColor)} style={{ width: `${Math.min(pct, 100)}%` }} />
-            </div>
-            <p className={cn('text-xs', pct >= 100 ? 'text-destructive' : 'text-muted-foreground')}>
-              {ta('budgetPct', { pct })}
-            </p>
-          </div>
-        )
-      })() : (
-        <div className="rounded-lg border p-4 flex items-center justify-between">
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            {ta('budgetKpi')}
-          </p>
-          <Link href="/budget" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
-            {t('setBudget')}
-          </Link>
-        </div>
-      )}
+      {/* Budget KPI + Top-3 spending — client island with Personal/Group tabs */}
+      <DashboardBudgetTabs
+        personalData={personalData}
+        groupData={groupData}
+        groupId={groupId}
+        groupName={group?.name ?? null}
+      />
 
       {/* Last 3 transactions */}
       {(recentTxs ?? []).length > 0 && (
@@ -255,66 +249,6 @@ export default async function DashboardPage() {
         </div>
       )}
 
-      {/* Top-3 category budget mini-list — shown only when personal budgets exist */}
-      {budgetMap.size > 0 && top3Categories.length > 0 && (
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              {t('topCategories')}
-            </p>
-            <Link href="/budget" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
-              {t('viewAll')}
-            </Link>
-          </div>
-          <div className="rounded-lg border divide-y">
-            {top3Categories.map(cat => {
-              const budget   = budgetMap.get(cat.key)
-              const pct      = budget != null ? Math.round((cat.total / budget) * 100) : null
-              const barColor = pct != null
-                ? pct >= 100 ? 'bg-destructive' : pct >= 80 ? 'bg-amber-500' : 'bg-emerald-500'
-                : 'bg-primary/50'
-              return (
-                <div key={cat.key} className="px-4 py-3 space-y-1.5">
-                  <div className="flex items-center justify-between gap-2 text-sm">
-                    <span className="flex items-center gap-1.5 font-medium min-w-0">
-                      {cat.icon && <span aria-hidden="true">{cat.icon}</span>}
-                      <span className="truncate">{cat.name}</span>
-                    </span>
-                    {budget != null ? (
-                      <span className="text-xs tabular-nums shrink-0 text-muted-foreground">
-                        <span className={cn('font-semibold', pct! >= 100 ? 'text-destructive' : 'text-foreground')}>
-                          {symbol} {cat.total.toFixed(2)}
-                        </span>
-                        {' / '}{symbol} {budget.toFixed(0)}
-                      </span>
-                    ) : (
-                      <span className="text-xs tabular-nums shrink-0 font-semibold">
-                        {symbol} {cat.total.toFixed(2)}
-                      </span>
-                    )}
-                  </div>
-                  {budget != null && pct != null && (
-                    <>
-                      <div className="h-1 w-full rounded-full bg-muted overflow-hidden">
-                        <div className={cn('h-full rounded-full', barColor)} style={{ width: `${Math.min(pct, 100)}%` }} />
-                      </div>
-                      <p className={cn('text-[10px]',
-                        pct >= 100 ? 'text-destructive' : pct >= 80 ? 'text-amber-600 dark:text-amber-400' : 'text-muted-foreground',
-                      )}>
-                        {pct >= 100
-                          ? `⚠ ${tb('overBudget')} · ${pct}%`
-                          : pct >= 80
-                            ? `${pct}% · ${tb('nearLimit')}`
-                            : `${pct}% ${tb('used')}`}
-                      </p>
-                    </>
-                  )}
-                </div>
-              )
-            })}
-          </div>
-        </div>
-      )}
 
     </main>
   )
