@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation'
 import { routing } from '@/i18n/routing'
 import { Header } from '@/components/header'
 import { BottomNav } from '@/components/bottom-nav'
+import { QuickAddFab } from '@/components/quick-add-fab'
 
 interface Props {
   children: React.ReactNode
@@ -21,6 +22,7 @@ export default async function LocaleLayout({ children, params }: Props) {
     <NextIntlClientProvider locale={locale} messages={messages}>
       <Header />
       {children}
+      <QuickAddFab />
       <BottomNav />
     </NextIntlClientProvider>
   )

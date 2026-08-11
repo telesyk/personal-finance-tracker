@@ -137,6 +137,39 @@ export default async function DashboardPage() {
         </div>
       )}
 
+      {/* Monthly KPI snapshot */}
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{label}</p>
+          <Link href="/analytics" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
+            {t('fullAnalytics')}
+          </Link>
+        </div>
+        <div className="grid grid-cols-3 gap-3">
+          <div className="rounded-lg border px-3 py-2.5 space-y-0.5">
+            <p className="text-xs text-muted-foreground">{ta('income')}</p>
+            <p className="text-sm font-semibold tabular-nums text-green-600 dark:text-green-400">
+              {symbol} {income.toFixed(2)}
+            </p>
+          </div>
+          <div className="rounded-lg border px-3 py-2.5 space-y-0.5">
+            <p className="text-xs text-muted-foreground">{ta('expenses')}</p>
+            <p className="text-sm font-semibold tabular-nums text-red-600 dark:text-red-500">
+              {symbol} {expenses.toFixed(2)}
+            </p>
+          </div>
+          <div className="rounded-lg border px-3 py-2.5 space-y-0.5">
+            <p className="text-xs text-muted-foreground">{ta('net')}</p>
+            <p className={cn(
+              'text-sm font-semibold tabular-nums',
+              net >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-500',
+            )}>
+              {net >= 0 ? '+' : '−'}{symbol} {Math.abs(net).toFixed(2)}
+            </p>
+          </div>
+        </div>
+      </div>
+
       {/* Budget KPI card */}
       {overallBudget != null ? (() => {
         const pct      = Math.round((personalExpenses / overallBudget) * 100)
@@ -176,6 +209,47 @@ export default async function DashboardPage() {
           <Link href="/budget" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
             {t('setBudget')}
           </Link>
+        </div>
+      )}
+
+      {/* Last 3 transactions */}
+      {(recentTxs ?? []).length > 0 && (
+        <div className="space-y-2">
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t('recentTransactions')}</p>
+          <div className="rounded-lg border divide-y">
+            {(recentTxs ?? []).map((tx: any) => {
+              const txSymbol = currencySymbol(tx.wallet?.currency ?? 'EUR')
+              const amt = parseFloat(String(tx.amount)).toFixed(2)
+              return (
+                <div key={tx.id} className="flex items-center justify-between px-4 py-2.5 text-sm">
+                  <div className="flex items-center gap-2">
+                    <span aria-hidden>
+                      {tx.type === 'transfer' ? '↔' : (tx.category?.icon ?? '•')}
+                    </span>
+                    <div>
+                      <p className="font-medium leading-tight">
+                        {tx.type === 'transfer' ? tt('types.transfer') : (tx.category?.name ?? 'Uncategorised')}
+                      </p>
+                      <p className="text-xs text-muted-foreground">{tx.wallet?.name}</p>
+                    </div>
+                  </div>
+                  <span className={cn(
+                    'font-medium tabular-nums',
+                    tx.type === 'income' && 'text-green-600 dark:text-green-400',
+                    tx.type === 'expense' && 'text-red-600 dark:text-red-500',
+                    tx.type === 'transfer' && 'text-muted-foreground',
+                  )}>
+                    {tx.type === 'income' ? '+' : tx.type === 'expense' ? '−' : ''}{txSymbol} {amt}
+                  </span>
+                </div>
+              )
+            })}
+          </div>
+          <div className="text-right">
+            <Link href="/transactions" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
+              {t('allTransactions')}
+            </Link>
+          </div>
         </div>
       )}
 
@@ -236,80 +310,6 @@ export default async function DashboardPage() {
                 </div>
               )
             })}
-          </div>
-        </div>
-      )}
-
-      {/* Monthly KPI snapshot */}
-      <div className="space-y-2">
-        <div className="flex items-center justify-between">
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{label}</p>
-          <Link href="/analytics" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
-            {t('fullAnalytics')}
-          </Link>
-        </div>
-        <div className="grid grid-cols-3 gap-3">
-          <div className="rounded-lg border px-3 py-2.5 space-y-0.5">
-            <p className="text-xs text-muted-foreground">{ta('income')}</p>
-            <p className="text-sm font-semibold tabular-nums text-green-600 dark:text-green-400">
-              {symbol} {income.toFixed(2)}
-            </p>
-          </div>
-          <div className="rounded-lg border px-3 py-2.5 space-y-0.5">
-            <p className="text-xs text-muted-foreground">{ta('expenses')}</p>
-            <p className="text-sm font-semibold tabular-nums text-red-600 dark:text-red-500">
-              {symbol} {expenses.toFixed(2)}
-            </p>
-          </div>
-          <div className="rounded-lg border px-3 py-2.5 space-y-0.5">
-            <p className="text-xs text-muted-foreground">{ta('net')}</p>
-            <p className={cn(
-              'text-sm font-semibold tabular-nums',
-              net >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-500',
-            )}>
-              {net >= 0 ? '+' : '−'}{symbol} {Math.abs(net).toFixed(2)}
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* Last 3 transactions */}
-      {(recentTxs ?? []).length > 0 && (
-        <div className="space-y-2">
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t('recentTransactions')}</p>
-          <div className="rounded-lg border divide-y">
-            {(recentTxs ?? []).map((tx: any) => {
-              const txSymbol = currencySymbol(tx.wallet?.currency ?? 'EUR')
-              const amt = parseFloat(String(tx.amount)).toFixed(2)
-              return (
-                <div key={tx.id} className="flex items-center justify-between px-4 py-2.5 text-sm">
-                  <div className="flex items-center gap-2">
-                    <span aria-hidden>
-                      {tx.type === 'transfer' ? '↔' : (tx.category?.icon ?? '•')}
-                    </span>
-                    <div>
-                      <p className="font-medium leading-tight">
-                        {tx.type === 'transfer' ? tt('types.transfer') : (tx.category?.name ?? 'Uncategorised')}
-                      </p>
-                      <p className="text-xs text-muted-foreground">{tx.wallet?.name}</p>
-                    </div>
-                  </div>
-                  <span className={cn(
-                    'font-medium tabular-nums',
-                    tx.type === 'income' && 'text-green-600 dark:text-green-400',
-                    tx.type === 'expense' && 'text-red-600 dark:text-red-500',
-                    tx.type === 'transfer' && 'text-muted-foreground',
-                  )}>
-                    {tx.type === 'income' ? '+' : tx.type === 'expense' ? '−' : ''}{txSymbol} {amt}
-                  </span>
-                </div>
-              )
-            })}
-          </div>
-          <div className="text-right">
-            <Link href="/transactions" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
-              {t('allTransactions')}
-            </Link>
           </div>
         </div>
       )}
