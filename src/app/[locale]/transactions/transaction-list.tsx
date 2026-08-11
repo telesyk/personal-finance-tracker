@@ -261,9 +261,8 @@ export function TransactionList({ transactions, wallets, categories, groupId, gr
               <ChevronRight className="h-4 w-4" />
             </button>
           </div>
-          <Button onClick={openCreate} disabled={wallets.length === 0} size="sm">
-            <Plus className="h-4 w-4 sm:hidden" />
-            <span className="hidden sm:inline">{t('add')}</span>
+          <Button onClick={openCreate} disabled={wallets.length === 0} size="sm" className="hidden md:flex">
+            {t('add')}
           </Button>
         </div>
       </div>
