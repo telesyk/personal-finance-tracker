@@ -106,32 +106,34 @@ export default async function DashboardPage() {
         )}
       </div>
 
-      {/* Primary wallet + all wallets total */}
+      {/* Primary wallet — compact */}
       {primaryWallet && (
-        <div className="rounded-lg border p-4 space-y-3">
-          <div className="space-y-1">
-            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              {primaryWallet.is_primary ? t('primaryWallet') : t('primaryWallet')}
-            </p>
-            <p className="font-heading text-2xl font-semibold tabular-nums">
-              {symbol} {parseFloat(String(primaryWallet.balance)).toFixed(2)}
-            </p>
-            <p className="text-sm text-muted-foreground">{primaryWallet.name}</p>
-          </div>
-          {(wallets ?? []).length > 1 && (
-            <div className="border-t pt-3 flex items-baseline justify-between">
-              <Link href="/wallets" className="text-xs text-muted-foreground hover:text-foreground transition-colors">{t('allWallets')}</Link>
-              <p className="text-sm font-medium tabular-nums text-muted-foreground">
-                {symbol} {totalBalance.toFixed(2)}
+        <div className="rounded-lg border p-4">
+          <div className="flex items-start justify-between gap-2">
+            <div>
+              <p className="text-xs text-muted-foreground">{primaryWallet.name}</p>
+              <p className="font-heading text-2xl font-semibold tabular-nums mt-0.5">
+                {symbol} {parseFloat(String(primaryWallet.balance)).toFixed(2)}
               </p>
             </div>
-          )}
-          {groupId && sharedWallets.length > 0 && (
-            <div className="border-t pt-3 flex items-baseline justify-between">
-              <Link href="/wallets" className="text-xs text-indigo-600 dark:text-indigo-400 hover:opacity-80 transition-opacity">{t('groupWallets')}</Link>
-              <p className="text-sm font-medium tabular-nums text-indigo-600 dark:text-indigo-400">
-                {symbol} {sharedWalletsTotal.toFixed(2)}
-              </p>
+            <Link href="/wallets" className="text-xs text-muted-foreground hover:text-foreground transition-colors shrink-0 mt-0.5">
+              {t('allWallets')} →
+            </Link>
+          </div>
+          {((wallets ?? []).length > 1 || (groupId && sharedWallets.length > 0)) && (
+            <div className="flex items-center gap-3 mt-3 pt-3 border-t flex-wrap">
+              {(wallets ?? []).length > 1 && (
+                <span className="text-xs text-muted-foreground tabular-nums">
+                  {t('allWallets')}{' '}
+                  <span className="font-medium text-foreground">{symbol} {totalBalance.toFixed(2)}</span>
+                </span>
+              )}
+              {groupId && sharedWallets.length > 0 && (
+                <span className="text-xs tabular-nums text-indigo-600 dark:text-indigo-400">
+                  {t('groupWallets')}{' '}
+                  <span className="font-medium">{symbol} {sharedWalletsTotal.toFixed(2)}</span>
+                </span>
+              )}
             </div>
           )}
         </div>
