@@ -10,6 +10,44 @@ Versioning: PATCH only (`0.0.x`) until a release is explicitly approved.
 
 ---
 
+## [0.6.4] — 2026-08-11
+
+### Changed
+- **Dashboard Budget KPI + Top-3 tabs** (`<DashboardBudgetTabs>`) — Budget KPI card and Top-3 spending mini-list extracted into a dedicated Client Component; switches between Personal and Group scope with the shared `ft-active-tab` state (stays in sync with Analytics, Budget, and Transactions tabs); dashboard `page.tsx` stays a Server Component
+- **Quick-add FAB** — floating `+` button fixed bottom-right on mobile (above bottom nav); opens Add Transaction dialog; hidden on `md:` and above; `+ Add` button in the Transactions header is now hidden on mobile (FAB covers it)
+- **Dashboard section reorder** — new order: Welcome → Wallet card → Monthly KPI grid → Budget KPI/Top-3 tabs → Recent transactions
+- **Compact wallet card** on dashboard — wallet name + balance in main row; "All wallets →" link top-right; combined totals (all wallets, group wallets) as inline badges in footer; stacked rows removed
+
+### Refactored
+- **`src/lib/budget.ts`** (new) — `budgetBarColor(pct, warnThreshold?)` + `budgetLabelClass(pct, warnThreshold?)` shared helpers; replaces duplicate inline ternaries in `analytics-dashboard`, `budget-list`, `dashboard-budget-tabs`
+- **`src/lib/utils.ts`** — added `nativeSelectClass` constant (98-char underline-style `<select>` class); replaces copy-pasted string across 5 occurrences in 3 files
+- **`src/components/category-grouped-select.tsx`** (new) — `<CategoryGroupedSelect>` reusable grouped select with parent/optgroup hierarchy; replaces identical 20-line render block in `transaction-list`, `quick-add-fab`, `budget-list`
+- **`src/components/month-nav.tsx`** (new) — `<MonthNav month basePath>` client component; replaces identical prev/label/next button block in `analytics-dashboard`, `budget-list`, `transaction-list`
+
+### Fixed
+- Removed unused `useState` import from `analytics-dashboard.tsx`
+- Analytics budgets query now scoped to the selected month (`eq('month', month)`) — previously fetched all months
+
+---
+
+## [0.6.3] — 2026-08-10
+
+### Changed
+- **Computed `overallBudget`** — the Analytics Budget KPI tile now shows automatically as the sum of all category budgets for the active scope; no longer requires a manually created "Overall" budget row; tile appears as soon as any category budget exists
+- **Budget total summary bar** on `/budget` — new summary row at the top of the list showing the total planned amount vs. available wallet balance; colour-coded green (within balance) or red (exceeds balance)
+- **Budget month navigation** — prev/next month arrows in the `/budget` header; list and actuals re-fetched for the selected month; same `?month=yyyy-mm` URL param pattern as Analytics and Transactions; "next" arrow disabled on current month
+- **"Manage →" link** in Analytics "vs. budget" section header — links directly to `/budget`
+- **Budget currency symbol** — hardcoded `€` replaced with the scope's primary wallet currency symbol throughout `/budget`
+
+### Fixed
+- Removed "Overall (no category)" option from the budget form — category selection is now required; category validation error shown when none is selected
+
+### Added
+- `supabase/migrations/20260810000000_budgets_remove_overall.sql` — deletes existing `category_id = null` budget rows
+- `supabase/migrations/20260810010000_budgets_add_month.sql` — adds `month char(7)` column to `budgets`; updates unique constraint to `(group_id, owner_id, category_id, month)`; applied to dev and prod
+
+---
+
 ## [0.6.2] — 2026-08-09
 
 ### Fixed

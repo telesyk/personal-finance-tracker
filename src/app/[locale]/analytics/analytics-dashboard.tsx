@@ -1,15 +1,14 @@
 'use client'
 
-import { useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { useTabState } from '@/hooks/use-tab-state'
-import { Link, useRouter } from '@/i18n/navigation'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { Link } from '@/i18n/navigation'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts'
 import { cn } from '@/lib/utils'
 import { currencySymbol, parseAmount } from '@/lib/currency'
-import { currentMonthStr, monthLabel, prevMonth, nextMonth } from '@/lib/date'
 import { TabSwitcher } from '@/components/tab-switcher'
+import { MonthNav } from '@/components/month-nav'
+import { budgetBarColor, budgetLabelClass } from '@/lib/budget'
 import type { AnalyticsTransaction, AnalyticsBudget } from './page'
 
 interface Wallet {
@@ -33,11 +32,9 @@ interface Props {
 }
 
 export function AnalyticsDashboard({ month, transactions, wallets, groupId, groupName, currentUserId, budgets }: Props) {
-  const router = useRouter()
   const t  = useTranslations('analytics')
   const tb = useTranslations('budget')
   const tw = useTranslations('wallets')
-  const isCurrentMonth = month === currentMonthStr()
   const { activeTab, changeTab } = useTabState(groupId)
 
   // ── Scope filters ─────────────────────────────────────────────────────────────
@@ -84,10 +81,13 @@ export function AnalyticsDashboard({ month, transactions, wallets, groupId, grou
   )
   const budgetMap = new Map<string, number>()
   for (const b of scopeBudgets) {
-    budgetMap.set(b.category_id ?? '__overall__', parseAmount(b.amount))
+    if (b.category_id !== null) budgetMap.set(b.category_id, parseAmount(b.amount))
   }
 
-  const overallBudget = budgetMap.get('__overall__')
+  // Auto-computed: sum of all category budgets in scope; undefined when none set
+  const overallBudget = budgetMap.size > 0
+    ? Array.from(budgetMap.values()).reduce((s, v) => s + v, 0)
+    : undefined
 
   // ── Render ────────────────────────────────────────────────────────────────────
 
@@ -97,27 +97,7 @@ export function AnalyticsDashboard({ month, transactions, wallets, groupId, grou
       {/* Header + month nav */}
       <div className="flex items-center justify-between">
         <h1 className="font-heading text-2xl font-semibold">{t('title')}</h1>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => router.push(`/analytics?month=${prevMonth(month)}`)}
-            className="p-1.5 rounded hover:bg-muted transition-colors"
-            aria-label="Previous month"
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </button>
-          <span className="text-sm font-medium min-w-0 text-center">{monthLabel(month)}</span>
-          <button
-            onClick={() => router.push(`/analytics?month=${nextMonth(month)}`)}
-            disabled={isCurrentMonth}
-            className={cn(
-              'p-1.5 rounded transition-colors',
-              isCurrentMonth ? 'text-muted-foreground/30 cursor-not-allowed' : 'hover:bg-muted',
-            )}
-            aria-label="Next month"
-          >
-            <ChevronRight className="h-4 w-4" />
-          </button>
-        </div>
+        <MonthNav month={month} basePath="/analytics" labelWidth="min-w-0" />
       </div>
 
       {/* Personal / Group tabs */}
@@ -151,7 +131,7 @@ export function AnalyticsDashboard({ month, transactions, wallets, groupId, grou
         {/* Net OR Overall budget */}
         {overallBudget != null ? (() => {
           const pct      = Math.round((expenses / overallBudget) * 100)
-          const barColor = pct >= 100 ? 'bg-destructive' : pct >= 80 ? 'bg-amber-500' : 'bg-emerald-500'
+          const barColor = budgetBarColor(pct, 70)
           return (
             <div className="rounded-lg border p-3 sm:p-4 space-y-1.5">
               <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t('budgetKpi')}</p>
@@ -219,19 +199,20 @@ export function AnalyticsDashboard({ month, transactions, wallets, groupId, grou
       {/* vs. budget — per-category actual vs limit; "set one →" CTA for unbudgeted categories */}
       {categoryData.filter(c => c.key !== '__none__').length > 0 && (
         <div className="space-y-3">
-          <h2 className="font-heading text-base font-semibold">{t('budgetTracking')}</h2>
+          <div className="flex items-center justify-between">
+            <h2 className="font-heading text-base font-semibold">{t('budgetTracking')}</h2>
+            <Link href="/budget" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
+              {t('manageBudget')}
+            </Link>
+          </div>
           <div className="rounded-lg border divide-y">
             {categoryData
               .filter(c => c.key !== '__none__')
               .map(cat => {
                 const budget = budgetMap.get(cat.key)
                 const pct    = budget != null ? Math.round((cat.total / budget) * 100) : null
-                const barColor   = pct != null
-                  ? pct >= 100 ? 'bg-destructive' : pct >= 80 ? 'bg-amber-500' : 'bg-emerald-500'
-                  : 'bg-primary'
-                const labelClass = pct != null
-                  ? pct >= 100 ? 'text-destructive' : pct >= 80 ? 'text-amber-600 dark:text-amber-400' : 'text-muted-foreground'
-                  : 'text-muted-foreground'
+                const barColor   = pct != null ? budgetBarColor(pct) : 'bg-primary'
+                const labelClass = pct != null ? budgetLabelClass(pct) : 'text-muted-foreground'
 
                 return (
                   <div key={cat.key} className="px-4 py-3 space-y-2">
