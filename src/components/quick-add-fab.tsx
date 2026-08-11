@@ -5,7 +5,8 @@ import { useTranslations } from 'next-intl'
 import { useRouter } from '@/i18n/navigation'
 import { Plus } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
-import { cn } from '@/lib/utils'
+import { cn, nativeSelectClass } from '@/lib/utils'
+import { CategoryGroupedSelect } from '@/components/category-grouped-select'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
@@ -121,11 +122,8 @@ export function QuickAddFab() {
     router.refresh()
   }
 
-  const filteredCategories   = categories.filter(c => c.type === type)
-  const parentCategories     = filteredCategories.filter(c => !c.parent_id)
-  const childCategories      = filteredCategories.filter(c =>  c.parent_id)
-  const toWalletOptions      = wallets.filter(w => w.id !== walletId)
-  const selectClass          = 'h-10 w-full border border-transparent border-b-input bg-transparent py-1 text-base text-foreground outline-none focus:border-b-ring md:text-sm disabled:opacity-50'
+  const filteredCategories = categories.filter(c => c.type === type)
+  const toWalletOptions    = wallets.filter(w => w.id !== walletId)
 
   return (
     <>
@@ -183,7 +181,7 @@ export function QuickAddFab() {
                 value={walletId}
                 onChange={e => setWalletId(e.target.value)}
                 required
-                className={selectClass}
+                className={nativeSelectClass}
               >
                 {wallets.map(w => (
                   <option key={w.id} value={w.id}>{w.name}</option>
@@ -200,7 +198,7 @@ export function QuickAddFab() {
                   value={toWalletId}
                   onChange={e => setToWalletId(e.target.value)}
                   required
-                  className={selectClass}
+                  className={nativeSelectClass}
                 >
                   <option value="">{tf('toWalletPlaceholder')}</option>
                   {toWalletOptions.map(w => (
@@ -229,33 +227,14 @@ export function QuickAddFab() {
             {type !== 'transfer' && (
               <div className="space-y-2">
                 <Label htmlFor="fab-category">{tf('category')}</Label>
-                <select
+                <CategoryGroupedSelect
                   id="fab-category"
                   value={categoryId}
-                  onChange={e => setCategoryId(e.target.value)}
-                  className={selectClass}
-                >
-                  <option value="none">{tf('categoryNone')}</option>
-                  {parentCategories.map(parent => {
-                    const children = childCategories.filter(c => c.parent_id === parent.id)
-                    if (children.length === 0) {
-                      return (
-                        <option key={parent.id} value={parent.id}>
-                          {parent.icon ? `${parent.icon} ${parent.name}` : parent.name}
-                        </option>
-                      )
-                    }
-                    return (
-                      <optgroup key={parent.id} label={parent.icon ? `${parent.icon} ${parent.name}` : parent.name}>
-                        {children.map(child => (
-                          <option key={child.id} value={child.id}>
-                            {child.icon ? `${child.icon} ${child.name}` : child.name}
-                          </option>
-                        ))}
-                      </optgroup>
-                    )
-                  })}
-                </select>
+                  onChange={setCategoryId}
+                  categories={filteredCategories}
+                  placeholder={{ value: 'none', label: tf('categoryNone') }}
+                  className={nativeSelectClass}
+                />
               </div>
             )}
 

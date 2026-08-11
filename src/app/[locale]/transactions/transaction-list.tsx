@@ -5,7 +5,7 @@ import { useTranslations } from 'next-intl'
 import { useTabState } from '@/hooks/use-tab-state'
 import { useWalletRealtime } from '@/hooks/use-wallet-realtime'
 import { useRouter } from '@/i18n/navigation'
-import { Pencil, Trash2, ChevronLeft, ChevronRight, Plus } from 'lucide-react'
+import { Pencil, Trash2, Plus } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
@@ -13,10 +13,12 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import { cn } from '@/lib/utils'
+import { cn, nativeSelectClass } from '@/lib/utils'
 import { currencySymbol } from '@/lib/currency'
-import { currentMonthStr, monthLabel, prevMonth, nextMonth } from '@/lib/date'
+import { currentMonthStr, monthLabel } from '@/lib/date'
 import { TabSwitcher } from '@/components/tab-switcher'
+import { MonthNav } from '@/components/month-nav'
+import { CategoryGroupedSelect } from '@/components/category-grouped-select'
 import React from 'react'
 
 export interface Transaction {
@@ -219,9 +221,6 @@ export function TransactionList({ transactions, wallets, categories, groupId, gr
   const isEdit = editingTx !== null
   const toWalletOptions = wallets.filter(w => w.id !== walletId)
   const filteredCategories = categories.filter(c => c.type === type)
-  // Split into parents (no parent_id) and children, for grouped <select>
-  const parentCategories = filteredCategories.filter(c => !c.parent_id)
-  const childCategories  = filteredCategories.filter(c =>  c.parent_id)
 
   const visibleTransactions = !groupId || activeTab === 'personal'
     ? transactions.filter(tx => tx.wallet?.owner_id === currentUserId)
@@ -240,27 +239,7 @@ export function TransactionList({ transactions, wallets, categories, groupId, gr
       <div className="flex flex-col md:flex-row md:items-center  md:justify-between gap-2">
         <h1 className="font-heading text-2xl font-semibold">{t('title')}</h1>
         <div className="flex items-center gap-2">
-          <div className="flex items-center gap-1">
-            <button
-              onClick={() => router.push(`/transactions?month=${prevMonth(month)}`)}
-              className="p-1.5 rounded hover:bg-muted transition-colors"
-              aria-label="Previous month"
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </button>
-            <span className="text-sm font-medium w-28 text-center">{monthLabel(month)}</span>
-            <button
-              onClick={() => router.push(`/transactions?month=${nextMonth(month)}`)}
-              disabled={isCurrentMonth}
-              className={cn(
-                'p-1.5 rounded transition-colors',
-                isCurrentMonth ? 'text-muted-foreground/30 cursor-not-allowed' : 'hover:bg-muted',
-              )}
-              aria-label="Next month"
-            >
-              <ChevronRight className="h-4 w-4" />
-            </button>
-          </div>
+          <MonthNav month={month} basePath="/transactions" labelWidth="w-28" />
           <Button onClick={openCreate} disabled={wallets.length === 0} size="sm" className="hidden md:flex">
             {t('add')}
           </Button>
@@ -435,7 +414,7 @@ export function TransactionList({ transactions, wallets, categories, groupId, gr
                 value={walletId}
                 onChange={e => setWalletId(e.target.value)}
                 required
-                className="h-10 w-full border border-transparent border-b-input bg-transparent py-1 text-base text-foreground outline-none focus:border-b-ring md:text-sm disabled:opacity-50"
+                className={nativeSelectClass}
               >
                 {wallets.map(w => (
                   <option key={w.id} value={w.id}>{w.name}</option>
@@ -451,7 +430,7 @@ export function TransactionList({ transactions, wallets, categories, groupId, gr
                   value={toWalletId}
                   onChange={e => setToWalletId(e.target.value)}
                   required
-                  className="h-10 w-full border border-transparent border-b-input bg-transparent py-1 text-base text-foreground outline-none focus:border-b-ring md:text-sm disabled:opacity-50"
+                  className={nativeSelectClass}
                 >
                   <option value="">{tf('toWalletPlaceholder')}</option>
                   {toWalletOptions.map(w => (
@@ -478,35 +457,14 @@ export function TransactionList({ transactions, wallets, categories, groupId, gr
             {type !== 'transfer' && (
               <div className="space-y-2">
                 <Label htmlFor="tx-category">{tf('category')}</Label>
-                <select
+                <CategoryGroupedSelect
                   id="tx-category"
                   value={categoryId}
-                  onChange={e => setCategoryId(e.target.value)}
-                  className="h-10 w-full border border-transparent border-b-input bg-transparent py-1 text-base text-foreground outline-none focus:border-b-ring md:text-sm disabled:opacity-50"
-                >
-                  <option value="none">{tf('categoryNone')}</option>
-                  {parentCategories.map(parent => {
-                    const children = childCategories.filter(c => c.parent_id === parent.id)
-                    if (children.length === 0) {
-                      // Leaf parent — directly selectable
-                      return (
-                        <option key={parent.id} value={parent.id}>
-                          {parent.icon ? `${parent.icon} ${parent.name}` : parent.name}
-                        </option>
-                      )
-                    }
-                    // Parent with children — render as optgroup
-                    return (
-                      <optgroup key={parent.id} label={parent.icon ? `${parent.icon} ${parent.name}` : parent.name}>
-                        {children.map(child => (
-                          <option key={child.id} value={child.id}>
-                            {child.icon ? `${child.icon} ${child.name}` : child.name}
-                          </option>
-                        ))}
-                      </optgroup>
-                    )
-                  })}
-                </select>
+                  onChange={setCategoryId}
+                  categories={filteredCategories}
+                  placeholder={{ value: 'none', label: tf('categoryNone') }}
+                  className={nativeSelectClass}
+                />
               </div>
             )}
 

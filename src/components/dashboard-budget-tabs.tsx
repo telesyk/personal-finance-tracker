@@ -5,6 +5,7 @@ import { Link } from '@/i18n/navigation'
 import { cn } from '@/lib/utils'
 import { useTabState } from '@/hooks/use-tab-state'
 import { TabSwitcher } from '@/components/tab-switcher'
+import { budgetBarColor, budgetLabelClass } from '@/lib/budget'
 
 export interface BudgetScopeData {
   expenses: number
@@ -46,7 +47,7 @@ export function DashboardBudgetTabs({ personalData, groupData, groupId, groupNam
       {/* Budget KPI card */}
       {d.overallBudget != null ? (() => {
         const pct      = Math.round((d.expenses / d.overallBudget) * 100)
-        const barColor = pct >= 100 ? 'bg-destructive' : pct >= 70 ? 'bg-amber-500' : 'bg-emerald-500'
+        const barColor = budgetBarColor(pct, 70)
         return (
           <div className="rounded-lg border p-4 space-y-2">
             <div className="flex items-center justify-between">
@@ -100,9 +101,7 @@ export function DashboardBudgetTabs({ personalData, groupData, groupId, groupNam
             {d.top3.map(cat => {
               const budget   = d.budgetMap[cat.key]
               const pct      = budget != null ? Math.round((cat.total / budget) * 100) : null
-              const barColor = pct != null
-                ? pct >= 100 ? 'bg-destructive' : pct >= 80 ? 'bg-amber-500' : 'bg-emerald-500'
-                : 'bg-primary/50'
+              const barColor = pct != null ? budgetBarColor(pct) : 'bg-primary/50'
               return (
                 <div key={cat.key} className="px-4 py-3 space-y-1.5">
                   <div className="flex items-center justify-between gap-2 text-sm">
@@ -128,9 +127,7 @@ export function DashboardBudgetTabs({ personalData, groupData, groupId, groupNam
                       <div className="h-1 w-full rounded-full bg-muted overflow-hidden">
                         <div className={cn('h-full rounded-full', barColor)} style={{ width: `${Math.min(pct, 100)}%` }} />
                       </div>
-                      <p className={cn('text-[10px]',
-                        pct >= 100 ? 'text-destructive' : pct >= 80 ? 'text-amber-600 dark:text-amber-400' : 'text-muted-foreground',
-                      )}>
+                      <p className={cn('text-[10px]', budgetLabelClass(pct))}>
                         {pct >= 100
                           ? `⚠ ${tb('overBudget')} · ${pct}%`
                           : pct >= 80

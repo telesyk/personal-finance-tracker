@@ -2,19 +2,21 @@
 
 import { useState } from 'react'
 import { useTranslations } from 'next-intl'
-import { ChevronLeft, ChevronRight, Pencil, Trash2 } from 'lucide-react'
+import { Pencil, Trash2 } from 'lucide-react'
 import { useRouter } from '@/i18n/navigation'
-import { currentMonthStr, monthLabel, prevMonth, nextMonth } from '@/lib/date'
 import { createClient } from '@/lib/supabase/client'
 import { useTabState } from '@/hooks/use-tab-state'
 import { TabSwitcher } from '@/components/tab-switcher'
+import { MonthNav } from '@/components/month-nav'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog'
-import { cn } from '@/lib/utils'
+import { cn, nativeSelectClass } from '@/lib/utils'
 import { currencySymbol, parseAmount } from '@/lib/currency'
+import { budgetBarColor, budgetLabelClass } from '@/lib/budget'
+import { CategoryGroupedSelect } from '@/components/category-grouped-select'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -86,8 +88,8 @@ function BudgetRow({
   const limit = Number(budget.amount)
   const pct   = limit > 0 ? Math.round((actual / limit) * 100) : 0
 
-  const barColor   = pct >= 100 ? 'bg-destructive' : pct >= 80 ? 'bg-amber-500' : 'bg-emerald-500'
-  const labelClass = pct >= 100 ? 'text-destructive' : pct >= 80 ? 'text-amber-600 dark:text-amber-400' : 'text-muted-foreground'
+  const barColor   = budgetBarColor(pct)
+  const labelClass = budgetLabelClass(pct)
   const label      = pct >= 100 ? `⚠ ${t('overBudget')} · ${pct}%` : pct >= 80 ? `${pct}% · ${t('nearLimit')}` : `${pct}% ${t('used')}`
 
   return (
@@ -164,8 +166,6 @@ export function BudgetList({
   const td = useTranslations('budget.delete')
   const tc = useTranslations('common')
 
-  const isCurrentMonth = month === currentMonthStr()
-
   const { activeTab, changeTab } = useTabState(groupId)
 
   // ── form dialog state ──
@@ -199,10 +199,6 @@ export function BudgetList({
   const isOverBalance  = totalBalance > 0 && totalPlanned > totalBalance
   const summaryColor   = isOverBalance ? 'text-destructive' : 'text-emerald-600 dark:text-emerald-500'
   const summaryBarCol  = isOverBalance ? 'bg-destructive' : 'bg-emerald-500'
-
-  // Category helpers — expense only (already filtered by page.tsx)
-  const parentCategories = categories.filter(c => !c.parent_id)
-  const childCategories  = categories.filter(c => !!c.parent_id)
 
   // ── handlers ──
 
@@ -299,25 +295,7 @@ export function BudgetList({
       <div className="flex items-center justify-between gap-2">
         <h1 className="font-heading text-2xl font-semibold">{t('title')}</h1>
         <div className="flex items-center gap-1">
-          <button
-            onClick={() => router.push(`/budget?month=${prevMonth(month)}`)}
-            className="p-1.5 rounded hover:bg-muted transition-colors"
-            aria-label="Previous month"
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </button>
-          <span className="text-sm font-medium min-w-[110px] text-center">{monthLabel(month)}</span>
-          <button
-            onClick={() => router.push(`/budget?month=${nextMonth(month)}`)}
-            disabled={isCurrentMonth}
-            className={cn(
-              'p-1.5 rounded transition-colors',
-              isCurrentMonth ? 'text-muted-foreground/30 cursor-not-allowed' : 'hover:bg-muted',
-            )}
-            aria-label="Next month"
-          >
-            <ChevronRight className="h-4 w-4" />
-          </button>
+          <MonthNav month={month} basePath="/budget" />
           <Button size="sm" onClick={openCreate}>{t('new')}</Button>
         </div>
       </div>
@@ -399,34 +377,15 @@ export function BudgetList({
             {/* Category — disabled on edit (scope + category are immutable after creation) */}
             <div className="space-y-2">
               <Label htmlFor="budget-category">{tf('category')}</Label>
-              <select
+              <CategoryGroupedSelect
                 id="budget-category"
                 value={categoryId}
-                onChange={e => setCategoryId(e.target.value)}
+                onChange={setCategoryId}
+                categories={categories}
+                placeholder={{ value: 'none', label: tf('categoryPlaceholder'), hidden: true }}
+                className={nativeSelectClass}
                 disabled={isEdit}
-                className="h-10 w-full border border-transparent border-b-input bg-transparent py-1 text-base text-foreground outline-none focus:border-b-ring md:text-sm disabled:opacity-50"
-              >
-                <option value="none" disabled hidden>{tf('categoryPlaceholder')}</option>
-                {parentCategories.map(parent => {
-                  const children = childCategories.filter(c => c.parent_id === parent.id)
-                  if (children.length === 0) {
-                    return (
-                      <option key={parent.id} value={parent.id}>
-                        {parent.icon ? `${parent.icon} ${parent.name}` : parent.name}
-                      </option>
-                    )
-                  }
-                  return (
-                    <optgroup key={parent.id} label={parent.icon ? `${parent.icon} ${parent.name}` : parent.name}>
-                      {children.map(child => (
-                        <option key={child.id} value={child.id}>
-                          {child.icon ? `${child.icon} ${child.name}` : child.name}
-                        </option>
-                      ))}
-                    </optgroup>
-                  )
-                })}
-              </select>
+              />
             </div>
 
             {/* Monthly limit amount */}
