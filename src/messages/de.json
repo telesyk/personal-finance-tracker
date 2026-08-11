@@ -56,6 +56,9 @@
     "allTransactions": "Alle Transaktionen →",
     "fullAnalytics": "Vollständige Analyse →",
     "noTransactions": "Noch keine Transaktionen.",
+    "setBudget": "Budget festlegen →",
+    "topCategories": "Top-Ausgaben",
+    "viewAll": "Alle →",
     "notInGroup": "Sie sind noch in keiner Familiengruppe.",
     "goToSettings": "Zu den Einstellungen →",
     "inviteMember": "Familienmitglied einladen",
@@ -156,6 +159,7 @@
     "budgetKpi": "Budget",
     "budgetPct": "{pct}% des Monatsbudgets",
     "budgetTracking": "vs. Budget",
+    "manageBudget": "Verwalten →",
     "noBudget": "kein Budget festgelegt",
     "setBudget": "festlegen →"
   },
@@ -205,11 +209,16 @@
     "nearLimit": "fast ausgeschöpft",
     "used": "genutzt",
     "overall": "Gesamt",
+    "summary": {
+      "planned": "Geplant gesamt",
+      "available": "Verfügbar",
+      "warning": "übersteigt Kontostand"
+    },
     "form": {
       "titleNew": "Budget hinzufügen",
       "titleEdit": "Budget bearbeiten",
       "category": "Kategorie",
-      "categoryNone": "— Gesamt (keine Kategorie) —",
+      "categoryPlaceholder": "— Kategorie wählen —",
       "amount": "Monatliches Limit",
       "amountPlaceholder": "0,00",
       "submitNew": "Budget hinzufügen",
@@ -217,6 +226,7 @@
       "creating": "Wird hinzugefügt…",
       "errors": {
         "amountPositive": "Der Betrag muss größer als null sein.",
+        "categoryRequired": "Bitte wähle eine Ausgabenkategorie.",
         "duplicate": "Für diese Kategorie existiert bereits ein Budget."
       }
     },
