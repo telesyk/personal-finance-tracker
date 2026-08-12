@@ -115,6 +115,8 @@
     "dayNet": "Tagessaldo",
     "filterAllCategories": "Alle Kategorien",
     "filterAllWallets": "Alle Geldbörsen",
+    "searchNotePlaceholder": "Nach Notiz suchen…",
+    "searchNoteClear": "Suche löschen",
     "emptyFilter": "Keine Transaktionen entsprechen den gewählten Filtern.",
     "types": {
       "income": "Einnahme",

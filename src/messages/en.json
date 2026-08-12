@@ -115,6 +115,8 @@
     "dayNet": "Day net",
     "filterAllCategories": "All categories",
     "filterAllWallets": "All wallets",
+    "searchNotePlaceholder": "Search by note…",
+    "searchNoteClear": "Clear search",
     "emptyFilter": "No transactions match the selected filters.",
     "types": {
       "income": "Income",

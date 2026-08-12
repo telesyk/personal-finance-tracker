@@ -115,6 +115,8 @@
     "dayNet": "За день",
     "filterAllCategories": "Всі категорії",
     "filterAllWallets": "Всі гаманці",
+    "searchNotePlaceholder": "Пошук за приміткою…",
+    "searchNoteClear": "Очистити пошук",
     "emptyFilter": "Немає операцій, що відповідають фільтрам.",
     "types": {
       "income": "Дохід",

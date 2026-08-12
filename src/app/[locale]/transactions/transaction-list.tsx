@@ -5,7 +5,7 @@ import { useTranslations } from 'next-intl'
 import { useTabState } from '@/hooks/use-tab-state'
 import { useWalletRealtime } from '@/hooks/use-wallet-realtime'
 import { useRouter } from '@/i18n/navigation'
-import { Pencil, Trash2 } from 'lucide-react'
+import { Pencil, Trash2, X } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
@@ -117,6 +117,9 @@ export function TransactionList({ transactions, wallets, categories, groupId, gr
   const [deleteLoading, setDeleteLoading] = useState(false)
   const [deleteError, setDeleteError] = useState<string | null>(null)
 
+  // note search (client-side only — does not persist in URL)
+  const [noteSearch, setNoteSearch] = useState('')
+
   // mobile: which row is showing its action buttons
   const [activeId, setActiveId] = useState<string | null>(null)
 
@@ -146,9 +149,10 @@ export function TransactionList({ transactions, wallets, categories, groupId, gr
     router.push(`/transactions${p.size > 0 ? '?' + p.toString() : ''}`)
   }
 
-  /** When switching tabs, drop both active filters from the URL. */
+  /** When switching tabs, drop both URL filters and clear note search. */
   function handleTabChange(newTab: 'personal' | 'group') {
     changeTab(newTab)
+    setNoteSearch('')
     if (categoryFilter !== 'all' || walletFilter !== 'all') {
       const p = new URLSearchParams()
       if (month !== currentMonthStr()) p.set('month', month)
@@ -287,10 +291,12 @@ export function TransactionList({ transactions, wallets, categories, groupId, gr
   const activeCategory = filterableCategories.some(c => c.id === categoryFilter) ? categoryFilter : 'all'
   const activeWallet   = filterableWallets.some(w => w.id === walletFilter)      ? walletFilter   : 'all'
 
-  // Apply both filters on top of tab filter
+  // Apply all three filters on top of tab filter
+  const noteQuery = noteSearch.trim().toLowerCase()
   const displayedTransactions = visibleTransactions
     .filter(tx => activeCategory === 'all' || tx.category_id === activeCategory)
     .filter(tx => activeWallet   === 'all' || tx.wallet_id   === activeWallet)
+    .filter(tx => !noteQuery || (tx.note ?? '').toLowerCase().includes(noteQuery))
 
   const groups = groupByDate(displayedTransactions)
 
@@ -388,6 +394,29 @@ export function TransactionList({ transactions, wallets, categories, groupId, gr
                 <option key={w.id} value={w.id}>{w.name}</option>
               ))}
             </select>
+          )}
+        </div>
+      )}
+
+      {/* Note search */}
+      {visibleTransactions.length > 0 && (
+        <div className="relative">
+          <Input
+            type="search"
+            placeholder={t('searchNotePlaceholder')}
+            value={noteSearch}
+            onChange={e => setNoteSearch(e.target.value)}
+            className="pr-8"
+          />
+          {noteSearch && (
+            <button
+              type="button"
+              onClick={() => setNoteSearch('')}
+              aria-label={t('searchNoteClear')}
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <X className="h-4 w-4" />
+            </button>
           )}
         </div>
       )}
