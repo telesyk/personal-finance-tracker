@@ -113,6 +113,8 @@
     "allPersonal": "All personal",
     "groupTotal": "Total",
     "dayNet": "Day net",
+    "filterAllCategories": "All categories",
+    "emptyFilter": "No transactions match the selected category.",
     "types": {
       "income": "Income",
       "expense": "Expense",

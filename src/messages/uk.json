@@ -113,6 +113,8 @@
     "allPersonal": "Всі особисті",
     "groupTotal": "Всього",
     "dayNet": "За день",
+    "filterAllCategories": "Всі категорії",
+    "emptyFilter": "Немає операцій у вибраній категорії.",
     "types": {
       "income": "Дохід",
       "expense": "Витрата",

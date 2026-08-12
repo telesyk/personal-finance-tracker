@@ -113,6 +113,8 @@
     "allPersonal": "Alle persönlichen",
     "groupTotal": "Gesamt",
     "dayNet": "Tagessaldo",
+    "filterAllCategories": "Alle Kategorien",
+    "emptyFilter": "Keine Transaktionen in der gewählten Kategorie.",
     "types": {
       "income": "Einnahme",
       "expense": "Ausgabe",

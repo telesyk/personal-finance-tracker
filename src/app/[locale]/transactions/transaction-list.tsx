@@ -46,6 +46,7 @@ interface Props {
   groupName: string | null
   currentUserId: string
   month: string
+  categoryFilter: string   // UUID or 'all' — from ?category= URL param
 }
 
 type TxType = 'income' | 'expense' | 'transfer'
@@ -88,7 +89,7 @@ function formatDateHeader(dateStr: string) {
   })
 }
 
-export function TransactionList({ transactions, wallets, categories, groupId, groupName, currentUserId, month }: Props) {
+export function TransactionList({ transactions, wallets, categories, groupId, groupName, currentUserId, month, categoryFilter }: Props) {
   const router = useRouter()
   const t = useTranslations('transactions')
   const tf = useTranslations('transactions.form')
@@ -121,6 +122,21 @@ export function TransactionList({ transactions, wallets, categories, groupId, gr
   // personal / group tab
   const { activeTab, changeTab } = useTabState(groupId)
   useWalletRealtime()
+
+  // ── category filter ───────────────────────────────────────────────────────
+  /** Push a new ?category= value to the URL, preserving ?month= when non-current. */
+  function pushCategoryFilter(cat: string) {
+    const p = new URLSearchParams()
+    if (month !== currentMonthStr()) p.set('month', month)
+    if (cat !== 'all') p.set('category', cat)
+    router.push(`/transactions${p.size > 0 ? '?' + p.toString() : ''}`)
+  }
+
+  /** When switching tabs, drop any active category filter from the URL. */
+  function handleTabChange(newTab: 'personal' | 'group') {
+    changeTab(newTab)
+    if (categoryFilter !== 'all') pushCategoryFilter('all')
+  }
 
   function openCreate() {
     setEditingTx(null)
@@ -222,10 +238,31 @@ export function TransactionList({ transactions, wallets, categories, groupId, gr
   const toWalletOptions = wallets.filter(w => w.id !== walletId)
   const filteredCategories = categories.filter(c => c.type === type)
 
+  // Tab-scoped transactions (personal vs. group)
   const visibleTransactions = !groupId || activeTab === 'personal'
     ? transactions.filter(tx => tx.wallet?.owner_id === currentUserId)
     : transactions.filter(tx => tx.wallet?.group_id !== null)
-  const groups = groupByDate(visibleTransactions)
+
+  // Unique categories that appear in this tab's transactions (for the filter dropdown)
+  const filterableCategories = (() => {
+    const map = new Map<string, { id: string; name: string; icon: string | null }>()
+    for (const tx of visibleTransactions) {
+      if (tx.category_id && tx.category && !map.has(tx.category_id)) {
+        map.set(tx.category_id, { id: tx.category_id, name: tx.category.name, icon: tx.category.icon })
+      }
+    }
+    return Array.from(map.values()).sort((a, b) => a.name.localeCompare(b.name))
+  })()
+
+  // Active filter — falls back to 'all' if the selected category is not in this tab's data
+  const activeCategory = filterableCategories.some(c => c.id === categoryFilter) ? categoryFilter : 'all'
+
+  // Apply category filter on top of tab filter
+  const displayedTransactions = activeCategory === 'all'
+    ? visibleTransactions
+    : visibleTransactions.filter(tx => tx.category_id === activeCategory)
+
+  const groups = groupByDate(displayedTransactions)
 
   const personalWallets = wallets.filter(w => w.owner_id === currentUserId)
   const groupWallets = wallets.filter(w => w.group_id !== null)
@@ -250,7 +287,7 @@ export function TransactionList({ transactions, wallets, categories, groupId, gr
         <TabSwitcher
           tabs={[{ value: 'personal', label: t('tabPersonal') }, { value: 'group', label: groupName ? groupName.slice(0, 50) : t('tabGroup') }]}
           active={activeTab}
-          onChange={v => changeTab(v as 'personal' | 'group')}
+          onChange={v => handleTabChange(v as 'personal' | 'group')}
         />
       )}
 
@@ -291,10 +328,31 @@ export function TransactionList({ transactions, wallets, categories, groupId, gr
         </div>
       )}
 
+      {/* Category filter — only when there are categorised transactions to filter on */}
+      {filterableCategories.length > 0 && (
+        <select
+          value={activeCategory}
+          onChange={e => pushCategoryFilter(e.target.value)}
+          className={nativeSelectClass}
+          aria-label={t('filterAllCategories')}
+        >
+          <option value="all">{t('filterAllCategories')}</option>
+          {filterableCategories.map(cat => (
+            <option key={cat.id} value={cat.id}>
+              {cat.icon ? `${cat.icon} ${cat.name}` : cat.name}
+            </option>
+          ))}
+        </select>
+      )}
+
       {visibleTransactions.length === 0 ? (
         <div className="flex flex-col items-center gap-2 py-20 text-muted-foreground">
           <p>{isCurrentMonth ? t('empty') : t('emptyMonth', { month: monthLabel(month) })}</p>
           {isCurrentMonth && <p className="text-sm">{t('emptyHint')}</p>}
+        </div>
+      ) : displayedTransactions.length === 0 ? (
+        <div className="flex flex-col items-center gap-2 py-20 text-muted-foreground">
+          <p className="text-sm">{t('emptyFilter')}</p>
         </div>
       ) : (
         <div className="rounded-lg border divide-y">
