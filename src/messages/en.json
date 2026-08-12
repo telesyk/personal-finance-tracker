@@ -114,7 +114,8 @@
     "groupTotal": "Total",
     "dayNet": "Day net",
     "filterAllCategories": "All categories",
-    "emptyFilter": "No transactions match the selected category.",
+    "filterAllWallets": "All wallets",
+    "emptyFilter": "No transactions match the selected filters.",
     "types": {
       "income": "Income",
       "expense": "Expense",

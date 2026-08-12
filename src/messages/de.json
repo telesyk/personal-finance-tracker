@@ -114,7 +114,8 @@
     "groupTotal": "Gesamt",
     "dayNet": "Tagessaldo",
     "filterAllCategories": "Alle Kategorien",
-    "emptyFilter": "Keine Transaktionen in der gewählten Kategorie.",
+    "filterAllWallets": "Alle Geldbörsen",
+    "emptyFilter": "Keine Transaktionen entsprechen den gewählten Filtern.",
     "types": {
       "income": "Einnahme",
       "expense": "Ausgabe",

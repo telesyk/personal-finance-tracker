@@ -114,7 +114,8 @@
     "groupTotal": "Всього",
     "dayNet": "За день",
     "filterAllCategories": "Всі категорії",
-    "emptyFilter": "Немає операцій у вибраній категорії.",
+    "filterAllWallets": "Всі гаманці",
+    "emptyFilter": "Немає операцій, що відповідають фільтрам.",
     "types": {
       "income": "Дохід",
       "expense": "Витрата",

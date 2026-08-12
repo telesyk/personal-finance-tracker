@@ -5,7 +5,7 @@ import { useTranslations } from 'next-intl'
 import { useTabState } from '@/hooks/use-tab-state'
 import { useWalletRealtime } from '@/hooks/use-wallet-realtime'
 import { useRouter } from '@/i18n/navigation'
-import { Pencil, Trash2, Plus } from 'lucide-react'
+import { Pencil, Trash2 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
@@ -47,6 +47,7 @@ interface Props {
   currentUserId: string
   month: string
   categoryFilter: string   // UUID or 'all' — from ?category= URL param
+  walletFilter:   string   // UUID or 'all' — from ?wallet= URL param
 }
 
 type TxType = 'income' | 'expense' | 'transfer'
@@ -89,7 +90,7 @@ function formatDateHeader(dateStr: string) {
   })
 }
 
-export function TransactionList({ transactions, wallets, categories, groupId, groupName, currentUserId, month, categoryFilter }: Props) {
+export function TransactionList({ transactions, wallets, categories, groupId, groupName, currentUserId, month, categoryFilter, walletFilter }: Props) {
   const router = useRouter()
   const t = useTranslations('transactions')
   const tf = useTranslations('transactions.form')
@@ -123,19 +124,36 @@ export function TransactionList({ transactions, wallets, categories, groupId, gr
   const { activeTab, changeTab } = useTabState(groupId)
   useWalletRealtime()
 
-  // ── category filter ───────────────────────────────────────────────────────
-  /** Push a new ?category= value to the URL, preserving ?month= when non-current. */
-  function pushCategoryFilter(cat: string) {
+  // ── filters ───────────────────────────────────────────────────────────────
+  /** Build URL params preserving ?month= and applying both filter values. */
+  function buildFilterParams(overrides: { category?: string; wallet?: string }) {
+    const cat = overrides.category ?? categoryFilter
+    const wal = overrides.wallet   ?? walletFilter
     const p = new URLSearchParams()
     if (month !== currentMonthStr()) p.set('month', month)
     if (cat !== 'all') p.set('category', cat)
+    if (wal !== 'all') p.set('wallet',   wal)
+    return p
+  }
+
+  function pushCategoryFilter(cat: string) {
+    const p = buildFilterParams({ category: cat })
     router.push(`/transactions${p.size > 0 ? '?' + p.toString() : ''}`)
   }
 
-  /** When switching tabs, drop any active category filter from the URL. */
+  function pushWalletFilter(wal: string) {
+    const p = buildFilterParams({ wallet: wal })
+    router.push(`/transactions${p.size > 0 ? '?' + p.toString() : ''}`)
+  }
+
+  /** When switching tabs, drop both active filters from the URL. */
   function handleTabChange(newTab: 'personal' | 'group') {
     changeTab(newTab)
-    if (categoryFilter !== 'all') pushCategoryFilter('all')
+    if (categoryFilter !== 'all' || walletFilter !== 'all') {
+      const p = new URLSearchParams()
+      if (month !== currentMonthStr()) p.set('month', month)
+      router.push(`/transactions${p.size > 0 ? '?' + p.toString() : ''}`)
+    }
   }
 
   function openCreate() {
@@ -254,13 +272,25 @@ export function TransactionList({ transactions, wallets, categories, groupId, gr
     return Array.from(map.values()).sort((a, b) => a.name.localeCompare(b.name))
   })()
 
-  // Active filter — falls back to 'all' if the selected category is not in this tab's data
-  const activeCategory = filterableCategories.some(c => c.id === categoryFilter) ? categoryFilter : 'all'
+  // Unique wallets that appear in this tab's transactions (for the wallet filter dropdown)
+  const filterableWallets = (() => {
+    const map = new Map<string, { id: string; name: string }>()
+    for (const tx of visibleTransactions) {
+      if (tx.wallet_id && tx.wallet && !map.has(tx.wallet_id)) {
+        map.set(tx.wallet_id, { id: tx.wallet_id, name: tx.wallet.name })
+      }
+    }
+    return Array.from(map.values()).sort((a, b) => a.name.localeCompare(b.name))
+  })()
 
-  // Apply category filter on top of tab filter
-  const displayedTransactions = activeCategory === 'all'
-    ? visibleTransactions
-    : visibleTransactions.filter(tx => tx.category_id === activeCategory)
+  // Active filters — fall back to 'all' if the selected value is not in this tab's data
+  const activeCategory = filterableCategories.some(c => c.id === categoryFilter) ? categoryFilter : 'all'
+  const activeWallet   = filterableWallets.some(w => w.id === walletFilter)      ? walletFilter   : 'all'
+
+  // Apply both filters on top of tab filter
+  const displayedTransactions = visibleTransactions
+    .filter(tx => activeCategory === 'all' || tx.category_id === activeCategory)
+    .filter(tx => activeWallet   === 'all' || tx.wallet_id   === activeWallet)
 
   const groups = groupByDate(displayedTransactions)
 
@@ -328,21 +358,38 @@ export function TransactionList({ transactions, wallets, categories, groupId, gr
         </div>
       )}
 
-      {/* Category filter — only when there are categorised transactions to filter on */}
-      {filterableCategories.length > 0 && (
-        <select
-          value={activeCategory}
-          onChange={e => pushCategoryFilter(e.target.value)}
-          className={nativeSelectClass}
-          aria-label={t('filterAllCategories')}
-        >
-          <option value="all">{t('filterAllCategories')}</option>
-          {filterableCategories.map(cat => (
-            <option key={cat.id} value={cat.id}>
-              {cat.icon ? `${cat.icon} ${cat.name}` : cat.name}
-            </option>
-          ))}
-        </select>
+      {/* Filters — only when there is data to filter on */}
+      {(filterableCategories.length > 0 || filterableWallets.length > 1) && (
+        <div className="flex flex-col sm:flex-row gap-2">
+          {filterableCategories.length > 0 && (
+            <select
+              value={activeCategory}
+              onChange={e => pushCategoryFilter(e.target.value)}
+              className={nativeSelectClass}
+              aria-label={t('filterAllCategories')}
+            >
+              <option value="all">{t('filterAllCategories')}</option>
+              {filterableCategories.map(cat => (
+                <option key={cat.id} value={cat.id}>
+                  {cat.icon ? `${cat.icon} ${cat.name}` : cat.name}
+                </option>
+              ))}
+            </select>
+          )}
+          {filterableWallets.length > 1 && (
+            <select
+              value={activeWallet}
+              onChange={e => pushWalletFilter(e.target.value)}
+              className={nativeSelectClass}
+              aria-label={t('filterAllWallets')}
+            >
+              <option value="all">{t('filterAllWallets')}</option>
+              {filterableWallets.map(w => (
+                <option key={w.id} value={w.id}>{w.name}</option>
+              ))}
+            </select>
+          )}
+        </div>
       )}
 
       {visibleTransactions.length === 0 ? (
