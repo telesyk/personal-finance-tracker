@@ -10,6 +10,19 @@ Versioning: PATCH only (`0.0.x`) until a release is explicitly approved.
 
 ---
 
+## [0.6.5] — 2026-08-12
+
+### Added
+- **Category filter** on `/transactions` — native `<select>` above the transaction list; scoped to the active tab's categories that appear in the current month's data; persists as `?category=uuid` in the URL; falls back to "All categories" silently when the selected category isn't present in the current tab
+- **Wallet filter** on `/transactions` — native `<select>` alongside the category filter (flex row, stacks on mobile); scoped to wallets that appear in the active tab's transactions; persists as `?wallet=uuid` in the URL; shown only when the tab has ≥ 2 distinct wallets; both filters stay in sync via a shared `buildFilterParams` helper
+- **Note search** on `/transactions` — text input below the filter row; filters displayed rows by note content (case-insensitive, client-side); `×` button clears the query; does not persist in URL; cleared automatically on tab switch
+
+### Changed
+- Switching Personal/Group tabs now resets all active filters (category, wallet, note search) to avoid a blank list on the new tab
+- `emptyFilter` message updated to "No transactions match the selected filters." (covers all three filter types)
+
+---
+
 ## [0.6.4] — 2026-08-11
 
 ### Changed
