@@ -5,7 +5,7 @@ import { useTranslations } from 'next-intl'
 import { useTabState } from '@/hooks/use-tab-state'
 import { useWalletRealtime } from '@/hooks/use-wallet-realtime'
 import { useRouter } from '@/i18n/navigation'
-import { Pencil, Trash2, Plus } from 'lucide-react'
+import { Pencil, Trash2, X } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
@@ -46,6 +46,8 @@ interface Props {
   groupName: string | null
   currentUserId: string
   month: string
+  categoryFilter: string   // UUID or 'all' — from ?category= URL param
+  walletFilter:   string   // UUID or 'all' — from ?wallet= URL param
 }
 
 type TxType = 'income' | 'expense' | 'transfer'
@@ -88,7 +90,7 @@ function formatDateHeader(dateStr: string) {
   })
 }
 
-export function TransactionList({ transactions, wallets, categories, groupId, groupName, currentUserId, month }: Props) {
+export function TransactionList({ transactions, wallets, categories, groupId, groupName, currentUserId, month, categoryFilter, walletFilter }: Props) {
   const router = useRouter()
   const t = useTranslations('transactions')
   const tf = useTranslations('transactions.form')
@@ -115,12 +117,48 @@ export function TransactionList({ transactions, wallets, categories, groupId, gr
   const [deleteLoading, setDeleteLoading] = useState(false)
   const [deleteError, setDeleteError] = useState<string | null>(null)
 
+  // note search (client-side only — does not persist in URL)
+  const [noteSearch, setNoteSearch] = useState('')
+
   // mobile: which row is showing its action buttons
   const [activeId, setActiveId] = useState<string | null>(null)
 
   // personal / group tab
   const { activeTab, changeTab } = useTabState(groupId)
   useWalletRealtime()
+
+  // ── filters ───────────────────────────────────────────────────────────────
+  /** Build URL params preserving ?month= and applying both filter values. */
+  function buildFilterParams(overrides: { category?: string; wallet?: string }) {
+    const cat = overrides.category ?? categoryFilter
+    const wal = overrides.wallet   ?? walletFilter
+    const p = new URLSearchParams()
+    if (month !== currentMonthStr()) p.set('month', month)
+    if (cat !== 'all') p.set('category', cat)
+    if (wal !== 'all') p.set('wallet',   wal)
+    return p
+  }
+
+  function pushCategoryFilter(cat: string) {
+    const p = buildFilterParams({ category: cat })
+    router.push(`/transactions${p.size > 0 ? '?' + p.toString() : ''}`)
+  }
+
+  function pushWalletFilter(wal: string) {
+    const p = buildFilterParams({ wallet: wal })
+    router.push(`/transactions${p.size > 0 ? '?' + p.toString() : ''}`)
+  }
+
+  /** When switching tabs, drop both URL filters and clear note search. */
+  function handleTabChange(newTab: 'personal' | 'group') {
+    changeTab(newTab)
+    setNoteSearch('')
+    if (categoryFilter !== 'all' || walletFilter !== 'all') {
+      const p = new URLSearchParams()
+      if (month !== currentMonthStr()) p.set('month', month)
+      router.push(`/transactions${p.size > 0 ? '?' + p.toString() : ''}`)
+    }
+  }
 
   function openCreate() {
     setEditingTx(null)
@@ -222,10 +260,45 @@ export function TransactionList({ transactions, wallets, categories, groupId, gr
   const toWalletOptions = wallets.filter(w => w.id !== walletId)
   const filteredCategories = categories.filter(c => c.type === type)
 
+  // Tab-scoped transactions (personal vs. group)
   const visibleTransactions = !groupId || activeTab === 'personal'
     ? transactions.filter(tx => tx.wallet?.owner_id === currentUserId)
     : transactions.filter(tx => tx.wallet?.group_id !== null)
-  const groups = groupByDate(visibleTransactions)
+
+  // Unique categories that appear in this tab's transactions (for the filter dropdown)
+  const filterableCategories = (() => {
+    const map = new Map<string, { id: string; name: string; icon: string | null }>()
+    for (const tx of visibleTransactions) {
+      if (tx.category_id && tx.category && !map.has(tx.category_id)) {
+        map.set(tx.category_id, { id: tx.category_id, name: tx.category.name, icon: tx.category.icon })
+      }
+    }
+    return Array.from(map.values()).sort((a, b) => a.name.localeCompare(b.name))
+  })()
+
+  // Unique wallets that appear in this tab's transactions (for the wallet filter dropdown)
+  const filterableWallets = (() => {
+    const map = new Map<string, { id: string; name: string }>()
+    for (const tx of visibleTransactions) {
+      if (tx.wallet_id && tx.wallet && !map.has(tx.wallet_id)) {
+        map.set(tx.wallet_id, { id: tx.wallet_id, name: tx.wallet.name })
+      }
+    }
+    return Array.from(map.values()).sort((a, b) => a.name.localeCompare(b.name))
+  })()
+
+  // Active filters — fall back to 'all' if the selected value is not in this tab's data
+  const activeCategory = filterableCategories.some(c => c.id === categoryFilter) ? categoryFilter : 'all'
+  const activeWallet   = filterableWallets.some(w => w.id === walletFilter)      ? walletFilter   : 'all'
+
+  // Apply all three filters on top of tab filter
+  const noteQuery = noteSearch.trim().toLowerCase()
+  const displayedTransactions = visibleTransactions
+    .filter(tx => activeCategory === 'all' || tx.category_id === activeCategory)
+    .filter(tx => activeWallet   === 'all' || tx.wallet_id   === activeWallet)
+    .filter(tx => !noteQuery || (tx.note ?? '').toLowerCase().includes(noteQuery))
+
+  const groups = groupByDate(displayedTransactions)
 
   const personalWallets = wallets.filter(w => w.owner_id === currentUserId)
   const groupWallets = wallets.filter(w => w.group_id !== null)
@@ -250,7 +323,7 @@ export function TransactionList({ transactions, wallets, categories, groupId, gr
         <TabSwitcher
           tabs={[{ value: 'personal', label: t('tabPersonal') }, { value: 'group', label: groupName ? groupName.slice(0, 50) : t('tabGroup') }]}
           active={activeTab}
-          onChange={v => changeTab(v as 'personal' | 'group')}
+          onChange={v => handleTabChange(v as 'personal' | 'group')}
         />
       )}
 
@@ -291,10 +364,71 @@ export function TransactionList({ transactions, wallets, categories, groupId, gr
         </div>
       )}
 
+      {/* Filters — only when there is data to filter on */}
+      {(filterableCategories.length > 0 || filterableWallets.length > 1) && (
+        <div className="flex flex-col sm:flex-row gap-2">
+          {filterableCategories.length > 0 && (
+            <select
+              value={activeCategory}
+              onChange={e => pushCategoryFilter(e.target.value)}
+              className={nativeSelectClass}
+              aria-label={t('filterAllCategories')}
+            >
+              <option value="all">{t('filterAllCategories')}</option>
+              {filterableCategories.map(cat => (
+                <option key={cat.id} value={cat.id}>
+                  {cat.icon ? `${cat.icon} ${cat.name}` : cat.name}
+                </option>
+              ))}
+            </select>
+          )}
+          {filterableWallets.length > 1 && (
+            <select
+              value={activeWallet}
+              onChange={e => pushWalletFilter(e.target.value)}
+              className={nativeSelectClass}
+              aria-label={t('filterAllWallets')}
+            >
+              <option value="all">{t('filterAllWallets')}</option>
+              {filterableWallets.map(w => (
+                <option key={w.id} value={w.id}>{w.name}</option>
+              ))}
+            </select>
+          )}
+        </div>
+      )}
+
+      {/* Note search */}
+      {visibleTransactions.length > 0 && (
+        <div className="relative">
+          <Input
+            type="search"
+            placeholder={t('searchNotePlaceholder')}
+            value={noteSearch}
+            onChange={e => setNoteSearch(e.target.value)}
+            className="pr-8"
+          />
+          {noteSearch && (
+            <button
+              type="button"
+              onClick={() => setNoteSearch('')}
+              aria-label={t('searchNoteClear')}
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          )}
+        </div>
+      )}
+
       {visibleTransactions.length === 0 ? (
         <div className="flex flex-col items-center gap-2 py-20 text-muted-foreground">
           <p>{isCurrentMonth ? t('empty') : t('emptyMonth', { month: monthLabel(month) })}</p>
           {isCurrentMonth && <p className="text-sm">{t('emptyHint')}</p>}
+        </div>
+      ) : displayedTransactions.length === 0 ? (
+        <div className="flex flex-col items-center gap-2 py-20 text-muted-foreground">
+          <p className="text-sm">{t('emptyFilter')}</p>
         </div>
       ) : (
         <div className="rounded-lg border divide-y">

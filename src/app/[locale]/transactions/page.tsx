@@ -10,7 +10,9 @@ export default async function TransactionsPage({
   const { supabase, user, profile } = await requireProfile()
 
   const params = await searchParams
-  const month = typeof params.month === 'string' ? params.month : currentMonthStr()
+  const month          = typeof params.month    === 'string' ? params.month    : currentMonthStr()
+  const categoryFilter = typeof params.category === 'string' ? params.category : 'all'
+  const walletFilter   = typeof params.wallet   === 'string' ? params.wallet   : 'all'
   const { from: dateFrom, to: dateTo } = monthDateRange(month)
 
   const groupId = profile?.group_id ?? null
@@ -51,6 +53,8 @@ export default async function TransactionsPage({
       groupName={group?.name ?? null}
       currentUserId={user.id}
       month={month}
+      categoryFilter={categoryFilter}
+      walletFilter={walletFilter}
     />
   )
 }

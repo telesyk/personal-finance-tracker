@@ -113,6 +113,11 @@
     "allPersonal": "Alle persönlichen",
     "groupTotal": "Gesamt",
     "dayNet": "Tagessaldo",
+    "filterAllCategories": "Alle Kategorien",
+    "filterAllWallets": "Alle Geldbörsen",
+    "searchNotePlaceholder": "Nach Notiz suchen…",
+    "searchNoteClear": "Suche löschen",
+    "emptyFilter": "Keine Transaktionen entsprechen den gewählten Filtern.",
     "types": {
       "income": "Einnahme",
       "expense": "Ausgabe",
