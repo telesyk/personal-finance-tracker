@@ -131,6 +131,7 @@
       "fromWallet": "From wallet",
       "toWallet": "To wallet",
       "toWalletPlaceholder": "Select destination",
+      "transferSharedNote": "This is a shared group wallet — both balances will update.",
       "amount": "Amount",
       "category": "Category",
       "categoryNone": "— None —",
