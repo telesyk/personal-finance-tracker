@@ -217,6 +217,7 @@
     "overall": "Gesamt",
     "summary": {
       "planned": "Geplant gesamt",
+      "spent": "Diesen Monat ausgegeben",
       "available": "Verfügbar",
       "warning": "übersteigt Kontostand"
     },

@@ -66,6 +66,8 @@ interface Props {
   month: string
   personalActuals: Actuals
   groupActuals: Actuals
+  personalTotalActual: number
+  groupTotalActual: number
 }
 
 // ── BudgetRow ─────────────────────────────────────────────────────────────────
@@ -159,6 +161,8 @@ export function BudgetList({
   month,
   personalActuals,
   groupActuals,
+  personalTotalActual,
+  groupTotalActual,
 }: Props) {
   const router = useRouter()
   const t  = useTranslations('budget')
@@ -196,8 +200,9 @@ export function BudgetList({
 
   // ── budget total summary ──
   const totalPlanned   = visibleBudgets.reduce((s, b) => s + Number(b.amount), 0)
+  const totalActual    = activeTab === 'personal' ? personalTotalActual : groupTotalActual
+  const spentPct       = totalPlanned > 0 ? Math.round((totalActual / totalPlanned) * 100) : 0
   const isOverBalance  = totalBalance > 0 && totalPlanned > totalBalance
-  const summaryColor   = isOverBalance ? 'text-destructive' : 'text-emerald-600 dark:text-emerald-500'
   const summaryBarCol  = isOverBalance ? 'bg-destructive' : 'bg-emerald-500'
 
   // ── handlers ──
@@ -324,27 +329,60 @@ export function BudgetList({
       ) : (
         <div className="space-y-3">
 
-          {/* Budget total summary vs wallet balance */}
+          {/* Budget total summary: spent vs planned, planned vs wallet balance */}
           <div className="rounded-lg border px-4 py-3 space-y-2">
+
+            {/* Planned total */}
             <div className="flex items-center justify-between text-sm">
               <span className="text-muted-foreground">{t('summary.planned')}</span>
-              <span className={cn('font-semibold tabular-nums', summaryColor)}>
+              <span className="font-semibold tabular-nums">
                 {symbol}{totalPlanned.toFixed(2)}
               </span>
             </div>
-            {totalBalance > 0 && (
+
+            {/* Actual spent vs planned */}
+            {totalPlanned > 0 && (
               <>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">{t('summary.spent')}</span>
+                  <span className="text-xs text-muted-foreground tabular-nums whitespace-nowrap">
+                    <span className={cn('font-semibold', spentPct >= 100 ? 'text-destructive' : 'text-foreground')}>
+                      {symbol}{totalActual.toFixed(2)}
+                    </span>
+                    {' / '}
+                    {symbol}{totalPlanned.toFixed(2)}
+                  </span>
+                </div>
                 <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
                   <div
-                    className={cn('h-full rounded-full', summaryBarCol)}
-                    style={{ width: `${Math.min((totalPlanned / totalBalance) * 100, 100)}%` }}
+                    className={cn('h-full rounded-full transition-[width]', budgetBarColor(spentPct))}
+                    style={{ width: `${Math.min(spentPct, 100)}%` }}
                   />
                 </div>
-                <div className="flex items-center justify-between text-xs text-muted-foreground">
+                <p className={cn('text-xs', budgetLabelClass(spentPct))}>
+                  {spentPct >= 100
+                    ? `⚠ ${t('overBudget')} · ${spentPct}%`
+                    : spentPct >= 80
+                      ? `${spentPct}% · ${t('nearLimit')}`
+                      : `${spentPct}% ${t('used')}`}
+                </p>
+              </>
+            )}
+
+            {/* Planned vs wallet balance */}
+            {totalBalance > 0 && (
+              <>
+                <div className="border-t mt-1 pt-2 flex items-center justify-between text-xs text-muted-foreground">
                   <span className={cn(isOverBalance && 'text-destructive')}>
                     {isOverBalance && '⚠ '}{isOverBalance ? t('summary.warning') : t('summary.available')}
                   </span>
                   <span className="tabular-nums">{symbol}{totalBalance.toFixed(2)}</span>
+                </div>
+                <div className="h-1 w-full rounded-full bg-muted overflow-hidden">
+                  <div
+                    className={cn('h-full rounded-full', summaryBarCol)}
+                    style={{ width: `${Math.min((totalPlanned / totalBalance) * 100, 100)}%` }}
+                  />
                 </div>
               </>
             )}

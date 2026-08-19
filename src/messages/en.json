@@ -217,6 +217,7 @@
     "overall": "Overall",
     "summary": {
       "planned": "Planned total",
+      "spent": "Spent this month",
       "available": "Available",
       "warning": "exceeds wallet balance"
     },
