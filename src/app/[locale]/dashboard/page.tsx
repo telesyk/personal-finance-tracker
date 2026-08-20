@@ -176,7 +176,12 @@ export default async function DashboardPage() {
       {/* Last 3 transactions */}
       {(recentTxs ?? []).length > 0 && (
         <div className="space-y-2">
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t('recentTransactions')}</p>
+          <div className="flex items-center justify-between">
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t('recentTransactions')}</p>
+            <Link href="/transactions" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
+              {t('allTransactions')}
+            </Link>
+          </div>
           <div className="rounded-lg border divide-y">
             {(recentTxs ?? []).map((tx: any) => {
               const txSymbol = currencySymbol(tx.wallet?.currency ?? 'EUR')
@@ -205,11 +210,6 @@ export default async function DashboardPage() {
                 </div>
               )
             })}
-          </div>
-          <div className="text-right">
-            <Link href="/transactions" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
-              {t('allTransactions')}
-            </Link>
           </div>
         </div>
       )}
