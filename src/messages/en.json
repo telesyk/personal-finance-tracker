@@ -131,6 +131,7 @@
       "fromWallet": "From wallet",
       "toWallet": "To wallet",
       "toWalletPlaceholder": "Select destination",
+      "transferSharedNote": "This is a shared group wallet — both balances will update.",
       "amount": "Amount",
       "category": "Category",
       "categoryNone": "— None —",
@@ -216,6 +217,7 @@
     "overall": "Overall",
     "summary": {
       "planned": "Planned total",
+      "spent": "Spent this month",
       "available": "Available",
       "warning": "exceeds wallet balance"
     },

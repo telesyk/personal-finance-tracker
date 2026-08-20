@@ -9,7 +9,6 @@ import { DashboardBudgetTabs, type BudgetScopeData } from '@/components/dashboar
 export default async function DashboardPage() {
   const { supabase, user, profile } = await requireProfile()
   const t  = await getTranslations('dashboard')
-  const ta = await getTranslations('analytics')
   const tt = await getTranslations('transactions')
 
   const { from, to, label } = currentMonthRange()
@@ -74,11 +73,6 @@ export default async function DashboardPage() {
   const symbol            = primaryWallet ? currencySymbol(primaryWallet.currency) : '€'
   const groupSymbol       = sharedWallets[0] ? currencySymbol(sharedWallets[0].currency) : symbol
 
-  // ── Monthly KPI (all wallets combined) ────────────────────────────────────────
-  const income   = (transactions ?? []).filter(t => t.type === 'income').reduce((s, t) => s + parseFloat(String(t.amount)), 0)
-  const expenses = (transactions ?? []).filter(t => t.type === 'expense').reduce((s, t) => s + parseFloat(String(t.amount)), 0)
-  const net      = income - expenses
-
   // ── Budget scope builder ───────────────────────────────────────────────────────
   function buildScopeData(
     budgetRows: { category_id: string | null; amount: string | number }[] | null,
@@ -93,6 +87,9 @@ export default async function DashboardPage() {
       ? Object.values(bmap).reduce((s, v) => s + v, 0)
       : undefined
 
+    const scopeIncome = (transactions ?? [])
+      .filter(t => t.type === 'income' && txFilter(t))
+      .reduce((s, t) => s + parseFloat(String(t.amount)), 0)
     const scopeExpenses = (transactions ?? [])
       .filter(t => t.type === 'expense' && txFilter(t))
       .reduce((s, t) => s + parseFloat(String(t.amount)), 0)
@@ -109,7 +106,7 @@ export default async function DashboardPage() {
     }
     const top3 = Array.from(catMap.values()).sort((a, b) => b.total - a.total).slice(0, 3)
 
-    return { expenses: scopeExpenses, overallBudget, budgetMap: bmap, top3, symbol: scopeSymbol }
+    return { income: scopeIncome, expenses: scopeExpenses, overallBudget, budgetMap: bmap, top3, symbol: scopeSymbol }
   }
 
   const personalData = buildScopeData(
@@ -167,51 +164,24 @@ export default async function DashboardPage() {
         </div>
       )}
 
-      {/* Monthly KPI snapshot */}
-      <div className="space-y-2">
-        <div className="flex items-center justify-between">
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{label}</p>
-          <Link href="/analytics" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
-            {t('fullAnalytics')}
-          </Link>
-        </div>
-        <div className="grid grid-cols-3 gap-3">
-          <div className="rounded-lg border px-3 py-2.5 space-y-0.5">
-            <p className="text-xs text-muted-foreground">{ta('income')}</p>
-            <p className="text-sm font-semibold tabular-nums text-green-600 dark:text-green-400">
-              {symbol} {income.toFixed(2)}
-            </p>
-          </div>
-          <div className="rounded-lg border px-3 py-2.5 space-y-0.5">
-            <p className="text-xs text-muted-foreground">{ta('expenses')}</p>
-            <p className="text-sm font-semibold tabular-nums text-red-600 dark:text-red-500">
-              {symbol} {expenses.toFixed(2)}
-            </p>
-          </div>
-          <div className="rounded-lg border px-3 py-2.5 space-y-0.5">
-            <p className="text-xs text-muted-foreground">{ta('net')}</p>
-            <p className={cn(
-              'text-sm font-semibold tabular-nums',
-              net >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-500',
-            )}>
-              {net >= 0 ? '+' : '−'}{symbol} {Math.abs(net).toFixed(2)}
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* Budget KPI + Top-3 spending — client island with Personal/Group tabs */}
+      {/* Monthly KPI + Budget KPI + Top-3 — client island with Personal/Group tabs */}
       <DashboardBudgetTabs
         personalData={personalData}
         groupData={groupData}
         groupId={groupId}
         groupName={group?.name ?? null}
+        monthLabel={label}
       />
 
       {/* Last 3 transactions */}
       {(recentTxs ?? []).length > 0 && (
         <div className="space-y-2">
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t('recentTransactions')}</p>
+          <div className="flex items-center justify-between">
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t('recentTransactions')}</p>
+            <Link href="/transactions" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
+              {t('allTransactions')}
+            </Link>
+          </div>
           <div className="rounded-lg border divide-y">
             {(recentTxs ?? []).map((tx: any) => {
               const txSymbol = currencySymbol(tx.wallet?.currency ?? 'EUR')
@@ -240,11 +210,6 @@ export default async function DashboardPage() {
                 </div>
               )
             })}
-          </div>
-          <div className="text-right">
-            <Link href="/transactions" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
-              {t('allTransactions')}
-            </Link>
           </div>
         </div>
       )}
