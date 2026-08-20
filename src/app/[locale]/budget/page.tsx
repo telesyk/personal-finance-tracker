@@ -47,16 +47,21 @@ export default async function BudgetPage({
       .order('is_primary', { ascending: false }),
   ])
 
-  // Aggregate actuals by category for each scope.
+  // Aggregate actuals by category for each scope, and running totals for the summary.
   //   Personal scope: only expenses from wallets owned by the current user.
   //   Group scope:    all expenses regardless of wallet owner.
   const personalActuals: Actuals = {}
   const groupActuals: Actuals    = {}
+  let personalTotalActual = 0
+  let groupTotalActual    = 0
 
   for (const tx of txns ?? []) {
     const amount = parseFloat(tx.amount as unknown as string)
     const wallet = tx.wallet as unknown as { owner_id: string | null } | null
     const isOwn  = wallet?.owner_id === user.id
+
+    groupTotalActual += amount
+    if (isOwn) personalTotalActual += amount
 
     // Per-category only (skip uncategorised transactions)
     if (tx.category_id) {
@@ -76,6 +81,8 @@ export default async function BudgetPage({
       month={month}
       personalActuals={personalActuals}
       groupActuals={groupActuals}
+      personalTotalActual={personalTotalActual}
+      groupTotalActual={groupTotalActual}
     />
   )
 }

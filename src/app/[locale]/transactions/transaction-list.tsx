@@ -95,6 +95,7 @@ export function TransactionList({ transactions, wallets, categories, groupId, gr
   const t = useTranslations('transactions')
   const tf = useTranslations('transactions.form')
   const tc = useTranslations('common')
+  const tw = useTranslations('wallets')
   const isCurrentMonth = month === currentMonthStr()
 
   // form dialog
@@ -259,6 +260,14 @@ export function TransactionList({ transactions, wallets, categories, groupId, gr
   const isEdit = editingTx !== null
   const toWalletOptions = wallets.filter(w => w.id !== walletId)
   const filteredCategories = categories.filter(c => c.type === type)
+
+  /** Label a wallet option: appends "(shared)" for group wallets owned by someone else. */
+  function walletOptionLabel(w: Wallet) {
+    if (w.owner_id !== currentUserId && w.group_id !== null) {
+      return `${w.name} (${tw('shared').toLowerCase()})`
+    }
+    return w.name
+  }
 
   // Tab-scoped transactions (personal vs. group)
   const visibleTransactions = !groupId || activeTab === 'personal'
@@ -551,7 +560,9 @@ export function TransactionList({ transactions, wallets, categories, groupId, gr
                 className={nativeSelectClass}
               >
                 {wallets.map(w => (
-                  <option key={w.id} value={w.id}>{w.name}</option>
+                  <option key={w.id} value={w.id}>
+                    {type === 'transfer' ? walletOptionLabel(w) : w.name}
+                  </option>
                 ))}
               </select>
             </div>
@@ -568,9 +579,12 @@ export function TransactionList({ transactions, wallets, categories, groupId, gr
                 >
                   <option value="">{tf('toWalletPlaceholder')}</option>
                   {toWalletOptions.map(w => (
-                    <option key={w.id} value={w.id}>{w.name}</option>
+                    <option key={w.id} value={w.id}>{walletOptionLabel(w)}</option>
                   ))}
                 </select>
+                {toWalletId && toWalletOptions.find(w => w.id === toWalletId && w.owner_id !== currentUserId) && (
+                  <p className="text-xs text-muted-foreground">{tf('transferSharedNote')}</p>
+                )}
               </div>
             )}
 
