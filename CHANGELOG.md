@@ -10,6 +10,21 @@ Versioning: PATCH only (`0.0.x`) until a release is explicitly approved.
 
 ---
 
+## [0.6.6] — 2026-08-20
+
+### Fixed
+- **Cross-owner wallet transfers** — `update_wallet_balance()` trigger re-declared with `SECURITY DEFINER SET search_path = ''`; RLS `"wallet update"` policy was silently blocking balance updates on the destination wallet when it was owned by a different group member; destination balance now updates correctly
+
+### Added
+- **Budget page — spent vs. planned total** — summary block now shows a "Spent this month" row (`€actual / €planned`) with a progress bar and green/amber/red threshold label; includes all expense transactions for the tab scope (categorised and uncategorised); new translation key `budget.summary.spent` (en/uk/de)
+- **Dashboard KPIs tab-scoped** — Income, Expenses, and Net tiles on `/dashboard` now respond to the Personal / Group tab; personal tab shows KPIs from the user's own wallets only, group tab from all shared wallets; KPI strip moved into `<DashboardBudgetTabs>` alongside the budget card and top-3 list
+- **Transfer destination hint** — when a shared group wallet is selected as the transfer destination, a note confirms both balances will update; wallet picker labels group-owned wallets with "(shared)" in transfer mode
+
+### Changed
+- **"All transactions →" link** — moved from a standalone right-aligned line below the recent-transactions list to inline with the "Recent Transactions" section heading (flex row, title left / link right), matching all other section headers on the dashboard
+
+---
+
 ## [0.6.5] — 2026-08-12
 
 ### Added
