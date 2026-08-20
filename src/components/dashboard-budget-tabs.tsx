@@ -8,6 +8,7 @@ import { TabSwitcher } from '@/components/tab-switcher'
 import { budgetBarColor, budgetLabelClass } from '@/lib/budget'
 
 export interface BudgetScopeData {
+  income: number
   expenses: number
   overallBudget: number | undefined
   budgetMap: Record<string, number>   // { [category_id]: amount }
@@ -20,15 +21,17 @@ interface Props {
   groupData: BudgetScopeData | null   // null when user has no group
   groupId: string | null
   groupName: string | null
+  monthLabel: string
 }
 
-export function DashboardBudgetTabs({ personalData, groupData, groupId, groupName }: Props) {
+export function DashboardBudgetTabs({ personalData, groupData, groupId, groupName, monthLabel }: Props) {
   const ta = useTranslations('analytics')
   const td = useTranslations('dashboard')
   const tb = useTranslations('budget')
 
   const { activeTab, changeTab } = useTabState(groupId)
-  const d = (!groupId || activeTab === 'personal' || !groupData) ? personalData : groupData
+  const d   = (!groupId || activeTab === 'personal' || !groupData) ? personalData : groupData
+  const net = d.income - d.expenses
 
   return (
     <div className="space-y-4">
@@ -43,6 +46,39 @@ export function DashboardBudgetTabs({ personalData, groupData, groupId, groupNam
           onChange={v => changeTab(v as 'personal' | 'group')}
         />
       )}
+
+      {/* Monthly KPI strip — tab-scoped */}
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{monthLabel}</p>
+          <Link href="/analytics" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
+            {td('fullAnalytics')}
+          </Link>
+        </div>
+        <div className="grid grid-cols-3 gap-3">
+          <div className="rounded-lg border px-3 py-2.5 space-y-0.5">
+            <p className="text-xs text-muted-foreground">{ta('income')}</p>
+            <p className="text-sm font-semibold tabular-nums text-green-600 dark:text-green-400">
+              {d.symbol} {d.income.toFixed(2)}
+            </p>
+          </div>
+          <div className="rounded-lg border px-3 py-2.5 space-y-0.5">
+            <p className="text-xs text-muted-foreground">{ta('expenses')}</p>
+            <p className="text-sm font-semibold tabular-nums text-red-600 dark:text-red-500">
+              {d.symbol} {d.expenses.toFixed(2)}
+            </p>
+          </div>
+          <div className="rounded-lg border px-3 py-2.5 space-y-0.5">
+            <p className="text-xs text-muted-foreground">{ta('net')}</p>
+            <p className={cn(
+              'text-sm font-semibold tabular-nums',
+              net >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-500',
+            )}>
+              {net >= 0 ? '+' : '−'}{d.symbol} {Math.abs(net).toFixed(2)}
+            </p>
+          </div>
+        </div>
+      </div>
 
       {/* Budget KPI card */}
       {d.overallBudget != null ? (() => {
