@@ -8,6 +8,7 @@ import { createClient } from '@/lib/supabase/client'
 import { useTabState } from '@/hooks/use-tab-state'
 import { TabSwitcher } from '@/components/tab-switcher'
 import { MonthNav } from '@/components/month-nav'
+import { currentMonthStr } from '@/lib/date'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -179,6 +180,7 @@ export function BudgetList({
   const [formError, setFormError]         = useState<string | null>(null)
   const [categoryId, setCategoryId]       = useState('none')
   const [amount, setAmount]               = useState('')
+  const [formMonth, setFormMonth]         = useState(month)
 
   // ── delete dialog state ──
   const [deletingBudget, setDeletingBudget] = useState<Budget | null>(null)
@@ -211,6 +213,7 @@ export function BudgetList({
     setEditingBudget(null)
     setCategoryId('none')
     setAmount('')
+    setFormMonth(month)
     setFormError(null)
     setDialogOpen(true)
   }
@@ -254,7 +257,7 @@ export function BudgetList({
       owner_id:    editingBudget ? editingBudget.owner_id : activeTab === 'personal' ? currentUserId : null,
       category_id: categoryId === 'none' ? null : categoryId,
       amount:      parsedAmount,
-      month,
+      month:       editingBudget ? editingBudget.month : formMonth,
     }
 
     const { error } = editingBudget
@@ -269,7 +272,12 @@ export function BudgetList({
     }
 
     setDialogOpen(false)
-    router.refresh()
+    // Navigate to the budget's month if different from the current view
+    if (!editingBudget && formMonth !== month) {
+      router.push(`/budget?month=${formMonth}`)
+    } else {
+      router.refresh()
+    }
   }
 
   async function handleDelete() {
@@ -411,6 +419,21 @@ export function BudgetList({
           </DialogHeader>
 
           <form onSubmit={handleSubmit} className="space-y-4 pt-2">
+
+            {/* Month — only on create; fixed after creation */}
+            {!isEdit && (
+              <div className="space-y-2">
+                <Label htmlFor="budget-month">{tf('month')}</Label>
+                <Input
+                  id="budget-month"
+                  type="month"
+                  min={currentMonthStr()}
+                  value={formMonth}
+                  onChange={e => setFormMonth(e.target.value)}
+                  required
+                />
+              </div>
+            )}
 
             {/* Category — disabled on edit (scope + category are immutable after creation) */}
             <div className="space-y-2">

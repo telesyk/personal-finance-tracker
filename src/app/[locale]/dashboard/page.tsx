@@ -5,6 +5,7 @@ import { requireProfile } from '@/lib/auth'
 import { currencySymbol } from '@/lib/currency'
 import { currentMonthRange, currentMonthStr } from '@/lib/date'
 import { DashboardBudgetTabs, type BudgetScopeData } from '@/components/dashboard-budget-tabs'
+import { DashboardTopSpending } from '@/components/dashboard-top-spending'
 
 export default async function DashboardPage() {
   const { supabase, user, profile } = await requireProfile()
@@ -214,6 +215,12 @@ export default async function DashboardPage() {
         </div>
       )}
 
+      {/* Top-3 spending — tab-scoped, shown after recent transactions */}
+      <DashboardTopSpending
+        personalData={personalData}
+        groupData={groupData}
+        groupId={groupId}
+      />
 
     </main>
   )
