@@ -10,6 +10,18 @@ Versioning: PATCH only (`0.0.x`) until a release is explicitly approved.
 
 ---
 
+## [0.6.7] — 2026-08-31
+
+### Added
+- **Future budget planning** — Add Budget dialog now includes a month picker (`<input type="month">`, min = current month); saving a budget for a future month automatically navigates to that month's view; `MonthNav` gains a `blockFuture` prop (default `false`) so the forward arrow is no longer blocked on the budget page
+- **Institution icons on wallet cards** — colored initials badge per bank preset (hash-derived, consistent per institution); will automatically switch to a real logo when `bank_presets.logo_url` is populated; no schema change
+
+### Changed
+- **Wallets page — Option B redesign** — institution icon + wallet name/badges row at top; balance promoted to `text-2xl` hero number with currency pill below; bank name shown as secondary metadata
+- **Dashboard section reorder** — "Recent transactions" now appears above "Top spending"; Top-3 list extracted into a dedicated `DashboardTopSpending` client island (stays tab-synced via shared `useTabState` key)
+
+---
+
 ## [0.6.6] — 2026-08-20
 
 ### Fixed

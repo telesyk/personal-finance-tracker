@@ -224,6 +224,7 @@
     "form": {
       "titleNew": "Budget hinzufügen",
       "titleEdit": "Budget bearbeiten",
+      "month": "Monat",
       "category": "Kategorie",
       "categoryPlaceholder": "— Kategorie wählen —",
       "amount": "Monatliches Limit",

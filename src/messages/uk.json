@@ -224,6 +224,7 @@
     "form": {
       "titleNew": "Додати бюджет",
       "titleEdit": "Редагувати бюджет",
+      "month": "Місяць",
       "category": "Категорія",
       "categoryPlaceholder": "— Оберіть категорію —",
       "amount": "Місячний ліміт",
