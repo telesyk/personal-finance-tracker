@@ -7,16 +7,56 @@ import { useWalletRealtime } from '@/hooks/use-wallet-realtime'
 import { useRouter } from '@/i18n/navigation'
 import { Pencil, Trash2 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
+import { cn } from '@/lib/utils'
 import { currencySymbol, formatAmount, parseAmount } from '@/lib/currency'
 import { TabSwitcher } from '@/components/tab-switcher'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 
 const CURRENCIES = ['EUR', 'USD', 'GBP', 'UAH']
+
+const ICON_COLORS = [
+  'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300',
+  'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300',
+  'bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-300',
+  'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300',
+  'bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300',
+  'bg-cyan-100 text-cyan-700 dark:bg-cyan-900/40 dark:text-cyan-300',
+  'bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300',
+  'bg-teal-100 text-teal-700 dark:bg-teal-900/40 dark:text-teal-300',
+]
+
+function InstitutionIcon({ preset }: { preset: BankPreset | undefined }) {
+  if (!preset) {
+    return (
+      <div className="h-11 w-11 rounded-full bg-muted flex items-center justify-center text-sm font-bold text-muted-foreground shrink-0">
+        ?
+      </div>
+    )
+  }
+  if (preset.logo_url) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        src={preset.logo_url}
+        alt={preset.name}
+        className="h-11 w-11 rounded-full object-contain border bg-white shrink-0"
+      />
+    )
+  }
+  const initials  = preset.name.slice(0, 2).toUpperCase()
+  const hash      = preset.name.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0)
+  const colorClass = ICON_COLORS[hash % ICON_COLORS.length]
+  return (
+    <div className={cn('h-11 w-11 rounded-full flex items-center justify-center text-sm font-bold shrink-0', colorClass)}>
+      {initials}
+    </div>
+  )
+}
 
 function WalletCard({
   wallet,
@@ -38,36 +78,41 @@ function WalletCard({
   const t = useTranslations('wallets')
   return (
     <Card>
-      <CardHeader className="pb-2">
-        <div className="flex items-center justify-between">
-          <div className="flex flex-col gap-0.5">
-            <div className="flex items-center gap-2 flex-wrap">
-              <CardTitle className="text-base">{wallet.name}</CardTitle>
-            {wallet.is_primary && (
-              <span className="text-xs font-medium px-1.5 py-0.5 rounded border border-primary/40 text-primary bg-primary/10">
-                {t('primary')}
-              </span>
-            )}
-            {wallet.group_id ? (
-              <span className="text-xs font-medium px-1.5 py-0.5 rounded border border-muted text-muted-foreground">
-                {t('shared')}
-              </span>
-            ) : (
-              <span className="text-xs px-1.5 py-0.5 rounded border border-dashed border-muted text-muted-foreground/60">
-                {t('private')}
-              </span>
-            )}
-          </div>
-            {showOwner && wallet.owner?.display_name && (
-              <span className="text-xs text-muted-foreground/70">{wallet.owner.display_name}</span>
-            )}
+      <CardContent className="p-4">
+        {/* Top row: institution icon + name/badges + actions */}
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex items-center gap-3 min-w-0">
+            <InstitutionIcon preset={preset} />
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <p className="font-medium text-sm leading-tight">{wallet.name}</p>
+                {wallet.is_primary && (
+                  <span className="text-xs font-medium px-1.5 py-0.5 rounded border border-primary/40 text-primary bg-primary/10">
+                    {t('primary')}
+                  </span>
+                )}
+                {wallet.group_id ? (
+                  <span className="text-xs font-medium px-1.5 py-0.5 rounded border border-muted text-muted-foreground">
+                    {t('shared')}
+                  </span>
+                ) : (
+                  <span className="text-xs px-1.5 py-0.5 rounded border border-dashed border-muted text-muted-foreground/60">
+                    {t('private')}
+                  </span>
+                )}
+              </div>
+              {showOwner && wallet.owner?.display_name && (
+                <p className="text-xs text-muted-foreground/70 mt-0.5">{wallet.owner.display_name}</p>
+              )}
+              <p className="text-xs text-muted-foreground mt-0.5">{preset?.name ?? 'Custom'}</p>
+            </div>
           </div>
           {wallet.owner_id === currentUserId && (
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-1 shrink-0">
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-9 w-9 text-muted-foreground hover:text-foreground"
+                className="h-8 w-8 text-muted-foreground hover:text-foreground"
                 onClick={() => onEdit(wallet)}
               >
                 <Pencil className="h-3.5 w-3.5" />
@@ -75,7 +120,7 @@ function WalletCard({
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-9 w-9 text-muted-foreground hover:text-destructive"
+                className="h-8 w-8 text-muted-foreground hover:text-destructive"
                 onClick={() => onDelete(wallet)}
               >
                 <Trash2 className="h-3.5 w-3.5" />
@@ -83,15 +128,13 @@ function WalletCard({
             </div>
           )}
         </div>
-      </CardHeader>
-      <CardContent className="flex items-center justify-between text-sm">
-        <span className="text-muted-foreground">{preset?.name ?? 'Custom'}</span>
-        <div className="flex items-center gap-3">
+        {/* Balance — hero number */}
+        <div className="mt-3 flex items-baseline gap-2">
+          <p className="font-heading text-2xl font-semibold tabular-nums">
+            {formatAmount(wallet.balance, wallet.currency)}
+          </p>
           <span className="text-xs font-mono border rounded px-1.5 py-0.5 text-muted-foreground">
             {wallet.currency}
-          </span>
-          <span className="font-medium tabular-nums">
-            {formatAmount(wallet.balance, wallet.currency)}
           </span>
         </div>
       </CardContent>
@@ -112,7 +155,7 @@ export interface Wallet {
   owner: { display_name: string } | null
 }
 
-interface BankPreset { id: string; name: string; type: string }
+interface BankPreset { id: string; name: string; type: string; logo_url: string | null }
 
 interface Props {
   wallets: Wallet[]

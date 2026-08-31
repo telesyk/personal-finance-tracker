@@ -13,7 +13,7 @@ export default async function WalletsPage() {
       .order('created_at'),
     supabase
       .from('bank_presets')
-      .select('id, name, type')
+      .select('id, name, type, logo_url')
       .order('name'),
     groupId
       ? supabase.from('groups').select('name').eq('id', groupId).single()
