@@ -18,9 +18,11 @@ interface Props {
   basePath: string
   /** Tailwind width/min-w class for the label span. Default: `'min-w-[7rem]'` */
   labelWidth?: string
+  /** When true, the "next" button is disabled on the current month (default: false) */
+  blockFuture?: boolean
 }
 
-export function MonthNav({ month, basePath, labelWidth = 'min-w-[7rem]' }: Props) {
+export function MonthNav({ month, basePath, labelWidth = 'min-w-[7rem]', blockFuture = false }: Props) {
   const router         = useRouter()
   const isCurrentMonth = month === currentMonthStr()
 
@@ -40,10 +42,10 @@ export function MonthNav({ month, basePath, labelWidth = 'min-w-[7rem]' }: Props
 
       <button
         onClick={() => router.push(`${basePath}?month=${nextMonth(month)}`)}
-        disabled={isCurrentMonth}
+        disabled={blockFuture && isCurrentMonth}
         className={cn(
           'p-1.5 rounded transition-colors',
-          isCurrentMonth ? 'text-muted-foreground/30 cursor-not-allowed' : 'hover:bg-muted',
+          blockFuture && isCurrentMonth ? 'text-muted-foreground/30 cursor-not-allowed' : 'hover:bg-muted',
         )}
         aria-label="Next month"
       >
