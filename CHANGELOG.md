@@ -10,6 +10,20 @@ Versioning: PATCH only (`0.0.x`) until a release is explicitly approved.
 
 ---
 
+## [0.6.8] — 2026-09-01
+
+### Added
+- **Wallet card — balance right** — balance and currency pill moved to the right side of the card row (single flex row: institution icon · name/badges · balance · actions); more compact and scan-friendly
+- **Wallet monthly stats on card** — each wallet card shows income received and net change (income − expenses) for the current month as a subtle secondary line; hidden when the wallet had no activity; powered by `buildWalletStats()` helper in `src/lib/wallet-stats.ts`
+- **Analytics — savings rate tile** — a 4th "Saved" KPI tile shows net ÷ income as a percentage; appears only when income > 0; green/red/muted depending on sign
+- **Budget — days remaining** — the budget summary bar now shows "X days left" for the current month alongside the planned total; omitted for past and future months
+
+### Changed
+- **Analytics — Net always visible** — KPI tile 3 previously swapped to a Budget tile when an overall budget was set, hiding the Net figure; Net is now always the third tile; if a budget is set, a compact budget progress bar appears below the strip instead
+- **Analytics — category bar chart removed** — the vs-Budget section already ranks expense categories by amount with progress bars; the bar chart was a visual duplicate; removed to reduce page length (a purpose-built chart alternative is planned for Stage 13)
+
+---
+
 ## [0.6.7] — 2026-08-31
 
 ### Added
