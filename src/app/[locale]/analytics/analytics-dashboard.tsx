@@ -3,10 +3,8 @@
 import { useTranslations } from 'next-intl'
 import { useTabState } from '@/hooks/use-tab-state'
 import { Link } from '@/i18n/navigation'
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts'
 import { cn } from '@/lib/utils'
 import { currencySymbol, parseAmount } from '@/lib/currency'
-import { buildWalletStats } from '@/lib/wallet-stats'
 import { TabSwitcher } from '@/components/tab-switcher'
 import { MonthNav } from '@/components/month-nav'
 import { budgetBarColor, budgetLabelClass } from '@/lib/budget'
@@ -90,10 +88,6 @@ export function AnalyticsDashboard({ month, transactions, wallets, groupId, grou
     ? Array.from(budgetMap.values()).reduce((s, v) => s + v, 0)
     : undefined
 
-  // ── Per-wallet monthly income & net ───────────────────────────────────────────
-
-  const walletMonthlyMap = buildWalletStats(visibleTxs)
-
   // ── Render ────────────────────────────────────────────────────────────────────
 
   return (
@@ -114,8 +108,8 @@ export function AnalyticsDashboard({ month, transactions, wallets, groupId, grou
         />
       )}
 
-      {/* KPI cards — 3 tiles; 3rd tile is Budget when an overall budget exists, otherwise Net */}
-      <div className="grid grid-cols-3 gap-3">
+      {/* KPI tiles — Income · Expenses · Net always; Saved rate when income > 0 */}
+      <div className={cn('grid gap-3', income > 0 ? 'grid-cols-4' : 'grid-cols-3')}>
 
         {/* Income */}
         <div className="rounded-lg border p-3 sm:p-4 space-y-1">
@@ -133,42 +127,60 @@ export function AnalyticsDashboard({ month, transactions, wallets, groupId, grou
           </p>
         </div>
 
-        {/* Net OR Overall budget */}
-        {overallBudget != null ? (() => {
-          const pct      = Math.round((expenses / overallBudget) * 100)
-          const barColor = budgetBarColor(pct, 70)
+        {/* Net — always visible */}
+        <div className="rounded-lg border p-3 sm:p-4 space-y-1">
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t('net')}</p>
+          <p className={cn(
+            'font-heading text-base sm:text-xl font-semibold tabular-nums',
+            net >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-500',
+          )}>
+            {net >= 0 ? '+' : '−'}{symbol} {Math.abs(net).toFixed(2)}
+          </p>
+        </div>
+
+        {/* Savings rate — only when income > 0 */}
+        {income > 0 && (() => {
+          const rate = Math.round((net / income) * 100)
           return (
-            <div className="rounded-lg border p-3 sm:p-4 space-y-1.5">
-              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t('budgetKpi')}</p>
+            <div className="rounded-lg border p-3 sm:p-4 space-y-1">
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t('saved')}</p>
               <p className={cn(
                 'font-heading text-base sm:text-xl font-semibold tabular-nums',
-                pct >= 100 ? 'text-destructive' : 'text-foreground',
+                rate > 0 ? 'text-green-600 dark:text-green-400'
+                  : rate < 0 ? 'text-red-600 dark:text-red-500'
+                  : 'text-muted-foreground',
               )}>
-                {symbol} {expenses.toFixed(2)}
-                <span className="text-[10px] font-normal text-muted-foreground ml-0.5">
-                  /{symbol}{overallBudget.toFixed(0)}
-                </span>
-              </p>
-              <div className="h-1 w-full rounded-full bg-muted overflow-hidden">
-                <div className={cn('h-full rounded-full', barColor)} style={{ width: `${Math.min(pct, 100)}%` }} />
-              </div>
-              <p className={cn('text-[10px]', pct >= 100 ? 'text-destructive' : 'text-muted-foreground')}>
-                {t('budgetPct', { pct })}
+                {rate > 0 ? '+' : ''}{rate}%
               </p>
             </div>
           )
-        })() : (
-          <div className="rounded-lg border p-3 sm:p-4 space-y-1">
-            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t('net')}</p>
-            <p className={cn(
-              'font-heading text-base sm:text-xl font-semibold tabular-nums',
-              net >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-500',
-            )}>
-              {net >= 0 ? '+' : '−'}{symbol} {Math.abs(net).toFixed(2)}
+        })()}
+      </div>
+
+      {/* Overall budget bar — shown below the KPI strip when a budget is set */}
+      {overallBudget != null && (() => {
+        const pct      = Math.round((expenses / overallBudget) * 100)
+        const barColor = budgetBarColor(pct, 70)
+        return (
+          <div className="rounded-lg border px-4 py-3 space-y-2">
+            <div className="flex items-center justify-between text-sm">
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t('budgetKpi')}</p>
+              <span className="text-xs tabular-nums text-muted-foreground">
+                <span className={cn('font-semibold', pct >= 100 ? 'text-destructive' : 'text-foreground')}>
+                  {symbol} {expenses.toFixed(2)}
+                </span>
+                {' / '}{symbol} {overallBudget.toFixed(0)}
+              </span>
+            </div>
+            <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
+              <div className={cn('h-full rounded-full', barColor)} style={{ width: `${Math.min(pct, 100)}%` }} />
+            </div>
+            <p className={cn('text-[10px]', pct >= 100 ? 'text-destructive' : 'text-muted-foreground')}>
+              {t('budgetPct', { pct })}
             </p>
           </div>
-        )}
-      </div>
+        )
+      })()}
 
       {/* Wallet summary */}
       <div className="space-y-3">
@@ -180,31 +192,20 @@ export function AnalyticsDashboard({ month, transactions, wallets, groupId, grou
         ) : (
           <div className="rounded-lg border divide-y">
             {visibleWallets.map(w => {
-              const s      = currencySymbol(w.currency)
-              const monthly = walletMonthlyMap[w.id]
+              const s = currencySymbol(w.currency)
               return (
-                <div key={w.id} className="px-4 py-3 text-sm">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium">{w.name}</span>
-                      {w.is_primary && (
-                        <span className="text-xs px-1.5 py-0.5 rounded border border-primary/40 text-primary bg-primary/10">
-                          {tw('primary')}
-                        </span>
-                      )}
-                    </div>
-                    <span className="font-medium tabular-nums">
-                      {s} {parseAmount(w.balance).toFixed(2)}
-                    </span>
-                  </div>
-                  {monthly && (monthly.income > 0 || monthly.savings !== 0) && (
-                    <div className="mt-1 flex items-center gap-4 text-xs text-muted-foreground">
-                      <span>↑ {s} {monthly.income.toFixed(2)} {t('income').toLowerCase()}</span>
-                      <span className={monthly.savings >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-500 dark:text-red-400'}>
-                        {monthly.savings >= 0 ? '+' : '−'}{s} {Math.abs(monthly.savings).toFixed(2)} {t('net').toLowerCase()}
+                <div key={w.id} className="flex items-center justify-between px-4 py-3 text-sm">
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium">{w.name}</span>
+                    {w.is_primary && (
+                      <span className="text-xs px-1.5 py-0.5 rounded border border-primary/40 text-primary bg-primary/10">
+                        {tw('primary')}
                       </span>
-                    </div>
-                  )}
+                    )}
+                  </div>
+                  <span className="font-medium tabular-nums">
+                    {s} {parseAmount(w.balance).toFixed(2)}
+                  </span>
                 </div>
               )
             })}
@@ -278,45 +279,6 @@ export function AnalyticsDashboard({ month, transactions, wallets, groupId, grou
           </div>
         </div>
       )}
-
-      {/* Category bar chart */}
-      <div className="space-y-3">
-        <h2 className="font-heading text-base font-semibold">{t('categoryBreakdown')}</h2>
-        {categoryData.length === 0 ? (
-          <p className="text-sm text-muted-foreground py-8 text-center">{t('noExpenses')}</p>
-        ) : (
-          <div className="rounded-lg border p-4">
-            <ResponsiveContainer width="100%" height={Math.max(180, categoryData.length * 44)}>
-              <BarChart
-                data={categoryData}
-                layout="vertical"
-                margin={{ top: 0, right: 16, left: 8, bottom: 0 }}
-              >
-                <XAxis type="number" tick={{ fontSize: 11 }} tickFormatter={v => `${symbol}${v}`} />
-                <YAxis
-                  type="category"
-                  dataKey="name"
-                  width={110}
-                  tick={{ fontSize: 12 }}
-                  tickFormatter={(name, i) => {
-                    const icon = categoryData[i]?.icon
-                    return icon ? `${icon} ${name}` : name
-                  }}
-                />
-                <Tooltip
-                  formatter={(value) => [`${symbol} ${Number(value).toFixed(2)}`, 'Amount']}
-                  cursor={{ fill: 'hsl(var(--muted))' }}
-                />
-                <Bar dataKey="total" radius={[0, 4, 4, 0]}>
-                  {categoryData.map((_, i) => (
-                    <Cell key={i} fill="hsl(var(--primary))" fillOpacity={1 - i * 0.06} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        )}
-      </div>
 
       <div className="pt-2">
         <Link href="/transactions" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
