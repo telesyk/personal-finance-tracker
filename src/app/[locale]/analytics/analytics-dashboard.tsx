@@ -6,6 +6,7 @@ import { Link } from '@/i18n/navigation'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts'
 import { cn } from '@/lib/utils'
 import { currencySymbol, parseAmount } from '@/lib/currency'
+import { buildWalletStats } from '@/lib/wallet-stats'
 import { TabSwitcher } from '@/components/tab-switcher'
 import { MonthNav } from '@/components/month-nav'
 import { budgetBarColor, budgetLabelClass } from '@/lib/budget'
@@ -88,6 +89,10 @@ export function AnalyticsDashboard({ month, transactions, wallets, groupId, grou
   const overallBudget = budgetMap.size > 0
     ? Array.from(budgetMap.values()).reduce((s, v) => s + v, 0)
     : undefined
+
+  // ── Per-wallet monthly income & net ───────────────────────────────────────────
+
+  const walletMonthlyMap = buildWalletStats(visibleTxs)
 
   // ── Render ────────────────────────────────────────────────────────────────────
 
@@ -175,20 +180,31 @@ export function AnalyticsDashboard({ month, transactions, wallets, groupId, grou
         ) : (
           <div className="rounded-lg border divide-y">
             {visibleWallets.map(w => {
-              const s = currencySymbol(w.currency)
+              const s      = currencySymbol(w.currency)
+              const monthly = walletMonthlyMap[w.id]
               return (
-                <div key={w.id} className="flex items-center justify-between px-4 py-3 text-sm">
-                  <div className="flex items-center gap-2">
-                    <span className="font-medium">{w.name}</span>
-                    {w.is_primary && (
-                      <span className="text-xs px-1.5 py-0.5 rounded border border-primary/40 text-primary bg-primary/10">
-                        {tw('primary')}
-                      </span>
-                    )}
+                <div key={w.id} className="px-4 py-3 text-sm">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium">{w.name}</span>
+                      {w.is_primary && (
+                        <span className="text-xs px-1.5 py-0.5 rounded border border-primary/40 text-primary bg-primary/10">
+                          {tw('primary')}
+                        </span>
+                      )}
+                    </div>
+                    <span className="font-medium tabular-nums">
+                      {s} {parseAmount(w.balance).toFixed(2)}
+                    </span>
                   </div>
-                  <span className="font-medium tabular-nums">
-                    {s} {parseAmount(w.balance).toFixed(2)}
-                  </span>
+                  {monthly && (monthly.income > 0 || monthly.savings !== 0) && (
+                    <div className="mt-1 flex items-center gap-4 text-xs text-muted-foreground">
+                      <span>↑ {s} {monthly.income.toFixed(2)} {t('income').toLowerCase()}</span>
+                      <span className={monthly.savings >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-500 dark:text-red-400'}>
+                        {monthly.savings >= 0 ? '+' : '−'}{s} {Math.abs(monthly.savings).toFixed(2)} {t('net').toLowerCase()}
+                      </span>
+                    </div>
+                  )}
                 </div>
               )
             })}
