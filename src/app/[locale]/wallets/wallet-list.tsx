@@ -9,6 +9,7 @@ import { Pencil, Trash2 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
 import { currencySymbol, formatAmount, parseAmount } from '@/lib/currency'
+import type { WalletStats } from '@/lib/wallet-stats'
 import { TabSwitcher } from '@/components/tab-switcher'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -63,6 +64,7 @@ function WalletCard({
   preset,
   currentUserId,
   showOwner,
+  stats,
   onEdit,
   onDelete,
 }: {
@@ -70,6 +72,7 @@ function WalletCard({
   preset: BankPreset | undefined
   currentUserId: string
   showOwner: boolean
+  stats: WalletStats | undefined
   onEdit: (w: Wallet) => void
   onDelete: (w: Wallet) => void
 }) {
@@ -79,34 +82,43 @@ function WalletCard({
   return (
     <Card>
       <CardContent className="p-4">
-        {/* Top row: institution icon + name/badges + actions */}
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex items-center gap-3 min-w-0">
-            <InstitutionIcon preset={preset} />
-            <div className="min-w-0">
-              <div className="flex items-center gap-1.5 flex-wrap">
-                <p className="font-medium text-sm leading-tight">{wallet.name}</p>
-                {wallet.is_primary && (
-                  <span className="text-xs font-medium px-1.5 py-0.5 rounded border border-primary/40 text-primary bg-primary/10">
-                    {t('primary')}
-                  </span>
-                )}
-                {wallet.group_id ? (
-                  <span className="text-xs font-medium px-1.5 py-0.5 rounded border border-muted text-muted-foreground">
-                    {t('shared')}
-                  </span>
-                ) : (
-                  <span className="text-xs px-1.5 py-0.5 rounded border border-dashed border-muted text-muted-foreground/60">
-                    {t('private')}
-                  </span>
-                )}
-              </div>
-              {showOwner && wallet.owner?.display_name && (
-                <p className="text-xs text-muted-foreground/70 mt-0.5">{wallet.owner.display_name}</p>
+        {/* Single row: institution icon · name-stack · balance+currency · actions */}
+        <div className="flex items-center gap-3">
+          <InstitutionIcon preset={preset} />
+          {/* Name / badges / metadata */}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <p className="font-medium text-sm leading-tight truncate">{wallet.name}</p>
+              {wallet.is_primary && (
+                <span className="text-xs font-medium px-1.5 py-0.5 rounded border border-primary/40 text-primary bg-primary/10 shrink-0">
+                  {t('primary')}
+                </span>
               )}
-              <p className="text-xs text-muted-foreground mt-0.5">{preset?.name ?? 'Custom'}</p>
+              {wallet.group_id ? (
+                <span className="text-xs font-medium px-1.5 py-0.5 rounded border border-muted text-muted-foreground shrink-0">
+                  {t('shared')}
+                </span>
+              ) : (
+                <span className="text-xs px-1.5 py-0.5 rounded border border-dashed border-muted text-muted-foreground/60 shrink-0">
+                  {t('private')}
+                </span>
+              )}
             </div>
+            {showOwner && wallet.owner?.display_name && (
+              <p className="text-xs text-muted-foreground/70 mt-0.5">{wallet.owner.display_name}</p>
+            )}
+            <p className="text-xs text-muted-foreground mt-0.5">{preset?.name ?? 'Custom'}</p>
           </div>
+          {/* Balance — hero number, right side */}
+          <div className="flex items-baseline gap-1.5 shrink-0">
+            <p className="font-heading text-2xl font-semibold tabular-nums">
+              {formatAmount(wallet.balance, wallet.currency)}
+            </p>
+            <span className="text-xs font-mono border rounded px-1.5 py-0.5 text-muted-foreground">
+              {wallet.currency}
+            </span>
+          </div>
+          {/* Edit / delete — owner only */}
           {wallet.owner_id === currentUserId && (
             <div className="flex items-center gap-1 shrink-0">
               <Button
@@ -128,15 +140,17 @@ function WalletCard({
             </div>
           )}
         </div>
-        {/* Balance — hero number */}
-        <div className="mt-3 flex items-baseline gap-2">
-          <p className="font-heading text-2xl font-semibold tabular-nums">
-            {formatAmount(wallet.balance, wallet.currency)}
-          </p>
-          <span className="text-xs font-mono border rounded px-1.5 py-0.5 text-muted-foreground">
-            {wallet.currency}
-          </span>
-        </div>
+        {/* Monthly stats — only when there was activity this month */}
+        {stats && (stats.income > 0 || stats.savings !== 0) && (
+          <div className="mt-2 flex items-center gap-4 pl-14 text-xs text-muted-foreground">
+            <span>
+              ↑ {formatAmount(stats.income, wallet.currency)} this month
+            </span>
+            <span className={stats.savings >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-500 dark:text-red-400'}>
+              {stats.savings >= 0 ? '+' : '−'}{formatAmount(Math.abs(stats.savings), wallet.currency)} net
+            </span>
+          </div>
+        )}
       </CardContent>
     </Card>
   )
@@ -155,6 +169,8 @@ export interface Wallet {
   owner: { display_name: string } | null
 }
 
+export type { WalletStats } from '@/lib/wallet-stats'
+
 interface BankPreset { id: string; name: string; type: string; logo_url: string | null }
 
 interface Props {
@@ -163,9 +179,10 @@ interface Props {
   currentUserId: string
   groupId: string | null
   groupName: string | null
+  walletStats?: Record<string, WalletStats>
 }
 
-export function WalletList({ wallets, bankPresets, currentUserId, groupId, groupName }: Props) {
+export function WalletList({ wallets, bankPresets, currentUserId, groupId, groupName, walletStats }: Props) {
   const router = useRouter()
   const t = useTranslations('wallets')
   const tf = useTranslations('wallets.form')
@@ -375,6 +392,7 @@ export function WalletList({ wallets, bankPresets, currentUserId, groupId, group
                     preset={bankPresets.find(p => p.id === wallet.bank_preset_id)}
                     currentUserId={currentUserId}
                     showOwner={!!groupId && activeTab === 'group'}
+                    stats={walletStats?.[wallet.id]}
                     onEdit={openEdit}
                     onDelete={(w) => { setDeleteError(null); setDeletingWallet(w) }}
                   />

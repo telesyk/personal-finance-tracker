@@ -2,7 +2,7 @@
 
 A self-hosted family finance tracker built as a Progressive Web App (PWA). Designed for 2–4 people sharing a household budget, with zero hosting cost using free tiers only.
 
-**Live:** [lesyk-finance-tracker.click](https://lesyk-finance-tracker.click) · **Version:** 0.5.2
+**Live:** [lesyk-finance-tracker.click](https://lesyk-finance-tracker.click) · **Version:** 0.6.8
 
 ---
 
@@ -12,7 +12,8 @@ A self-hosted family finance tracker built as a Progressive Web App (PWA). Desig
 - **Wallets** — personal and shared accounts with optional bank presets (Revolut, Wise, Sparkasse, Monobank, PrivatBank, PayPal, Cash, …)
 - **Transactions** — income, expense, and wallet-to-wallet transfers; amounts always stored positive, direction carried by type
 - **Categories** — default spending categories with hierarchical parent/child structure; custom categories per group
-- **Monthly analytics** — income vs. expenses, breakdown by category and wallet, month navigation
+- **Monthly analytics** — income, expenses, net savings, and savings rate (%) per month; expense breakdown by category with vs-budget bars; wallet balance snapshot; month navigation
+- **Budget** — monthly spending limits per category; overall and per-category progress bars; days remaining in the current month shown in the summary
 - **Invite flow** — share a link to let family members join the group
 - **Multilanguage** — English, Ukrainian, German; language switcher in the navigation bar; locale-prefixed URLs (`/en/`, `/uk/`, `/de/`)
 - **Dark / light theme** — persisted via `next-themes`

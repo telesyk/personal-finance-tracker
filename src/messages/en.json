@@ -158,6 +158,7 @@
     "income": "Income",
     "expenses": "Expenses",
     "net": "Net",
+    "saved": "Saved",
     "categoryBreakdown": "Spending by category",
     "walletSummary": "Wallets",
     "noExpenses": "No expenses recorded for this month.",
@@ -219,7 +220,9 @@
       "planned": "Planned total",
       "spent": "Spent this month",
       "available": "Available",
-      "warning": "exceeds wallet balance"
+      "warning": "exceeds wallet balance",
+      "daysLeft": "{days} days left",
+      "lastDay": "last day"
     },
     "form": {
       "titleNew": "Add budget",
