@@ -207,6 +207,16 @@ export function BudgetList({
   const isOverBalance  = totalBalance > 0 && totalPlanned > totalBalance
   const summaryBarCol  = isOverBalance ? 'bg-destructive' : 'bg-emerald-500'
 
+  // ── days remaining in the active month (only for current/future months) ──
+  const daysRemaining: number | null = (() => {
+    const today     = new Date()
+    const [y, m]    = month.split('-').map(Number)
+    const isCurrent = today.getFullYear() === y && today.getMonth() + 1 === m
+    if (!isCurrent) return null
+    const lastDay = new Date(y, m, 0).getDate()
+    return lastDay - today.getDate()
+  })()
+
   // ── handlers ──
 
   function openCreate() {
@@ -340,12 +350,21 @@ export function BudgetList({
           {/* Budget total summary: spent vs planned, planned vs wallet balance */}
           <div className="rounded-lg border px-4 py-3 space-y-2">
 
-            {/* Planned total */}
+            {/* Planned total + days remaining */}
             <div className="flex items-center justify-between text-sm">
               <span className="text-muted-foreground">{t('summary.planned')}</span>
-              <span className="font-semibold tabular-nums">
-                {symbol}{totalPlanned.toFixed(2)}
-              </span>
+              <div className="flex items-center gap-3">
+                {daysRemaining !== null && (
+                  <span className="text-xs text-muted-foreground">
+                    {daysRemaining === 0
+                      ? t('summary.lastDay')
+                      : t('summary.daysLeft', { days: daysRemaining })}
+                  </span>
+                )}
+                <span className="font-semibold tabular-nums">
+                  {symbol}{totalPlanned.toFixed(2)}
+                </span>
+              </div>
             </div>
 
             {/* Actual spent vs planned */}
