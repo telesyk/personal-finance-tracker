@@ -10,6 +10,14 @@ Versioning: PATCH only (`0.0.x`) until a release is explicitly approved.
 
 ---
 
+## [0.6.9] — 2026-09-04
+
+### Added
+- **Wallet card redesign** — two-section layout: header row (name + badges left, edit/delete right); body (institution icon · owner name · bank name · monthly stats left, large balance + currency badge right); owner name always visible regardless of tab
+- **Monthly opening balance** — wallet card stats row gains a third value `started €X` (current month; computed as `wallet.balance − net_of_month`); Analytics Wallets section shows `Started month: €X` as a secondary line per wallet (current month only — formula requires today's live balance)
+
+---
+
 ## [0.6.8] — 2026-09-01
 
 ### Added
