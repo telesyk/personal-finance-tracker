@@ -5,6 +5,8 @@ import { useTabState } from '@/hooks/use-tab-state'
 import { Link } from '@/i18n/navigation'
 import { cn } from '@/lib/utils'
 import { currencySymbol, parseAmount } from '@/lib/currency'
+import { currentMonthStr } from '@/lib/date'
+import { buildWalletStats } from '@/lib/wallet-stats'
 import { TabSwitcher } from '@/components/tab-switcher'
 import { MonthNav } from '@/components/month-nav'
 import { budgetBarColor, budgetLabelClass } from '@/lib/budget'
@@ -47,6 +49,14 @@ export function AnalyticsDashboard({ month, transactions, wallets, groupId, grou
     : wallets.filter(w => w.group_id !== null)
 
   const symbol = visibleWallets[0] ? currencySymbol(visibleWallets[0].currency) : '€'
+
+  // Per-wallet opening balance — only accurate for the current month
+  // (formula: current_balance − net_of_month; for past months the result would
+  // be incorrect because wallet.balance reflects today, not the month's closing date)
+  const isCurrentMonth = month === currentMonthStr()
+  const walletMonthlyStats = isCurrentMonth
+    ? buildWalletStats(visibleTxs.map(t => ({ wallet_id: t.wallet_id, type: t.type, amount: t.amount })))
+    : {}
 
   // ── KPI totals ────────────────────────────────────────────────────────────────
 
@@ -193,14 +203,23 @@ export function AnalyticsDashboard({ month, transactions, wallets, groupId, grou
           <div className="rounded-lg border divide-y">
             {visibleWallets.map(w => {
               const s = currencySymbol(w.currency)
+              const wStats = walletMonthlyStats[w.id]
+              const opening = wStats ? parseAmount(w.balance) - wStats.savings : null
               return (
                 <div key={w.id} className="flex items-center justify-between px-4 py-3 text-sm">
-                  <div className="flex items-center gap-2">
-                    <span className="font-medium">{w.name}</span>
-                    {w.is_primary && (
-                      <span className="text-xs px-1.5 py-0.5 rounded border border-primary/40 text-primary bg-primary/10">
-                        {tw('primary')}
-                      </span>
+                  <div className="space-y-0.5">
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium">{w.name}</span>
+                      {w.is_primary && (
+                        <span className="text-xs px-1.5 py-0.5 rounded border border-primary/40 text-primary bg-primary/10">
+                          {tw('primary')}
+                        </span>
+                      )}
+                    </div>
+                    {opening !== null && (
+                      <p className="text-xs text-muted-foreground">
+                        {t('startedMonth')}: {s} {opening.toFixed(2)}
+                      </p>
                     )}
                   </div>
                   <span className="font-medium tabular-nums">
