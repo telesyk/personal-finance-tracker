@@ -159,6 +159,7 @@
     "expenses": "Expenses",
     "net": "Net",
     "saved": "Saved",
+    "startedMonth": "Started month",
     "categoryBreakdown": "Spending by category",
     "walletSummary": "Wallets",
     "noExpenses": "No expenses recorded for this month.",

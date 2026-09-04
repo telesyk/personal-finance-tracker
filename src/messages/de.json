@@ -159,6 +159,7 @@
     "expenses": "Ausgaben",
     "net": "Saldo",
     "saved": "Gespart",
+    "startedMonth": "Monatsanfang",
     "categoryBreakdown": "Ausgaben nach Kategorie",
     "walletSummary": "Geldbörsen",
     "noExpenses": "Keine Ausgaben für diesen Monat.",
