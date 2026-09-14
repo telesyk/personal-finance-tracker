@@ -10,6 +10,7 @@ import { createClient } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
 import { currencySymbol, formatAmount, parseAmount } from '@/lib/currency'
 import type { WalletStats } from '@/lib/wallet-stats'
+import { PlannedAmountHint } from '@/components/planned-amount-hint'
 import { TabSwitcher } from '@/components/tab-switcher'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -64,6 +65,7 @@ function WalletCard({
   preset,
   currentUserId,
   stats,
+  plannedTotals,
   onEdit,
   onDelete,
 }: {
@@ -71,6 +73,7 @@ function WalletCard({
   preset: BankPreset | undefined
   currentUserId: string
   stats: WalletStats | undefined
+  plannedTotals: { income: number; expenses: number } | undefined
   onEdit: (w: Wallet) => void
   onDelete: (w: Wallet) => void
 }) {
@@ -146,14 +149,23 @@ function WalletCard({
               )}
             </div>
           </div>
-          {/* Right: hero balance (number only) + currency badge */}
-          <div className="flex items-baseline gap-1.5 shrink-0">
-            <p className="font-heading text-2xl font-semibold tabular-nums">
-              {parseAmount(wallet.balance).toFixed(2)}
-            </p>
-            <span className="text-xs font-mono border rounded px-1.5 py-0.5 text-muted-foreground">
-              {wallet.currency}
-            </span>
+          {/* Right: hero balance (number only) + currency badge + projected hint */}
+          <div className="flex flex-col items-end gap-0.5 shrink-0">
+            <div className="flex items-baseline gap-1.5">
+              <p className="font-heading text-2xl font-semibold tabular-nums">
+                {parseAmount(wallet.balance).toFixed(2)}
+              </p>
+              <span className="text-xs font-mono border rounded px-1.5 py-0.5 text-muted-foreground">
+                {wallet.currency}
+              </span>
+            </div>
+            {plannedTotals && (plannedTotals.income > 0 || plannedTotals.expenses > 0) && (
+              <PlannedAmountHint
+                amount={parseAmount(wallet.balance) + plannedTotals.income - plannedTotals.expenses}
+                type="balance"
+                symbol={currencySymbol(wallet.currency)}
+              />
+            )}
           </div>
         </div>
       </CardContent>
@@ -185,9 +197,10 @@ interface Props {
   groupId: string | null
   groupName: string | null
   walletStats?: Record<string, WalletStats>
+  walletPlannedTotals?: Record<string, { income: number; expenses: number }>
 }
 
-export function WalletList({ wallets, bankPresets, currentUserId, groupId, groupName, walletStats }: Props) {
+export function WalletList({ wallets, bankPresets, currentUserId, groupId, groupName, walletStats, walletPlannedTotals }: Props) {
   const router = useRouter()
   const t = useTranslations('wallets')
   const tf = useTranslations('wallets.form')
@@ -397,6 +410,7 @@ export function WalletList({ wallets, bankPresets, currentUserId, groupId, group
                     preset={bankPresets.find(p => p.id === wallet.bank_preset_id)}
                     currentUserId={currentUserId}
                     stats={walletStats?.[wallet.id]}
+                    plannedTotals={walletPlannedTotals?.[wallet.id]}
                     onEdit={openEdit}
                     onDelete={(w) => { setDeleteError(null); setDeletingWallet(w) }}
                   />
