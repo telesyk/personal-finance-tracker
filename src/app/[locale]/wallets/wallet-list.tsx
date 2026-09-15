@@ -152,12 +152,12 @@ function WalletCard({
           {/* Right: hero balance (number only) + currency badge + projected hint */}
           <div className="flex flex-col items-end gap-0.5 shrink-0">
             <div className="flex items-baseline gap-1.5">
+              <span className="text-lg font-mono px-1.5 py-0.5 text-muted-foreground">
+                {currencySymbol(wallet.currency)}
+              </span>
               <p className="font-heading text-2xl font-semibold tabular-nums">
                 {parseAmount(wallet.balance).toFixed(2)}
               </p>
-              <span className="text-xs font-mono border rounded px-1.5 py-0.5 text-muted-foreground">
-                {wallet.currency}
-              </span>
             </div>
             {plannedTotals && (plannedTotals.income > 0 || plannedTotals.expenses > 0) && (
               <PlannedAmountHint
