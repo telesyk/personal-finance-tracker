@@ -32,7 +32,7 @@
 AGENTS.md
 CLAUDE.md
 /docs
-docs/*.md
+/.workflow
 
 # misc
 .DS_Store
