@@ -10,6 +10,16 @@ Versioning: PATCH only (`0.0.x`) until a release is explicitly approved.
 
 ---
 
+## [0.6.10] — 2026-09-16
+
+### Added
+- **Planned transactions** — any transaction with a future date is treated as "planned" (computed on the fly; no schema change); planned rows appear inline in the transaction list with muted/italic styling and are excluded from daily net and primary totals
+- **Projected balance on wallet cards** — each wallet card shows a "Projected: € X" hint when there are upcoming planned transactions; computed as `current balance + planned income − planned expenses` across all future dates
+- `src/lib/planned.ts` — shared helpers: `isPlanned()`, `todayDateStr()`, `getPlannedTotals()`
+- `src/components/planned-amount-hint.tsx` — reusable `<PlannedAmountHint>` component; returns null when amount is zero
+
+---
+
 ## [0.6.9] — 2026-09-04
 
 ### Added
