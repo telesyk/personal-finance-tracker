@@ -16,6 +16,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { cn, nativeSelectClass } from '@/lib/utils'
 import { currencySymbol } from '@/lib/currency'
 import { currentMonthStr, monthLabel } from '@/lib/date'
+import { isPlanned } from '@/lib/planned'
 import { TabSwitcher } from '@/components/tab-switcher'
 import { MonthNav } from '@/components/month-nav'
 import { CategoryGroupedSelect } from '@/components/category-grouped-select'
@@ -40,6 +41,8 @@ interface Category { id: string; name: string; icon: string | null; type: 'incom
 
 interface Props {
   transactions: Transaction[]
+  /** Future-dated transactions for this month — displayed with muted style; excluded from totals. */
+  plannedTransactions: Transaction[]
   wallets: Wallet[]
   categories: Category[]
   groupId: string | null
@@ -90,7 +93,7 @@ function formatDateHeader(dateStr: string) {
   })
 }
 
-export function TransactionList({ transactions, wallets, categories, groupId, groupName, currentUserId, month, categoryFilter, walletFilter }: Props) {
+export function TransactionList({ transactions, plannedTransactions, wallets, categories, groupId, groupName, currentUserId, month, categoryFilter, walletFilter }: Props) {
   const router = useRouter()
   const t = useTranslations('transactions')
   const tf = useTranslations('transactions.form')
@@ -269,10 +272,15 @@ export function TransactionList({ transactions, wallets, categories, groupId, gr
     return w.name
   }
 
-  // Tab-scoped transactions (personal vs. group)
+  // Tab-scoped settled transactions — used for all totals and filter options
   const visibleTransactions = !groupId || activeTab === 'personal'
     ? transactions.filter(tx => tx.wallet?.owner_id === currentUserId)
     : transactions.filter(tx => tx.wallet?.group_id !== null)
+
+  // Tab-scoped planned transactions — display-only, excluded from totals
+  const visiblePlanned = !groupId || activeTab === 'personal'
+    ? plannedTransactions.filter(tx => tx.wallet?.owner_id === currentUserId)
+    : plannedTransactions.filter(tx => tx.wallet?.group_id !== null)
 
   // Unique categories that appear in this tab's transactions (for the filter dropdown)
   const filterableCategories = (() => {
@@ -302,10 +310,30 @@ export function TransactionList({ transactions, wallets, categories, groupId, gr
 
   // Apply all three filters on top of tab filter
   const noteQuery = noteSearch.trim().toLowerCase()
-  const displayedTransactions = visibleTransactions
+  const filteredSettled = visibleTransactions
     .filter(tx => activeCategory === 'all' || tx.category_id === activeCategory)
     .filter(tx => activeWallet   === 'all' || tx.wallet_id   === activeWallet)
     .filter(tx => !noteQuery || (tx.note ?? '').toLowerCase().includes(noteQuery))
+
+  // Apply same category/wallet/note filters to planned rows
+  const filteredPlanned = visiblePlanned
+    .filter(tx => activeCategory === 'all' || tx.category_id === activeCategory)
+    .filter(tx => activeWallet   === 'all' || tx.wallet_id   === activeWallet)
+    .filter(tx => !noteQuery || (tx.note ?? '').toLowerCase().includes(noteQuery))
+
+  // Set of planned transaction IDs — used for muted style in the render
+  const plannedIds = new Set(filteredPlanned.map(tx => tx.id))
+
+  // Merged display list: planned sorted ascending (soonest first) prepended before settled
+  // groupByDate expects date-ordered input; planned come after settled chronologically
+  const displayedTransactions = [
+    ...filteredSettled,
+    ...filteredPlanned,
+  ].sort((a, b) => {
+    // primary: date descending (future dates first for planned)
+    if (b.date !== a.date) return b.date.localeCompare(a.date)
+    return 0
+  })
 
   const groups = groupByDate(displayedTransactions)
 
@@ -430,7 +458,7 @@ export function TransactionList({ transactions, wallets, categories, groupId, gr
         </div>
       )}
 
-      {visibleTransactions.length === 0 ? (
+      {visibleTransactions.length === 0 && visiblePlanned.length === 0 ? (
         <div className="flex flex-col items-center gap-2 py-20 text-muted-foreground">
           <p>{isCurrentMonth ? t('empty') : t('emptyMonth', { month: monthLabel(month) })}</p>
           {isCurrentMonth && <p className="text-sm">{t('emptyHint')}</p>}
@@ -444,16 +472,25 @@ export function TransactionList({ transactions, wallets, categories, groupId, gr
           {groups.map(group => (
             <React.Fragment key={`date-${group.date}`}>
               {(() => {
-                const dayNet = group.items.reduce((s, tx) => {
-                  const n = parseFloat(String(tx.amount))
-                  if (tx.type === 'income') return s + n
-                  if (tx.type === 'expense') return s - n
-                  return s
-                }, 0)
+                // Daily net from settled rows only — planned are excluded from totals
+                const dayNet = group.items
+                  .filter(tx => !plannedIds.has(tx.id))
+                  .reduce((s, tx) => {
+                    const n = parseFloat(String(tx.amount))
+                    if (tx.type === 'income') return s + n
+                    if (tx.type === 'expense') return s - n
+                    return s
+                  }, 0)
+                const allPlanned = group.items.every(tx => plannedIds.has(tx.id))
                 return (
                   <div className="px-4 py-1.5 flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-muted-foreground bg-muted/30">
                     <span>{formatDateHeader(group.date)}</span>
-                    {dayNet !== 0 && (
+                    {allPlanned && (
+                      <span className="text-xs font-normal normal-case text-muted-foreground/70 italic">
+                        planned
+                      </span>
+                    )}
+                    {!allPlanned && dayNet !== 0 && (
                       <span className={cn('tabular-nums normal-case font-medium', dayNet > 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-500')}>
                         {dayNet > 0 ? '+' : '−'}{primarySymbol} {Math.abs(dayNet).toFixed(2)}
                       </span>
@@ -461,59 +498,65 @@ export function TransactionList({ transactions, wallets, categories, groupId, gr
                   </div>
                 )
               })()}
-              {group.items.map(tx => (
-                <div
-                  key={tx.id}
-                  className="flex items-center gap-3 px-4 py-3 hover:bg-muted/20 transition-colors sm:cursor-default cursor-pointer"
-                  onClick={() => setActiveId(activeId === tx.id ? null : tx.id)}
-                >
-                  <span className="text-xl shrink-0 w-7 text-center" aria-hidden>
-                    {tx.type === 'transfer' ? '↔' : (tx.category?.icon ?? '•')}
-                  </span>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium leading-tight truncate">
-                      {tx.type === 'transfer'
-                        ? t('types.transfer')
-                        : (tx.category?.name ?? 'Uncategorised')}
-                    </p>
-                    <p className="text-xs text-muted-foreground truncate">
-                      {tx.type === 'transfer'
-                        ? `${tx.wallet?.name ?? '?'} → ${tx.transfer_to_wallet?.name ?? '?'}`
-                        : tx.wallet?.name ?? '—'}
-                      {tx.note && <span className="italic"> · {tx.note}</span>}
-                    </p>
+              {group.items.map(tx => {
+                const planned = plannedIds.has(tx.id)
+                return (
+                  <div
+                    key={tx.id}
+                    className={cn(
+                      'flex items-center gap-3 px-4 py-3 hover:bg-muted/20 transition-colors sm:cursor-default cursor-pointer',
+                      planned && 'opacity-60',
+                    )}
+                    onClick={() => setActiveId(activeId === tx.id ? null : tx.id)}
+                  >
+                    <span className="text-xl shrink-0 w-7 text-center" aria-hidden>
+                      {tx.type === 'transfer' ? '↔' : (tx.category?.icon ?? '•')}
+                    </span>
+                    <div className="flex-1 min-w-0">
+                      <p className={cn('text-sm font-medium leading-tight truncate', planned && 'text-muted-foreground')}>
+                        {tx.type === 'transfer'
+                          ? t('types.transfer')
+                          : (tx.category?.name ?? 'Uncategorised')}
+                      </p>
+                      <p className="text-xs text-muted-foreground truncate">
+                        {tx.type === 'transfer'
+                          ? `${tx.wallet?.name ?? '?'} → ${tx.transfer_to_wallet?.name ?? '?'}`
+                          : tx.wallet?.name ?? '—'}
+                        {tx.note && <span className="italic"> · {tx.note}</span>}
+                      </p>
+                    </div>
+                    <span className={cn(
+                      'text-sm font-medium tabular-nums shrink-0',
+                      !planned && tx.type === 'income' && 'text-green-600 dark:text-green-400',
+                      !planned && tx.type === 'expense' && 'text-red-600 dark:text-red-500',
+                      (planned || tx.type === 'transfer') && 'text-muted-foreground',
+                    )}>
+                      {formatAmount(tx.amount, tx.wallet?.currency ?? 'EUR', tx.type)}
+                    </span>
+                    <div className={cn(
+                      'items-center gap-0.5 shrink-0',
+                      activeId === tx.id ? 'flex' : 'hidden sm:flex',
+                    )}>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-9 w-9 text-muted-foreground hover:text-foreground"
+                        onClick={(e) => { e.stopPropagation(); openEdit(tx) }}
+                      >
+                        <Pencil className="h-3.5 w-3.5" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-9 w-9 text-muted-foreground hover:text-destructive"
+                        onClick={(e) => { e.stopPropagation(); setDeleteError(null); setDeletingTx(tx) }}
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
                   </div>
-                  <span className={cn(
-                    'text-sm font-medium tabular-nums shrink-0',
-                    tx.type === 'income' && 'text-green-600 dark:text-green-400',
-                    tx.type === 'expense' && 'text-red-600 dark:text-red-500',
-                    tx.type === 'transfer' && 'text-muted-foreground',
-                  )}>
-                    {formatAmount(tx.amount, tx.wallet?.currency ?? 'EUR', tx.type)}
-                  </span>
-                  <div className={cn(
-                    'items-center gap-0.5 shrink-0',
-                    activeId === tx.id ? 'flex' : 'hidden sm:flex',
-                  )}>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-9 w-9 text-muted-foreground hover:text-foreground"
-                      onClick={(e) => { e.stopPropagation(); openEdit(tx) }}
-                    >
-                      <Pencil className="h-3.5 w-3.5" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-9 w-9 text-muted-foreground hover:text-destructive"
-                      onClick={(e) => { e.stopPropagation(); setDeleteError(null); setDeletingTx(tx) }}
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </Button>
-                  </div>
-                </div>
-              ))}
+                )
+              })}
             </React.Fragment>
           ))}
         </div>

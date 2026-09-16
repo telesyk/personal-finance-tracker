@@ -147,7 +147,7 @@ export default async function DashboardPage() {
             </Link>
           </div>
           {((wallets ?? []).length > 1 || (groupId && sharedWallets.length > 0)) && (
-            <div className="flex items-center gap-3 mt-3 pt-3 border-t flex-wrap">
+            <div className="flex items-center gap-3 mt-3 pt-3 border-t flex-wrap justify-between">
               {(wallets ?? []).length > 1 && (
                 <span className="text-xs text-muted-foreground tabular-nums">
                   {t('allWallets')}{' '}
