@@ -25,12 +25,14 @@ export default async function WalletsPage() {
     groupId
       ? supabase.from('groups').select('name').eq('id', groupId).single()
       : Promise.resolve({ data: null }),
-    // Settled: current month transactions (for monthly stats on each card)
+    // Settled: current month transactions up to today (for monthly stats on each card).
+    // Planned ones are excluded so `balance - savings` (opening balance) stays consistent
+    // with wallets.balance, which only includes settled transactions.
     supabase
       .from('transactions')
       .select('wallet_id, type, amount')
       .gte('date', dateFrom)
-      .lte('date', dateTo),
+      .lte('date', today < dateTo ? today : dateTo),
     // Planned: ALL future transactions (for balance projection on each card)
     supabase
       .from('transactions')

@@ -19,7 +19,7 @@ export default async function AnalyticsPage({
   const [{ data: transactions }, { data: wallets }, { data: group }, { data: budgets }] = await Promise.all([
     supabase
       .from('transactions')
-      .select('id, type, amount, category_id, wallet_id, category:categories(name, icon), wallet:wallets!wallet_id(owner_id, group_id)')
+      .select('id, type, amount, date, category_id, wallet_id, category:categories(name, icon), wallet:wallets!wallet_id(owner_id, group_id)')
       .gte('date', dateFrom)
       .lte('date', dateTo),
     supabase
@@ -51,6 +51,7 @@ export interface AnalyticsTransaction {
   id: string
   type: 'income' | 'expense' | 'transfer'
   amount: string | number
+  date: string
   category_id: string | null
   wallet_id: string
   category: { name: string; icon: string | null } | null
