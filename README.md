@@ -2,7 +2,7 @@
 
 A self-hosted family finance tracker built as a Progressive Web App (PWA). Designed for 2–4 people sharing a household budget, with zero hosting cost using free tiers only.
 
-**Live:** [lesyk-finance-tracker.click](https://lesyk-finance-tracker.click) · **Version:** 0.6.10
+**Live:** [lesyk-finance-tracker.click](https://lesyk-finance-tracker.click) · **Version:** 0.6.11
 
 ---
 
@@ -10,10 +10,10 @@ A self-hosted family finance tracker built as a Progressive Web App (PWA). Desig
 
 - **Family group** — one group per household; any member can view and add transactions
 - **Wallets** — personal and shared accounts with optional bank presets (Revolut, Wise, Sparkasse, Monobank, PrivatBank, PayPal, Cash, …)
-- **Transactions** — income, expense, and wallet-to-wallet transfers; amounts always stored positive, direction carried by type; future-dated transactions shown as "planned" (muted inline) with projected balance on wallet cards
+- **Transactions** — income, expense, and wallet-to-wallet transfers; amounts always stored positive, direction carried by type; future-dated transactions shown as "planned" (muted inline) with projected balance on wallet cards; wallet balances count settled transactions only and planned ones apply automatically on their date
 - **Categories** — default spending categories with hierarchical parent/child structure; custom categories per group
 - **Monthly analytics** — income, expenses, net savings, and savings rate (%) per month; expense breakdown by category with vs-budget bars; wallet balance snapshot; month navigation
-- **Budget** — monthly spending limits per category; overall and per-category progress bars; days remaining in the current month shown in the summary
+- **Budget** — monthly spending limits per category; overall and per-category progress bars; summary shows spent, left and planned for the month (settled expenses only) with days remaining in the current month
 - **Invite flow** — share a link to let family members join the group
 - **Multilanguage** — English, Ukrainian, German; language switcher in the navigation bar; locale-prefixed URLs (`/en/`, `/uk/`, `/de/`)
 - **Dark / light theme** — persisted via `next-themes`
@@ -80,6 +80,8 @@ The full schema (tables, enums, indexes, RLS policies, triggers, seed data) live
 supabase link --project-ref <your-project-ref>
 supabase db push
 ```
+
+Planned transactions are settled by a daily `pg_cron` job, so enable the `pg_cron` extension (Supabase dashboard → Database → Extensions) before pushing migrations.
 
 ---
 

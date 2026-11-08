@@ -13,8 +13,8 @@ export function BottomNav() {
     { href: '/dashboard'    as const, label: t('dashboard'),    icon: LayoutDashboard },
     { href: '/wallets'      as const, label: t('wallets'),      icon: Wallet },
     { href: '/transactions' as const, label: t('transactions'), icon: ArrowLeftRight },
-    { href: '/analytics'   as const, label: t('analytics'),    icon: BarChart2 },
     { href: '/budget'      as const, label: t('budget'),       icon: PiggyBank },
+    { href: '/analytics'   as const, label: t('analytics'),    icon: BarChart2 },
   ]
 
   return (

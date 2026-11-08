@@ -10,6 +10,22 @@ Versioning: PATCH only (`0.0.x`) until a release is explicitly approved.
 
 ---
 
+## [0.6.11] — 2026-11-08
+
+### Changed
+- **Budget top panel** — summary card now leads with a **Spent** headline (red once spent reaches the planned total) and a **Left / Planned** row beneath it (left turns red with a leading minus when over budget); both rows wrap on narrow screens instead of truncating; follows the selected month and the Personal / Group tab
+- **Budget spent figures count settled expenses only** — expenses dated in the future no longer count as spent in the summary or the per-category bars
+- **Navigation order** — Budget now comes before Analytics in the header and the mobile bottom bar
+
+### Fixed
+- **Wallet balance no longer includes planned transactions** — `wallets.balance` reflects settled transactions (date ≤ today) only; planned amounts are applied automatically once their date arrives (daily `pg_cron` job), so the "Projected" hint on wallet cards no longer counts them twice; moving a transaction's date across today and planned transfers (both wallets) keep balances correct; existing balances are corrected by the migration
+- Opening balance (`started €X`) on wallet cards and in Analytics ignores planned transactions, matching the settled balance
+
+### Database
+- Migration `20261108000000_settled_wallet_balance.sql`: `transactions.balance_applied` flag, date-aware `update_wallet_balance()`, `settle_planned_transactions()`, and a daily `pg_cron` schedule — **requires the `pg_cron` extension** (Supabase: Database → Extensions)
+
+---
+
 ## [0.6.10] — 2026-09-16
 
 ### Added

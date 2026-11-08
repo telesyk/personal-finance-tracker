@@ -1,5 +1,6 @@
 import { requireProfile } from '@/lib/auth'
 import { currentMonthStr, monthDateRange } from '@/lib/date'
+import { todayDateStr } from '@/lib/planned'
 import { BudgetList, type Budget, type Actuals, type Category, type Wallet } from './budget-list'
 
 export default async function BudgetPage({
@@ -13,6 +14,7 @@ export default async function BudgetPage({
   const params  = await searchParams
   const month   = typeof params.month === 'string' ? params.month : currentMonthStr()
   const { from, to } = monthDateRange(month)
+  const today = todayDateStr()
 
   const [{ data: budgets }, { data: group }, { data: txns }, { data: categories }, { data: wallets }] = await Promise.all([
     supabase
@@ -25,13 +27,14 @@ export default async function BudgetPage({
       ? supabase.from('groups').select('name').eq('id', groupId).single()
       : Promise.resolve({ data: null }),
 
-    // Expense transactions this month — wallet join gives us owner_id for personal filtering
+    // Settled expense transactions this month (date <= today; planned ones are not "spent" yet)
+    // — wallet join gives us owner_id for personal filtering
     supabase
       .from('transactions')
       .select('category_id, amount, wallet:wallets!wallet_id(owner_id)')
       .eq('type', 'expense')
       .gte('date', from)
-      .lte('date', to),
+      .lte('date', today < to ? today : to),
 
     // Expense categories only — used by the Add / Edit form
     supabase

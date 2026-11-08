@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils'
 import { currencySymbol, parseAmount } from '@/lib/currency'
 import { currentMonthStr } from '@/lib/date'
 import { buildWalletStats } from '@/lib/wallet-stats'
+import { isPlanned } from '@/lib/planned'
 import { TabSwitcher } from '@/components/tab-switcher'
 import { MonthNav } from '@/components/month-nav'
 import { budgetBarColor, budgetLabelClass } from '@/lib/budget'
@@ -52,10 +53,11 @@ export function AnalyticsDashboard({ month, transactions, wallets, groupId, grou
 
   // Per-wallet opening balance — only accurate for the current month
   // (formula: current_balance − net_of_month; for past months the result would
-  // be incorrect because wallet.balance reflects today, not the month's closing date)
+  // be incorrect because wallet.balance reflects today, not the month's closing date).
+  // Planned (future-dated) transactions are excluded: wallet.balance only includes settled ones.
   const isCurrentMonth = month === currentMonthStr()
   const walletMonthlyStats = isCurrentMonth
-    ? buildWalletStats(visibleTxs.map(t => ({ wallet_id: t.wallet_id, type: t.type, amount: t.amount })))
+    ? buildWalletStats(visibleTxs.filter(t => !isPlanned(t.date)).map(t => ({ wallet_id: t.wallet_id, type: t.type, amount: t.amount })))
     : {}
 
   // ── KPI totals ────────────────────────────────────────────────────────────────

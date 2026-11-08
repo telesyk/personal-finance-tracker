@@ -203,6 +203,7 @@ export function BudgetList({
   // ── budget total summary ──
   const totalPlanned   = visibleBudgets.reduce((s, b) => s + Number(b.amount), 0)
   const totalActual    = activeTab === 'personal' ? personalTotalActual : groupTotalActual
+  const totalLeft      = totalPlanned - totalActual
   const spentPct       = totalPlanned > 0 ? Math.round((totalActual / totalPlanned) * 100) : 0
   const isOverBalance  = totalBalance > 0 && totalPlanned > totalBalance
   const summaryBarCol  = isOverBalance ? 'bg-destructive' : 'bg-emerald-500'
@@ -350,36 +351,37 @@ export function BudgetList({
           {/* Budget total summary: spent vs planned, planned vs wallet balance */}
           <div className="rounded-lg border px-4 py-3 space-y-2">
 
-            {/* Planned total + days remaining */}
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">{t('summary.planned')}</span>
-              <div className="flex items-center gap-3">
+            {/* Spent — headline figure + days remaining */}
+            <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5">
+              <div className="text-sm">
+                <span className="text-muted-foreground">{t('summary.spent')}</span>
                 {daysRemaining !== null && (
-                  <span className="text-xs text-muted-foreground">
+                  <span className="ml-2 text-xs text-muted-foreground">
                     {daysRemaining === 0
                       ? t('summary.lastDay')
                       : t('summary.daysLeft', { days: daysRemaining })}
                   </span>
                 )}
-                <span className="font-semibold tabular-nums">
-                  {symbol}{totalPlanned.toFixed(2)}
-                </span>
               </div>
+              <span className={cn('text-lg font-semibold tabular-nums whitespace-nowrap', spentPct >= 100 && 'text-destructive')}>
+                {symbol}{totalActual.toFixed(2)}
+              </span>
             </div>
 
-            {/* Actual spent vs planned */}
+            {/* Left / Planned this month (left turns red when negative) */}
+            <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5 text-sm">
+              <span className="text-muted-foreground">{t('summary.leftPlanned')}</span>
+              <span className="tabular-nums whitespace-nowrap">
+                <span className={cn('font-semibold', totalLeft < 0 ? 'text-destructive' : 'text-foreground')}>
+                  {totalLeft < 0 && '−'}{symbol}{Math.abs(totalLeft).toFixed(2)}
+                </span>
+                <span className="text-muted-foreground">{' / '}{symbol}{totalPlanned.toFixed(2)}</span>
+              </span>
+            </div>
+
+            {/* Spent vs planned progress */}
             {totalPlanned > 0 && (
               <>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">{t('summary.spent')}</span>
-                  <span className="text-xs text-muted-foreground tabular-nums whitespace-nowrap">
-                    <span className={cn('font-semibold', spentPct >= 100 ? 'text-destructive' : 'text-foreground')}>
-                      {symbol}{totalActual.toFixed(2)}
-                    </span>
-                    {' / '}
-                    {symbol}{totalPlanned.toFixed(2)}
-                  </span>
-                </div>
                 <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
                   <div
                     className={cn('h-full rounded-full transition-[width]', budgetBarColor(spentPct))}
