@@ -218,8 +218,8 @@
     "used": "used",
     "overall": "Overall",
     "summary": {
-      "planned": "Planned total",
-      "spent": "Spent this month",
+      "spent": "Spent",
+      "leftPlanned": "Left / Planned",
       "available": "Available",
       "warning": "exceeds wallet balance",
       "daysLeft": "{days} days left",

@@ -218,8 +218,8 @@
     "used": "genutzt",
     "overall": "Gesamt",
     "summary": {
-      "planned": "Geplant gesamt",
-      "spent": "Diesen Monat ausgegeben",
+      "spent": "Ausgegeben",
+      "leftPlanned": "Verbleibend / Geplant",
       "available": "Verfügbar",
       "warning": "übersteigt Kontostand",
       "daysLeft": "noch {days} Tage",

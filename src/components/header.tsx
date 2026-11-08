@@ -22,8 +22,8 @@ export async function Header() {
         <nav className="hidden md:flex items-center gap-4 text-sm text-muted-foreground">
           <Link href="/wallets" className="hover:text-foreground transition-colors">{t('wallets')}</Link>
           <Link href="/transactions" className="hover:text-foreground transition-colors">{t('transactions')}</Link>
-          <Link href="/analytics" className="hover:text-foreground transition-colors">{t('analytics')}</Link>
           <Link href="/budget" className="hover:text-foreground transition-colors">{t('budget')}</Link>
+          <Link href="/analytics" className="hover:text-foreground transition-colors">{t('analytics')}</Link>
         </nav>
       </div>
       <div className="flex items-center gap-1">
